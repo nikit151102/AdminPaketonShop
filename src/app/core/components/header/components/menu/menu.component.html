@@ -1,0 +1,15 @@
+<nav class="nav">
+    <!-- <div class="menu-item">
+        <a (click)="toggleMegaMenu($event)">Каталог</a>
+        <div class="mega-menu" [class.active]="megaMenuOpen">
+            <app-mega-menu [niches]="niches" [selectedNiche]="selectedNiche"
+                (nicheSelected)="selectNiche($event)"></app-mega-menu>
+        </div>
+    </div> -->
+
+    <a [routerLink]="'/about'">О компании</a>
+    <a [routerLink]="'/news'">Новости и акции</a>
+    <a [routerLink]="'/contacts'">Контакты</a>
+    <a [routerLink]="'/business'">Для бизнеса</a>
+    <a href="#">Работа</a>
+</nav>

@@ -1,0 +1,74 @@
+.nav {
+    display: flex;
+    gap: 1.5rem;
+
+    a {
+        position: relative;
+        font-weight: 500;
+        color: #444;
+        text-decoration: none;
+        transition: color 0.3s;
+
+        &::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #0d6efd;
+            transition: width 0.3s ease;
+        }
+
+        &:hover {
+            color: #0d6efd;
+
+            &::before {
+                width: 100%;
+            }
+        }
+
+        &.active {
+            color: #0d6efd;
+
+            &::before {
+                width: 100%;
+            }
+        }
+    }
+
+    .mega-menu {
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 0;
+        display: flex;
+        background: #ffffff;
+        padding: 1.5rem;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+        border-radius: 16px;
+        display: none;
+        max-width: 1200px;
+        width: 100%;
+        transition: all 0.3s ease, opacity 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1000;
+
+        &.active {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+            animation: megaFadeIn 0.25s ease forwards;
+        }
+
+        app-mega-menu {
+            display: flex;
+            width: 100%;
+
+        }
+    }
+
+    @media (max-width: 1024px) {
+        display: none;
+    }
+}

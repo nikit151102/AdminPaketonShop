@@ -1,0 +1,24 @@
+<div class="categories">
+  <div class="category-card" *ngFor="let category of categories" [routerLink]="category.subCategories?.length > 0 
+         ? ['/category', category.id] 
+         : ['/products', category.id]" >
+    <div class="image-wrapper">
+      <img [src]="category.image" [alt]="category.name" />
+    </div>
+
+    <div class="category-info">
+      <h4>{{ category.name }}</h4>
+      <p>{{ category.count }} товаров</p>
+    </div>
+
+    <ng-container *ngIf="category.subCategories && category.subCategories.length > 0">
+      <div class="subcategories">
+        <a *ngFor="let sub of category.subCategories" 
+           [routerLink]="['/category', sub.id]" 
+           class="subcategory-chip">
+          {{ sub.name }}
+        </a>
+      </div>
+    </ng-container>
+  </div>
+</div>

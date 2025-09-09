@@ -1,0 +1,32 @@
+<div class="city-modal" *ngIf="showCityModal$ | async">
+  <div class="city-modal-content">
+    <input type="text" placeholder="Поиск области или города..."
+           [(ngModel)]="locationService.citySearch"
+           (input)="onSearchChange()"
+           class="city-search"/>
+
+    <div class="city-selector">
+      <div class="district-list" *ngIf="!locationService.selectedDistrict">
+        <ul>
+          <li *ngFor="let district of filteredDistricts()"
+              (click)="locationService.selectedDistrict = district"
+              class="district-item">
+            {{ district.name }}
+          </li>
+        </ul>
+      </div>
+
+      <div class="city-list-panel" *ngIf="locationService.selectedDistrict">
+        <button class="back-btn" (click)="locationService.selectedDistrict = null">← Назад</button>
+        <h4>{{ locationService.selectedDistrict.name }}</h4>
+        <ul class="city-list">
+          <li *ngFor="let c of filteredCities()"
+              (click)="setCity(c)"
+              class="city-item">
+            {{ c.name }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

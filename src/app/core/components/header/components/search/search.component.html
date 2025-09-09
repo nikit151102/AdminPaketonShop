@@ -1,0 +1,72 @@
+<div class="search-bar">
+  <!-- Основная обёртка для позиционирования кнопок и дропдаунов -->
+  <div class="positioned-wrapper">
+    <!-- Иконка поиска -->
+    <i class="fas fa-search"></i>
+
+    <!-- Поле ввода -->
+    <input #searchInput type="text" placeholder="Поиск товаров..." [(ngModel)]="searchQuery" (input)="onSearch()" />
+
+    <!-- Кнопка очистки -->
+    <!-- <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()" aria-label="Очистить">✕</button> -->
+
+    <!-- Кнопка поиска -->
+    <button class="search-btn" (click)="applySearch()" aria-label="Найти">🔍</button>
+
+    <!-- Выпадающий список автокомплита -->
+    <div class="autocomplete-dropdown" *ngIf="autocompleteResults?.length">
+      <div class="autocomplete-item" *ngFor="let item of autocompleteResults" (click)="selectItem(item)">
+        <img [src]="item.image" alt="{{item.name}}" />
+        <div class="item-info">
+          <span class="item-name">{{item.name}}</span>
+          <span class="item-sku">{{item.sku}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Кнопка фильтра -->
+  <button class="filter-btn" (click)="toggleFilters()" aria-label="Фильтры">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M3 6h12a1 1 0 0 0 0-2H3a1 1 0 0 0 0 2zm0 7h18a1 1 0 0 0 0-2H3a1 1 0 0 0 0 2zm0 7h9a1 1 0 0 0 0-2H3a1 1 0 0 0 0 2z"/>
+      <circle cx="18" cy="5" r="2"/>
+      <circle cx="9" cy="12" r="2"/>
+      <circle cx="15" cy="19" r="2"/>
+    </svg>
+  </button>
+</div>
+
+<!-- Маленькое выпадающее окно фильтров -->
+<div class="filters-dropdown" *ngIf="filtersOpen">
+  <h4>Фильтры</h4>
+
+  <!-- Цена -->
+  <div class="filter-group">
+    <label>Цена (₽)</label>
+    <div class="price-inputs">
+      <input type="number" [(ngModel)]="filters.priceMin" placeholder="от" />
+      <input type="number" [(ngModel)]="filters.priceMax" placeholder="до" />
+    </div>
+  </div>
+
+  <!-- Наличие -->
+  <div class="filter-group">
+    <label>
+      <input type="checkbox" [(ngModel)]="filters.inStock" />
+      В наличии
+    </label>
+  </div>
+
+  <!-- Доп. фильтры -->
+  <div class="filter-group">
+    <label>
+      <input type="checkbox" [(ngModel)]="filters.discountOnly" />
+      Со скидкой
+    </label>
+  </div>
+
+  <div class="filter-actions">
+    <button class="apply" (click)="applyFilters()">Применить</button>
+    <button class="reset" (click)="resetFilters()">Сбросить</button>
+  </div>
+</div>

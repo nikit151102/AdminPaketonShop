@@ -1,0 +1,269 @@
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 30px;
+  padding: 0.5rem 1rem;
+  gap: 0.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: auto;
+  /* больше не relative, чтобы не мешать другим блокам */
+
+  .positioned-wrapper {
+    position: relative;
+    /* все абсолютные элементы внутри этого блока */
+    display: flex;
+    align-items: center;
+    flex: 1;
+    /* чтобы input растягивался */
+  }
+
+  i {
+    color: #888;
+    font-size: 1rem;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    flex: 1;
+    min-width: 180px;
+    padding-left: 35px;
+  }
+
+  .clear-btn,
+  .search-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #666;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .search-btn {
+    left: 0;
+  }
+
+  .clear-btn {
+    right: 80px;
+    font-size: 1.1rem;
+    color: #999;
+
+    &:hover {
+      color: #333;
+    }
+  }
+
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: #0b5ed7;
+    }
+  }
+
+  .autocomplete-dropdown {
+    position: absolute;
+    /* теперь относительно positioned-wrapper */
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    z-index: 101;
+    animation: fadeSlideDown 0.25s ease;
+
+    .autocomplete-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 6px;
+        flex-shrink: 0;
+      }
+
+      .item-info {
+        display: flex;
+        flex-direction: column;
+
+        .item-name {
+          font-size: 0.95rem;
+          font-weight: 500;
+          color: #222;
+        }
+
+        .item-sku {
+          font-size: 0.8rem;
+          color: #777;
+        }
+      }
+
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+  }
+
+  @keyframes fadeSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Фильтры остаются как есть */
+.filters-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  z-index: 100;
+
+  h4 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+
+    label {
+      font-size: 0.9rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+
+      input[type='checkbox'] {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 1.5px solid #ccc;
+        accent-color: #0d6efd;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          border-color: #0b5ed7;
+        }
+      }
+    }
+
+    .price-inputs {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+
+      input {
+        width: 50%;
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+          border-color: #0d6efd;
+          box-shadow: 0 0 6px rgba(13, 110, 253, 0.2);
+        }
+      }
+    }
+  }
+
+  .filter-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+
+    button {
+      flex: 1;
+      padding: 0.5rem 0;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+
+      &.apply {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: #fff;
+
+        &:hover {
+          background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+        }
+      }
+
+      &.reset {
+        background: #f1f3f5;
+        color: #555;
+        margin-left: 0.5rem;
+
+        &:hover {
+          background: #e2e6ea;
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

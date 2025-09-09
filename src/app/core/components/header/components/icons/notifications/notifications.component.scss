@@ -1,0 +1,140 @@
+.notifications-link {
+    position: relative;
+    display: inline-block;
+}
+
+.notifications-link .badge {
+    position: absolute;
+    top: -10px;
+    right: -1px;
+    background: #ff8a1c;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 999px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    70% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+.notifications-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 300px;
+    max-height: 400px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    z-index: 9999;
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.notifications-dropdown h4 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #f1f1f1;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: #f9f9f9;
+}
+
+.notification-item .icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.8rem;
+}
+
+.notification-item .icon.order {
+    background: #e0f7fa;
+    color: #00796b;
+}
+
+.notification-item .icon.message {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.notification-item .icon.sale {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.notification-item .content p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.notification-item .time {
+    display: block;
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 0.2rem;
+}
+
+.view-all {
+    text-align: center;
+    padding-top: 0.8rem;
+}
+
+.view-all a {
+    font-size: 0.9rem;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.view-all a:hover {
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

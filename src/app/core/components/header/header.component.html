@@ -1,0 +1,31 @@
+<header class="header">
+  <div class="header__content">
+    <div class="header__content__top">
+      <div class="top-left">
+        <div class="header__content__top__location">
+          <button (click)="openCityListModal()" class="location-btn">
+            {{ (city$ | async) ? (city$ | async) : 'Определяем город...' }}
+          </button>
+        </div>
+        <app-menu></app-menu>
+      </div>
+      <div class="top-right">
+        <app-icons></app-icons>
+      </div>
+    </div>
+    <div class="header__content__bottom">
+      <app-logo></app-logo>
+      <app-catalog></app-catalog>
+      <app-search></app-search>
+    </div>
+  </div>
+</header>
+<div *ngIf="(detectedCity$ | async) && !(city$ | async) && !(showCityModal$ | async) && !(currentSession$ | async)" class="city-inline">
+  <span>
+    Ваш город: <strong>{{ detectedCity$ | async }}</strong>?
+  </span>
+  <div>
+    <button (click)="confirmCity()" class="yes">Да</button>
+    <button (click)="openCityListModal()" class="change">Изменить</button>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<div class="product-card" [ngClass]="view" [routerLink]="['/product', product.id] ">
+    <div class="top-bar">
+        <div class="badge" [ngClass]="product.badgeType">{{ product.badge }}</div>
+        <div class="actions">
+            <span (click)="toggleFavorite()" [class.active]="product.favorite">❤</span>
+            <span *ngIf="showCompare" (click)="toggleCompare()" [class.active]="product.compare">⇄</span>
+        </div>
+    </div>
+
+    <div class="image-wrapper">
+        <img [src]="product.image" alt="{{ product.title }}" />
+
+        <!-- 🔹 Быстрый просмотр -->
+        <button class="quick-view" *ngIf="hovered" (click)="openQuickView()">👁 Быстрый просмотр</button>
+    </div>
+
+    <div class="content">
+        <h4>{{ product.title }}</h4>
+
+        <!-- 🔹 наличие и упаковка -->
+        <div class="extra-info">
+            <span class="stock" *ngIf="product.stock > 0">В наличии: {{ product.stock }} упак.</span>
+            <span class="pack" *ngIf="product.perPack">В упаковке: {{ product.perPack }} шт.</span>
+        </div>
+
+        <div class="price-block">
+            <span class="main-price">{{ product.price }} ₽</span>
+            <span *ngIf="product.oldPrice" class="old-price">{{ product.oldPrice }} ₽</span>
+            <span *ngIf="product.oldPrice" class="discount">
+                -{{ ((1 - product.price / product.oldPrice) * 100) | number:'1.0-0' }}%
+            </span>
+        </div>
+
+        <button class="add-cart" *ngIf="!inCart" (click)="inCart = true">🛒 В корзину</button>
+    </div>
+</div>
+
+
+
+<div class="quick-view-modal" *ngIf="showQuickView">
+    <div class="modal-content">
+        <button class="close" (click)="closeQuickView()">✖</button>
+        <img [src]="product.image" alt="{{ product.title }}" />
+        <h3>{{ product.title }}</h3>
+        <p>Цена: {{ product.price }} ₽</p>
+        <p *ngIf="product.oldPrice">Старая цена: {{ product.oldPrice }} ₽</p>
+        <p>В наличии: {{ product.stock }} упак., в упаковке: {{ product.perPack }} шт.</p>
+        <p>Рейтинг: {{ product.rating }} ⭐ ({{ product.reviews }} отзывов)</p>
+    </div>
+    <div class="overlay" (click)="closeQuickView()"></div>
+</div>

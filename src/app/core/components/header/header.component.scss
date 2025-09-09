@@ -1,0 +1,161 @@
+.header {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 999;
+  transition: background 0.3s ease;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+}
+
+.header__content__top {
+  padding: 5px 20px;
+  max-width: 1238px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap; // чтобы элементы могли переноситься
+  gap: 10px;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 20px 20px 0 0;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Контейнеры для первой и второй строки
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+// Планшетная адаптация (пример для ширины <= 1024px)
+@media (max-width: 1024px) {
+  .header__content__top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .top-left,
+  .top-right {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .top-left {
+    margin-bottom: 10px; // отделяем строки
+  }
+}
+
+
+
+.header__content__top__location {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.header__content__bottom {
+  padding: 5px 20px;
+  max-width: 1238px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  // backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 0 0 20px 20px;
+
+  &.sticked {
+    border-radius: 0 0 20px 20px;
+  }
+
+  app-search {
+    width: 100%;
+  }
+}
+
+
+
+
+/* Кнопка */
+.location-btn {
+  background: linear-gradient(90deg, #6a11cb, #2575fc);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.location-btn:hover {
+  background: linear-gradient(90deg, #2575fc, #6a11cb);
+  transform: translateY(-2px);
+}
+
+/* Маленькое окошко под кнопкой */
+.city-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  top: 55px;
+  z-index: 1000;
+  margin-top: 8px;
+  background: #f9f9ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+
+  span{
+    strong{
+      color: #67c948;
+      font-size: 16px;
+    }
+  }
+}
+
+.city-inline button {
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.city-inline .yes {
+  background: #2575fc;
+  color: #fff;
+}
+
+.city-inline .yes:hover {
+  background: #1e5fd8;
+}
+
+.city-inline .change {
+  background: #eee;
+  color: #333;
+}
+
+.city-inline .change:hover {
+  background: #ddd;
+}

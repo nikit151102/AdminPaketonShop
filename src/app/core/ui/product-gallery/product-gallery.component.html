@@ -1,0 +1,13 @@
+<div class="gallery-container">
+    <div class="gallery">
+        <button class="nav prev" (click)="prevImage()">❮</button>
+        <img [src]="images[currentImageIndex]" alt="product" class="main-image" [@fadeAnimation] />
+        <button class="nav next" (click)="nextImage()">❯</button>
+    </div>
+
+    <!-- Миниатюры -->
+    <div class="thumbnails">
+        <img *ngFor="let img of images; let i = index" [src]="img" alt="thumbnail"
+            [class.active]="i === currentImageIndex" (click)="goToImage(i)" />
+    </div>
+</div>

@@ -1,0 +1,28 @@
+<div class="view-switcher">
+  <!-- Grid (плиткой) -->
+  <span 
+    class="icon" 
+    [class.active]="currentView === 'compact'" 
+    (click)="setView('compact')" 
+    title="Плиткой">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="3" y="3" width="7" height="7" rx="2"/>
+      <rect x="14" y="3" width="7" height="7" rx="2"/>
+      <rect x="3" y="14" width="7" height="7" rx="2"/>
+      <rect x="14" y="14" width="7" height="7" rx="2"/>
+    </svg>
+  </span>
+
+  <!-- List (списком) -->
+  <span 
+    class="icon" 
+    [class.active]="currentView === 'wide'" 
+    (click)="setView('wide')" 
+    title="Списком">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="3" y="4" width="18" height="3" rx="1.5"/>
+      <rect x="3" y="10.5" width="18" height="3" rx="1.5"/>
+      <rect x="3" y="17" width="18" height="3" rx="1.5"/>
+    </svg>
+  </span>
+</div>

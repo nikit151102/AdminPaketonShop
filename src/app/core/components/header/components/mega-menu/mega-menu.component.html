@@ -1,0 +1,26 @@
+<div class="mega-left">
+    <ul>
+        <li *ngFor="let niche of niches" (mouseenter)="selectNiche(niche.id)"
+            [class.active]="niche.id === selectedNiche">
+            {{ niche.name }}
+        </li>
+    </ul>
+</div>
+
+<div class="mega-right">
+    <ng-container *ngIf="selectedNiche === 'all'">
+        <ng-container *ngFor="let niche of niches">
+            <ul *ngIf="niche.id !== 'all'" class="active">
+                <li class="category-header">{{ niche.name }}</li>
+                <li *ngFor="let cat of niche.categories">{{ cat }}</li>
+            </ul>
+        </ng-container>
+
+    </ng-container>
+
+    <ng-container *ngIf="selectedNiche !== 'all'">
+        <ul *ngFor="let niche of niches" [class.active]="niche.id === selectedNiche">
+            <li *ngFor="let cat of niche.categories">{{ cat }}</li>
+        </ul>
+    </ng-container>
+</div>

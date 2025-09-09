@@ -1,0 +1,9 @@
+<nav class="nav">
+    <div class="menu-item">
+        <a (click)="toggleMegaMenu($event)">Каталог</a>
+        <div class="mega-menu" [class.active]="megaMenuOpen">
+            <app-mega-menu [niches]="niches" [selectedNiche]="selectedNiche"
+                (nicheSelected)="selectNiche($event)"></app-mega-menu>
+        </div>
+    </div>
+</nav>
