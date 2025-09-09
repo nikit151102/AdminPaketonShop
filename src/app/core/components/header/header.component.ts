@@ -1,121 +1,123 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../../modules/auth/auth.service';
-import { AboutRoutingModule } from "../../../modules/about/about-routing.module";
-import { IconsComponent } from './components/icons/icons.component';
-import { LogoComponent } from './components/logo/logo.component';
-import { MenuComponent } from './components/menu/menu.component';
-import { SearchComponent } from './components/search/search.component';
-import { CatalogComponent } from './components/catalog/catalog.component';
-import { City, LocationService } from '../location/location.service';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  Renderer2,
+  ViewEncapsulation,
+} from '@angular/core';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
+
+/**
+ * Интерфейс пункта меню.
+ * - children — вложенные пункты (произвольная глубина).
+ * - route — если указан — использовать routerLink.
+ */
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon?: string; // можно хранить SVG string или имя (в этом примере не используем внешние иконки)
+  route?: string;
+  children?: MenuItem[];
+  badge?: number;
+}
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, FormsModule, AboutRoutingModule, LogoComponent, MenuComponent, SearchComponent, IconsComponent, CatalogComponent],
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+  styleUrl: './header.component.scss',
+  imports: [CommonModule],
+  encapsulation: ViewEncapsulation.None, // чтобы стили проще переопределять в проекте
 })
+export class HeaderComponent implements OnInit, OnDestroy {
+  @Input() menu: MenuItem[] = [];
+  @Output() onNavigate = new EventEmitter<MenuItem>();
 
-export class HeaderComponent {
-  mobileMenuOpen = false;
+  // состояние открытых подменю — используем Set для быстрого поиска
+  openIds = new Set<string>();
 
-  constructor(private authService: AuthService, private router: Router, public locationService: LocationService) { }
+  // меню (sidebar) открыто
+  sidebarCollapsed = false;
 
-  city$!: typeof this.locationService.city$;
-  detectedCity$!: typeof this.locationService.detectedCity$;
-  showCityModal$!: typeof this.locationService.showCityModal$;
-  currentSession$!: typeof this.locationService.currentSession$;
-  async ngOnInit() {
-    await this.locationService.init();
-    this.city$ = this.locationService.city$;
-    this.detectedCity$ = this.locationService.detectedCity$;
-    this.currentSession$ = this.locationService.currentSession$;
-    // this.showCityModal$ = this.locationService.showCityModal$;
-    this.showCityModal$.next(false);
+  // подписка на роутер, чтобы закрывать меню при навигации
+  private subs: Subscription[] = [];
+
+  // вид — можно добавить переключатель темы по переменным SCSS
+  theme: 'light' | 'dark' = 'light';
+
+  constructor(private elRef: ElementRef, private renderer: Renderer2, private router: Router) { }
+
+  ngOnInit(): void {
+    // Закрываем меню при навигации по Router (полезно, если использовать routerLink)
+    const s = this.router.events.subscribe((ev) => {
+      if (ev instanceof NavigationEnd) {
+        this.closeAll();
+        this.sidebarCollapsed = false;
+      }
+    });
+    this.subs.push(s);
   }
 
-  openCityListModal() { this.locationService.openCityListModal(); }
-  setCity(city: City) { this.locationService.setCity(city); }
-  confirmCity() { this.locationService.confirmCity(); }
-
-  goHome() {
-    this.router.navigate(['/']);
+  ngOnDestroy(): void {
+    this.subs.forEach((s) => s.unsubscribe());
   }
 
-  toggleMobileMenu() {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
-  }
-
-  getAuth() {
-    this.authService.changeVisible(true);
-  }
-
-  megaMenuOpen = false;
-  selectedNiche: string = 'all';
-
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    const header = document.querySelector('.header__content__top') as HTMLElement;
-    const header_bottom = document.querySelector('.header__content__bottom') as HTMLElement;
-
-    if (window.scrollY === 0) {
-      header.classList.remove('sticked');
-      header_bottom.classList.remove('sticked');
-    } else if (window.scrollY > 10) {
-      header.classList.add('sticked');
-      header_bottom.classList.add('sticked');
+  // --- Работа с открытием/закрытием подменю ---
+  toggleOpen(id: string): void {
+    if (this.openIds.has(id)) {
+      this.openIds.delete(id);
+    } else {
+      this.openIds.add(id);
     }
   }
 
+  open(id: string): void {
+    this.openIds.add(id);
+  }
+
+  close(id: string): void {
+    this.openIds.delete(id);
+  }
+
+  isOpen(id: string): boolean {
+    return this.openIds.has(id);
+  }
+
+  closeAll(): void {
+    this.openIds.clear();
+  }
 
 
-  niches = [
-    {
-      id: 'all',
-      name: 'Все',
-      categories: []
-    },
-
-    {
-      id: 'electronics',
-      name: 'Электроника',
-      categories: ['Смартфоны', 'Ноутбуки', 'Телевизоры']
-    },
-    {
-      id: 'fashion',
-      name: 'Мода',
-      categories: ['Женская одежда', 'Мужская одежда', 'Обувь']
-    },
-    {
-      id: 'home',
-      name: 'Дом и сад',
-      categories: ['Мебель', 'Инструменты', 'Декор']
-    },
-    {
-      id: 'autos',
-      name: 'Авто',
-      categories: ['Машины', 'Мотоциклы', 'Запчасти']
+  // --- Обработка кликов вне компонента: закрытие меню ---
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const clickedInside = this.elRef.nativeElement.contains(event.target);
+    if (!clickedInside) {
+      this.closeAll();
+      this.sidebarCollapsed = false;
     }
-  ];
-
-  openMegaMenu() {
-    this.megaMenuOpen = true;
   }
 
-  closeMegaMenu() {
-    this.megaMenuOpen = false;
+  // --- Escape для закрытия ---
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent) {
+    // Закрыть все открытые меню
+    this.closeAll();
+    this.sidebarCollapsed = false;
   }
 
-  selectNiche(nicheId: string) {
-    this.selectedNiche = nicheId;
-  }
+  @Output() collapsedChange = new EventEmitter<boolean>();
 
-  toggleMegaMenu(event: Event) {
-    event.preventDefault();
-    this.megaMenuOpen = !this.megaMenuOpen;
+  // --- Гамбургер ---
+  toggleMenu() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    this.collapsedChange.emit(this.sidebarCollapsed);
   }
-
 
 }

@@ -1,31 +1,55 @@
-<header class="header">
-  <div class="header__content">
-    <div class="header__content__top">
-      <div class="top-left">
-        <div class="header__content__top__location">
-          <button (click)="openCityListModal()" class="location-btn">
-            {{ (city$ | async) ? (city$ | async) : 'Определяем город...' }}
-          </button>
+<header class="app-header" [attr.data-theme]="theme">
+  <div class="header-inner">
+    <!-- left: logo / hamburger -->
+    <div class="left">
+      <!-- hamburger для мобильных -->
+      <button
+        class="hamburger"
+        aria-label="Toggle menu"
+        [attr.aria-expanded]="sidebarCollapsed"
+        (click)="toggleMenu()"
+      >
+        <!-- inline SVG гамбургера — анимируется через класс .open -->
+        <svg class="icon-hamburger" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <path class="line top" d="M3 6h18" stroke-width="2" stroke-linecap="round" />
+          <path class="line mid" d="M3 12h18" stroke-width="2" stroke-linecap="round" />
+          <path class="line bot" d="M3 18h18" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <div class="logo" title="Admin">
+        <span class="brand">Вкладка</span>
+      </div>
+    </div>
+
+    <!-- right: user area -->
+    <div class="right">
+      <!-- notifications -->
+      <button class="icon-btn notif" aria-label="Notifications" title="Notifications">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2z" fill="none" stroke-width="2"></path>
+          <path d="M18 8a6 6 0 0 0-12 0v5l-2 2h16l-2-2z" fill="none" stroke-width="2"></path>
+        </svg>
+        <span class="notif-badge" aria-hidden="true">3</span>
+      </button>
+
+      <!-- user avatar + dropdown -->
+      <div class="user" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+        <button class="avatar-btn" aria-label="User menu" (click)="$event.stopPropagation(); toggleOpen('user');">
+          <svg class="avatar" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+            <circle cx="12" cy="8" r="3" />
+            <path d="M4 20c1.5-4 6-6 8-6s6.5 2 8 6" fill="none" stroke-width="1.2"></path>
+          </svg>
+        </button>
+
+        <!-- простой dropdown профиля -->
+        <div class="user-menu" [class.open]="isOpen('user')" role="menu" (click)="$event.stopPropagation()">
+          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'profile', label:'Profile'})">Profile</button>
+          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'settings', label:'Settings'})">Settings</button>
+          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'logout', label:'Sign out'})">Sign out</button>
         </div>
-        <app-menu></app-menu>
       </div>
-      <div class="top-right">
-        <app-icons></app-icons>
-      </div>
-    </div>
-    <div class="header__content__bottom">
-      <app-logo></app-logo>
-      <app-catalog></app-catalog>
-      <app-search></app-search>
     </div>
   </div>
+
 </header>
-<div *ngIf="(detectedCity$ | async) && !(city$ | async) && !(showCityModal$ | async) && !(currentSession$ | async)" class="city-inline">
-  <span>
-    Ваш город: <strong>{{ detectedCity$ | async }}</strong>?
-  </span>
-  <div>
-    <button (click)="confirmCity()" class="yes">Да</button>
-    <button (click)="openCityListModal()" class="change">Изменить</button>
-  </div>
-</div>

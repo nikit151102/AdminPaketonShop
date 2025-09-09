@@ -1,1 +1,7 @@
-<p>personal-account works!</p>
+
+<app-sidebar [menu]="sideMenu" [isCollapsed]="sidebarCollapsed" (collapsedChange)="toggleSidebar($event)"></app-sidebar>
+
+<main [class.collapsed]="sidebarCollapsed">
+    <app-header (collapsedChange)="toggleSidebar($event)"></app-header>
+    <router-outlet></router-outlet>
+</main>

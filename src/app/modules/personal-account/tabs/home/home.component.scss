@@ -1,0 +1,237 @@
+$font-family: 'Inter', sans-serif;
+$bg-dashboard: #f0f2f8;
+$color-text: #333;
+$color-muted: #777;
+$card-bg: #fff;
+$shadow-card: 0 10px 25px rgba(0, 0, 0, 0.08);
+$shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
+$progress-gradient: linear-gradient(90deg, #6A82FB, #8E54E9);
+
+.dashboard {
+    font-family: $font-family;
+    padding: 30px;
+
+    .kpi-tiles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+
+        .tile {
+            flex: 1 1 180px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+
+            &:hover {
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: $shadow-hover;
+            }
+
+            .tile-icon {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .tile-content {
+                h4 {
+                    font-size: 14px;
+                    opacity: 0.8;
+                    margin-bottom: 5px;
+                    color: #101010;
+                }
+
+                p {
+                    font-size: 26px;
+                    font-weight: 700;
+                    margin: 0;
+                    color: #101010;
+                }
+
+                small {
+                    opacity: 0.7;
+                }
+            }
+        }
+    }
+
+    .cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 40px;
+
+        .card {
+            flex: 1 1 22%;
+            background: $card-bg;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: $shadow-card;
+            transition: transform 0.3s, box-shadow 0.3s;
+
+            &:hover {
+                transform: translateY(-8px);
+                box-shadow: $shadow-hover;
+            }
+
+            .card-header {
+                // @include flex-center(row, space-between);
+                margin-bottom: 15px;
+                font-weight: 600;
+                color: $color-text;
+
+                .header-left {
+                    // @include flex-center(row, flex-start);
+                    gap: 10px;
+
+                    .icon {
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        color: #fff;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        font-size: 14px;
+                    }
+
+                    .title {
+                        font-size: 14px;
+                    }
+                }
+
+                .trend.up {
+                    color: #4caf50;
+                    font-weight: bold;
+                }
+
+                .trend.down {
+                    color: #f44336;
+                    font-weight: bold;
+                }
+            }
+
+            .card-body {
+                h3 {
+                    font-size: 28px;
+                    margin-bottom: 5px;
+                }
+
+                small {
+                    color: $color-muted;
+                }
+
+                .extra-metrics {
+                    // @include flex-center(row, space-between);
+                    margin: 10px 0;
+                    font-size: 13px;
+                    color: $color-text;
+                }
+
+                .progress-container {
+                    height: 8px;
+                    background: #e0e0e0;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    margin: 10px 0;
+
+                    .progress-bar {
+                        height: 100%;
+                        background: $progress-gradient;
+                        transition: width 0.5s;
+                    }
+
+                    small {
+                        font-size: 11px;
+                        color: $color-muted;
+                    }
+                }
+
+                canvas {
+                    margin-top: 10px;
+                    width: 100% !important;
+                }
+            }
+        }
+    }
+
+    .charts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+
+        .chart-card {
+            flex: 1 1 400px;
+            background: $card-bg;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: $shadow-card;
+        }
+    }
+
+    // ===========================
+    // Адаптивность
+    // ===========================
+    @media (max-width: 1200px) {
+        .cards {
+            .card {
+                flex: 1 1 30%;
+            }
+        }
+    }
+
+    @media (max-width: 768px) {
+        padding: 20px;
+
+        .kpi-tiles {
+            flex-direction: column;
+            gap: 15px;
+
+            .tile {
+                flex: 1 1 100%;
+            }
+        }
+
+        .cards {
+            .card {
+                flex: 1 1 100%;
+            }
+        }
+
+        .charts {
+            flex-direction: column;
+
+            .chart-card {
+                flex: 1 1 100%;
+            }
+        }
+    }
+
+    @media (max-width: 480px) {
+        padding: 15px;
+
+        .tile-content p {
+            font-size: 22px;
+        }
+
+        .card-body h3 {
+            font-size: 22px;
+        }
+
+        .extra-metrics {
+            flex-direction: column;
+            gap: 5px;
+        }
+    }
+}

@@ -1,0 +1,103 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-radius: 20px;
+    margin: 10px;
+    height: calc(100vh - 20px);
+    width: 200px;
+    background-color: rgb(255, 255, 255);
+    color: #101001;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    border-right: 1px solid #e5e7eb;
+    z-index: 1000;
+
+    &.collapsed {
+        width: 80px;
+
+        .label,
+        .badge,
+        .brand {
+            display: none;
+        }
+
+        .collapse-btn svg {
+            transform: rotate(180deg);
+        }
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .collapse-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: #101001;
+        transition: transform 0.3s ease;
+    }
+
+    .menu {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-top: 1rem;
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #101001;
+            font-size: 1rem;
+            transition: background 0.2s, color 0.2s;
+            position: relative;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+
+            &:hover {
+                background-color: #374151;
+            }
+
+            &.active {
+                background-color: #2563eb;
+                color: #101001;
+            }
+
+            .icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+            }
+
+            .label {
+                flex: 1;
+                white-space: nowrap;
+            }
+
+            .badge {
+                background-color: #ef4444;
+                color: #101001;
+                font-size: 0.75rem;
+                padding: 0.15rem 0.5rem;
+                border-radius: 9999px;
+            }
+        }
+    }
+}

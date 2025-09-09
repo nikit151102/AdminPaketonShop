@@ -1,161 +1,194 @@
-.header {
+/* Переменные темы */
+$header-height: 64px;
+$sidebar-width: 280px;
+$transition-fast: 180ms;
+$transition-medium: 280ms;
+
+/* Light theme vars (можно переопределять) */
+:root {
+  --bg: #ffffff;
+  --text: #222222;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --surface: #f8fafc;
+  --header-bg: #ffffff;
+  --shadow: 0 1px 6px rgba(16, 24, 40, 0.06);
+  --glass: rgba(255, 255, 255, 0.6);
+  --danger: #ef4444;
+}
+
+/* Dark theme example */
+[data-theme='dark'] {
+  --bg: #0b1220;
+  --text: #e6eef8;
+  --muted: #9aa6b2;
+  --accent: #60a5fa;
+  --surface: #071025;
+  --header-bg: #071025;
+  --shadow: 0 2px 12px rgba(2, 6, 23, 0.6);
+  --glass: rgba(10, 18, 30, 0.6);
+  --danger: #fb7185;
+}
+
+/* Header base */
+.app-header {
   position: sticky;
   top: 0;
-  width: 100%;
-  z-index: 999;
-  transition: background 0.3s ease;
-  margin-bottom: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
+  z-index: 1000;
+  height: $header-height;
 }
 
-.header__content__top {
-  padding: 5px 20px;
-  max-width: 1238px;
-  margin: 0 auto;
+/* Layout inner */
+.header-inner {
+  height: 100%;
   display: flex;
-  flex-wrap: wrap; // чтобы элементы могли переноситься
-  gap: 10px;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-  border-radius: 20px 20px 0 0;
   align-items: center;
   justify-content: space-between;
-}
-
-// Контейнеры для первой и второй строки
-.top-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.top-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-// Планшетная адаптация (пример для ширины <= 1024px)
-@media (max-width: 1024px) {
-  .header__content__top {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .top-left,
-  .top-right {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .top-left {
-    margin-bottom: 10px; // отделяем строки
-  }
-}
-
-
-
-.header__content__top__location {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
-}
-
-.header__content__bottom {
-  padding: 5px 20px;
-  max-width: 1238px;
+  padding: 0 16px;
   margin: 0 auto;
+  border-radius: 20px;
+  margin: 10px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* left area */
+.left {
   display: flex;
   align-items: center;
-  gap: 20px;
-  // backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-  border-radius: 0 0 20px 20px;
+  gap: 12px;
 
-  &.sticked {
-    border-radius: 0 0 20px 20px;
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: transform var(--transition-fast);
+
+    &:focus {
+      outline: 2px solid var(--accent);
+    }
   }
 
-  app-search {
-    width: 100%;
+  .icon-hamburger .line {
+    stroke: var(--text);
+    transition: transform $transition-medium ease, opacity $transition-medium ease;
+    stroke-width: 2;
   }
-}
 
+  /* анимация иконки: при открытии меню вращаем/складываем */
+  .hamburger[aria-expanded="true"] .icon-hamburger .top {
+    transform-origin: center;
+    transform: translateY(6px) rotate(45deg);
+  }
 
+  .hamburger[aria-expanded="true"] .icon-hamburger .mid {
+    opacity: 0;
+  }
 
+  .hamburger[aria-expanded="true"] .icon-hamburger .bot {
+    transform-origin: center;
+    transform: translateY(-6px) rotate(-45deg);
+  }
 
-/* Кнопка */
-.location-btn {
-  background: linear-gradient(90deg, #6a11cb, #2575fc);
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
+  .logo {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 
-.location-btn:hover {
-  background: linear-gradient(90deg, #2575fc, #6a11cb);
-  transform: translateY(-2px);
-}
+    .logo-icon {
+      fill: var(--accent);
+      opacity: 0.95;
+    }
 
-/* Маленькое окошко под кнопкой */
-.city-inline {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: absolute;
-  top: 55px;
-  z-index: 1000;
-  margin-top: 8px;
-  background: #f9f9ff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
+    .brand {
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: var(--text);
+    }
 
-  span{
-    strong{
-      color: #67c948;
-      font-size: 16px;
+    &.small .brand {
+      display: none;
     }
   }
 }
 
-.city-inline button {
-  margin-left: 10px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: none;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: 0.2s;
-}
 
-.city-inline .yes {
-  background: #2575fc;
-  color: #fff;
-}
+/* right area (user) */
+.right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 
-.city-inline .yes:hover {
-  background: #1e5fd8;
-}
+  .icon-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
 
-.city-inline .change {
-  background: #eee;
-  color: #333;
-}
+    &:focus {
+      outline: 2px solid var(--accent);
+    }
+  }
 
-.city-inline .change:hover {
-  background: #ddd;
+  .notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 11px;
+    padding: 2px 5px;
+  }
+
+  .user {
+    position: relative;
+
+    .avatar-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 6px;
+    }
+
+    .user-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      background: var(--header-bg);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      display: none;
+      min-width: 160px;
+      padding: 6px;
+      gap: 6px;
+
+      &.open {
+        display: flex;
+        flex-direction: column;
+      }
+
+      button {
+        background: transparent;
+        border: none;
+        padding: 8px 12px;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 6px;
+
+        &:hover {
+          background: var(--surface);
+        }
+      }
+    }
+  }
 }

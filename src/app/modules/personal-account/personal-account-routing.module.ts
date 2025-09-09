@@ -6,15 +6,15 @@ const routes: Routes = [
   {
     path: '', component: PersonalAccountComponent,
     children: [
-      // {
-      //   path: '',
-      //   redirectTo: 'profile',
-      //   pathMatch: 'full'
-      // },
-      // {
-      //   path: 'profile',
-      //   loadChildren: () => import('./tabs/user-data/user-data.module').then(m => m.UserDataModule)
-      // },
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full'
+      },
+      {
+        path: 'home',
+        loadChildren: () => import('./tabs/home/home.module').then(m => m.HomeModule)
+      },
 
     ]
   }
