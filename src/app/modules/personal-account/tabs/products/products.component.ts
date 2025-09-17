@@ -3,6 +3,7 @@ import { ProductsService } from './products.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { formatShortDate } from '../../../../../utils/date.utils';
+import { environment } from '../../../../../environment';
 
 @Component({
   selector: 'app-products',
@@ -16,7 +17,7 @@ export class ProductsComponent implements OnInit {
   page = 0;
   pageSize = 30;
   isDesktop: boolean = true;
-
+  domain: string = environment.domain
   columns: { [key: string]: boolean } = {
     article: true,
     fullName: true,
