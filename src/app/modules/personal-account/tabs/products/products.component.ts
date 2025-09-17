@@ -15,6 +15,7 @@ export class ProductsComponent implements OnInit {
   loading = false;
   page = 0;
   pageSize = 30;
+  isDesktop: boolean = true;
 
   columns: { [key: string]: boolean } = {
     article: true,
@@ -49,6 +50,7 @@ export class ProductsComponent implements OnInit {
   constructor(private productsService: ProductsService) { }
 
   ngOnInit(): void {
+    this.updateScreenSize();
     this.loadProducts();
   }
 
@@ -80,6 +82,15 @@ export class ProductsComponent implements OnInit {
     if (scrollPosition === documentHeight) {
       this.loadProducts();
     }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.updateScreenSize();
+  }
+
+  private updateScreenSize() {
+    this.isDesktop = window.innerWidth >= 1100;
   }
 
   editProduct(productId: string): void {
