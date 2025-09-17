@@ -1,11 +1,6 @@
 <div class="sidebar" [class.collapsed]="isCollapsed">
   <div class="sidebar-header">
-    <button class="collapse-btn" (click)="toggleCollapse()" aria-label="Toggle sidebar">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <path d="M6 6l12 6-12 6z" fill="currentColor"></path>
-      </svg>
-    </button>
-    <span *ngIf="!isCollapsed" class="brand">AdminPanel</span>
+    <span *ngIf="!isCollapsed" class="brand"><img src="logo.png" alt=""></span>
   </div>
 
   <nav class="menu">
@@ -13,6 +8,7 @@
       *ngFor="let item of menu"
       class="menu-item"
       [class.active]="item.active"
+      [routerLink]="item.router"
     >
       <span class="icon" [innerHTML]="item.icon"></span>
       <span class="label" *ngIf="!isCollapsed">{{ item.label }}</span>

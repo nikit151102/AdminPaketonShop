@@ -5,11 +5,13 @@
   =========================== -->
   <div class="kpi-tiles">
     <div class="tile" *ngFor="let tile of tiles">
-      <div class="tile-icon" [style.background]="tile.bgColor">
-        {{ tile.icon }}
+      <div class="tile-title">
+        <!-- <div class="tile-icon" [style.background]="tile.bgColor" [innerHTML]="tile.icon"></div> -->
+
+        <h4>{{ tile.title }}</h4>
       </div>
       <div class="tile-content">
-        <h4>{{ tile.title }}</h4>
+
         <p>{{ tile.value }}</p>
         <small>{{ tile.subtitle }}</small>
       </div>
@@ -23,7 +25,7 @@
     <div class="card" *ngFor="let stat of stats">
       <div class="card-header">
         <div class="header-left">
-          <span class="icon" [style.background]="stat.iconBg">{{ stat.icon }}</span>
+          <!-- <span class="icon" [style.background]="stat.iconBg">{{ stat.icon }}</span> -->
           <span class="title">{{ stat.header }}</span>
         </div>
         <span class="trend" [ngClass]="stat.trend > 0 ? 'up' : 'down'">
@@ -31,8 +33,10 @@
         </span>
       </div>
       <div class="card-body">
-        <h3>{{ stat.value }}</h3>
-        <small>{{ stat.description }}</small>
+        <div class="value">
+          <h3>{{ stat.value }}</h3>
+          <small>{{ stat.description }}</small>
+        </div>
 
         <div class="extra-metrics">
           <div><span>Сегодня:</span> <strong>{{ stat.today }}</strong></div>
@@ -45,12 +49,10 @@
           <small>{{ stat.progress }}% к цели {{ stat.goal }}</small>
         </div>
 
-        <canvas *ngIf="stat.sparklineData" baseChart
-          [data]="{
+        <canvas *ngIf="stat.sparklineData" baseChart [data]="{
             labels: stat.sparklineLabels,
             datasets: [{ data: stat.sparklineData, borderColor: '#6A82FB', backgroundColor: 'transparent', tension: 0.4 }]
-          }"
-          [options]="sparklineOptions" [type]="'line'">
+          }" [options]="sparklineOptions" [type]="'line'">
         </canvas>
       </div>
     </div>
@@ -66,7 +68,7 @@
         [options]="chartOptions" [type]="'line'">
       </canvas>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" style="max-width: 29%;">
       <canvas baseChart
         [data]="{ labels: productStatsLabels, datasets: [{ data: productStatsData, label: 'Products', backgroundColor: ['#42A5F5','#66BB6A','#FFA726','#FF6384','#36A2EB'] }] }"
         [options]="chartOptions" [type]="'doughnut'">

@@ -5,198 +5,219 @@ $color-muted: #777;
 $card-bg: #fff;
 $shadow-card: 0 10px 25px rgba(0, 0, 0, 0.08);
 $shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
-$progress-gradient: linear-gradient(90deg, #6A82FB, #8E54E9);
+$progress-gradient: linear-gradient(90deg, #16a34a, #3bd574);
 
 .dashboard {
     font-family: $font-family;
-    padding: 30px;
+    padding: 20px;
+    background: $bg-dashboard;
 
+    /* KPI плитки */
     .kpi-tiles {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 30px;
+        gap: 15px;
+        margin-bottom: 20px;
 
         .tile {
-            flex: 1 1 180px;
+            flex: 1 1 220px;
+            min-width: 200px;
             background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            color: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            color: $color-text;
             position: relative;
-            overflow: hidden;
             cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: $shadow-card;
 
-            &:hover {
-                transform: translateY(-5px) scale(1.05);
-                box-shadow: $shadow-hover;
-            }
-
-            .tile-icon {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                font-size: 20px;
+            .tile-title {
                 display: flex;
-                justify-content: center;
-                align-items: center;
-                margin-bottom: 10px;
+                flex-direction: row;
+                gap: 20px;
+
+                .tile-icon {
+                    width: 45px;
+                    height: 45px;
+                    border-radius: 50%;
+                    font-size: 20px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-bottom: 10px;
+                    background-color: #f4f5fa;
+                }
+
+                h4 {
+                    font-size: 14px;
+                    margin-bottom: 5px;
+                    opacity: 0.8;
+                }
             }
 
             .tile-content {
-                h4 {
-                    font-size: 14px;
-                    opacity: 0.8;
-                    margin-bottom: 5px;
-                    color: #101010;
-                }
+                display: flex;
+                align-items: flex-end;
+                gap: 11px;
 
                 p {
-                    font-size: 26px;
+                    font-size: 30px;
                     font-weight: 700;
                     margin: 0;
-                    color: #101010;
                 }
 
                 small {
+                    font-size: 12px;
                     opacity: 0.7;
+                    padding-bottom: 5px;
                 }
             }
         }
     }
 
+    /* Карточки */
     .cards {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 20px;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
 
         .card {
-            flex: 1 1 22%;
             background: $card-bg;
-            border-radius: 16px;
-            padding: 25px;
+            border-radius: 12px;
+            padding: 20px;
             box-shadow: $shadow-card;
-            transition: transform 0.3s, box-shadow 0.3s;
-
-            &:hover {
-                transform: translateY(-8px);
-                box-shadow: $shadow-hover;
-            }
 
             .card-header {
-                // @include flex-center(row, space-between);
-                margin-bottom: 15px;
-                font-weight: 600;
-                color: $color-text;
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
 
                 .header-left {
-                    // @include flex-center(row, flex-start);
+                    display: flex;
+                    align-items: center;
                     gap: 10px;
 
                     .icon {
                         width: 30px;
                         height: 30px;
                         border-radius: 50%;
-                        color: #fff;
+                        background-color: #42a5f5;
                         display: flex;
                         justify-content: center;
                         align-items: center;
-                        font-size: 14px;
+                        color: #fff;
                     }
 
                     .title {
                         font-size: 14px;
+                        font-weight: 600;
                     }
                 }
 
-                .trend.up {
-                    color: #4caf50;
+                .trend {
                     font-weight: bold;
-                }
 
-                .trend.down {
-                    color: #f44336;
-                    font-weight: bold;
+                    &.up {
+                        color: #4caf50;
+                    }
+
+                    &.down {
+                        color: #f44336;
+                    }
                 }
             }
 
             .card-body {
-                h3 {
-                    font-size: 28px;
-                    margin-bottom: 5px;
+
+                .value {
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 10px;
+
+                    h3 {
+                        font-size: 22px;
+                        margin: 0;
+                    }
+
+                    small {
+                        color: $color-muted;
+                        padding-bottom: 3px;
+                    }
                 }
 
-                small {
-                    color: $color-muted;
-                }
 
                 .extra-metrics {
-                    // @include flex-center(row, space-between);
-                    margin: 10px 0;
                     font-size: 13px;
                     color: $color-text;
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 10px 0;
                 }
 
                 .progress-container {
-                    height: 8px;
+                    height: 6px;
                     background: #e0e0e0;
                     border-radius: 8px;
-                    overflow: hidden;
                     margin: 10px 0;
 
                     .progress-bar {
                         height: 100%;
                         background: $progress-gradient;
-                        transition: width 0.5s;
+                        transition: width 0.5s ease;
                     }
 
                     small {
-                        font-size: 11px;
+                        font-size: 10px;
                         color: $color-muted;
                     }
                 }
 
                 canvas {
-                    margin-top: 10px;
+                    padding-top: 20px;
                     width: 100% !important;
                 }
             }
         }
     }
 
+    /* Графики */
     .charts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
 
         .chart-card {
-            flex: 1 1 400px;
             background: $card-bg;
             padding: 20px;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: $shadow-card;
+            min-width: 280px;
         }
     }
 
-    // ===========================
-    // Адаптивность
-    // ===========================
-    @media (max-width: 1200px) {
+    /* ===== Адаптивность ===== */
+    @media (max-width: 1400px) {
+        .charts {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 992px) {
         .cards {
-            .card {
-                flex: 1 1 30%;
-            }
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+
+        .charts {
+            grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 768px) {
-        padding: 20px;
+        padding: 15px;
 
         .kpi-tiles {
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
 
             .tile {
                 flex: 1 1 100%;
@@ -204,34 +225,32 @@ $progress-gradient: linear-gradient(90deg, #6A82FB, #8E54E9);
         }
 
         .cards {
-            .card {
-                flex: 1 1 100%;
-            }
+            grid-template-columns: 1fr;
         }
 
         .charts {
-            flex-direction: column;
-
-            .chart-card {
-                flex: 1 1 100%;
-            }
+            grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 480px) {
-        padding: 15px;
+        padding: 10px;
 
         .tile-content p {
-            font-size: 22px;
+            font-size: 18px;
         }
 
         .card-body h3 {
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .extra-metrics {
             flex-direction: column;
             gap: 5px;
+        }
+
+        canvas {
+            max-height: 200px; // ограничение, чтобы графики не растягивались
         }
     }
 }

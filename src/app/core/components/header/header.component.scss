@@ -50,7 +50,6 @@ $transition-medium: 280ms;
   margin: 10px;
   background: #fff;
   border-radius: 20px;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
 }
 
 /* left area */
@@ -166,7 +165,6 @@ $transition-medium: 280ms;
       top: calc(100% + 8px);
       background: var(--header-bg);
       border-radius: 8px;
-      box-shadow: var(--shadow);
       display: none;
       min-width: 160px;
       padding: 6px;

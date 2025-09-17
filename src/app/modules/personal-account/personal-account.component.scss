@@ -4,5 +4,9 @@ main {
 }
 
 .collapsed {
-    margin-left: 85px;
+    margin-left: 60px;
+
+    @media (max-width: 876px) {
+        margin-left: 0px;
+    }
 }

@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
-import { HeaderComponent, MenuItem } from '../../core/components/header/header.component';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from '../../core/components/header/header.component';
 import { SidebarComponent } from '../../core/components/sidebar/sidebar.component';
+import { DomSanitizer } from '@angular/platform-browser';
+import { getSideMenu, SideMenuItem } from './side-menu';
 
 @Component({
   selector: 'app-personal-account',
@@ -9,19 +11,28 @@ import { SidebarComponent } from '../../core/components/sidebar/sidebar.componen
   templateUrl: './personal-account.component.html',
   styleUrl: './personal-account.component.scss'
 })
-export class PersonalAccountComponent {
+export class PersonalAccountComponent implements OnInit {
 
-  sideMenu: any[] = [
-    { label: 'Dashboard', icon: '<svg>...</svg>', active: true },
-    { label: 'Analytics', icon: '<svg>...</svg>', active: false, badge: '3' },
-    { label: 'Users', icon: '<svg>...</svg>', active: false },
-    { label: 'Settings', icon: '<svg>...</svg>', active: false },
-  ];
+  sideMenu: SideMenuItem[] = [];
+  sidebarCollapsed = false;
 
-  sidebarCollapsed: boolean = false;
+  constructor(private sanitizer: DomSanitizer) {}
+
+  ngOnInit(): void {
+    this.sideMenu = getSideMenu(this.sanitizer);
+    this.checkScreenSize();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkScreenSize();
+  }
+
+  private checkScreenSize() {
+    this.sidebarCollapsed = window.innerWidth <= 876;
+  }
 
   toggleSidebar(collapsed: boolean) {
     this.sidebarCollapsed = collapsed;
   }
-
 }

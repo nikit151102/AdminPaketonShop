@@ -1,16 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { SafeHtml } from '@angular/platform-browser';
+import { AuthRoutingModule } from "../../../modules/auth/auth-routing.module";
 
 interface MenuItem {
   label: string;
-  icon: string;
+  icon: string | SafeHtml;
   active: boolean;
+  router: string;
   badge?: string;
 }
 
 @Component({
   selector: 'app-sidebar',
-  imports: [CommonModule],
+  imports: [CommonModule, AuthRoutingModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })

@@ -25,12 +25,44 @@ export class HomeComponent {
   ordersByCategory = { electronics: 500, clothing: 400, home: 350 };
   salesToday = 5000;
 
-  tiles = [
-    { title: 'Общее количество заказов', value: this.totalOrders, subtitle: 'Заказы с сайта', icon: '🛒', bgColor: '#8E54E9' },
-    { title: 'Общее количество товаров', value: this.totalProducts, subtitle: 'Все товары', icon: '📦', bgColor: '#42A5F5' },
-    { title: 'Пользователей сегодня', value: this.registeredToday, subtitle: 'Новые регистрации', icon: '🆕', bgColor: '#66BB6A' },
-    { title: 'Продажи сегодня', value: `$${this.salesToday}`, subtitle: 'Доход', icon: '📈', bgColor: '#FFA726' },
-  ];
+tiles = [
+  { 
+    title: 'Общее количество заказов', 
+    value: this.totalOrders, 
+    subtitle: 'Заказы с сайта', 
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.2 6h12.4M7 13L5.4 7M16 21a1 1 0 100-2 1 1 0 000 2zm-8 0a1 1 0 100-2 1 1 0 000 2z"/>
+           </svg>`, 
+    bgColor: '#8E54E9' 
+  },
+  { 
+    title: 'Общее количество товаров', 
+    value: this.totalProducts, 
+    subtitle: 'Все товары', 
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/>
+           </svg>`, 
+    bgColor: '#42A5F5' 
+  },
+  { 
+    title: 'Пользователей сегодня', 
+    value: this.registeredToday, 
+    subtitle: 'Новые регистрации', 
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1119.07 7.05M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+           </svg>`, 
+    bgColor: '#66BB6A' 
+  },
+  { 
+    title: 'Продажи сегодня', 
+    value: `$${this.salesToday}`, 
+    subtitle: 'Доход', 
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.1 0-2-.9-2-2s.9-2 2-2m0 0v12m0 0c1.1 0 2 .9 2 2s-.9 2-2 2m0-16c-1.1 0-2 .9-2 2s.9 2 2 2m0 0h4"/>
+           </svg>`, 
+    bgColor: '#FFA726' 
+  },
+];
 
 
   stats = [
@@ -97,7 +129,7 @@ export class HomeComponent {
     {
       header: 'Общее количество пользователей',
       value: this.totalUsers,
-      description: 'Все зарегистрированные пользователи',
+      description: 'Зарегистрированные',
       trend: 3,
       sparklineData: [320, 330, 335, 338, 340],
       sparklineLabels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'],
