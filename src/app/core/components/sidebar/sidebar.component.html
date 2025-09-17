@@ -4,12 +4,8 @@
   </div>
 
   <nav class="menu">
-    <button
-      *ngFor="let item of menu"
-      class="menu-item"
-      [class.active]="item.active"
-      [routerLink]="item.router"
-    >
+    <button *ngFor="let item of menu" class="menu-item" [routerLink]="item.router" routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }">
       <span class="icon" [innerHTML]="item.icon"></span>
       <span class="label" *ngIf="!isCollapsed">{{ item.label }}</span>
       <span *ngIf="item.badge && !isCollapsed" class="badge">{{ item.badge }}</span>

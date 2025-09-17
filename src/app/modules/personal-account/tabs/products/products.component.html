@@ -1,3 +1,103 @@
 <div class="container">
+    <div class="controls">
+        <div class="column-toggle">
+            <!-- Кнопка для открытия/закрытия панели с выбором столбцов -->
+            <button class="column-toggle-button" (click)="toggleColVisibility()">
+                Показать/скрыть столбцы
+            </button>
+
+            <!-- Панель с выбором столбцов -->
+            <div class="column-options" [class.show]="columnsVisible">
+                <label class="custom-select">
+                    <span>Выбрать столбцы</span>
+                    <div class="checkbox-group">
+                        <div *ngFor="let column of columnOptions" class="checkbox-item">
+                            <input type="checkbox" id="{{ column.key }}" [(ngModel)]="columns[column.key]"
+                                (ngModelChange)="toggleColumnVisibility(column.key, $event)" />
+                            <label for="{{ column.key }}">{{ column.label }}</label>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Отображение выбранных столбцов -->
+        <div class="selected-columns">
+            <span *ngFor="let column of filteredSelectedColumns">
+                {{ getColumnLabel(column) }}
+                <button class="btn-delete-column" (click)="removeColumn(column)">&#10005;</button> <!-- Крестик -->
+            </span>
+        </div>
+    </div>
+
+    <div class="products-container">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th *ngIf="columns['article']">Артикул</th>
+                    <th *ngIf="columns['productImageLinks']">Изображение</th>
+                    <th *ngIf="columns['fullName']">Название</th>
+                    <th *ngIf="columns['description']">Описание</th>
+                    <th *ngIf="columns['retailPrice']">Розничная цена</th>
+                    <th *ngIf="columns['wholesalePrice']">Оптовая цена</th>
+                    <th *ngIf="columns['createDateTime']">Дата создания</th>
+                    <th *ngIf="columns['manufacturer']">Производитель</th>
+                    <th *ngIf="columns['packCount']">Кол-во в упаковке</th>
+                    <th *ngIf="columns['keywords']">Ключевые слова</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let product of products">
+                    <td *ngIf="columns['article']">{{ product.article }}</td>
+                    <td *ngIf="columns['productImageLinks']">
+                        <img *ngIf="product.productImageLinks && product.productImageLinks.length > 0"
+                            [src]="product.productImageLinks[0]" alt="Product Image" width="50" />
+                    </td>
+                    <td *ngIf="columns['fullName']">{{ product.fullName }}</td>
+                    <td *ngIf="columns['description']">{{ product.description }}</td>
+                    <td *ngIf="columns['retailPrice']">{{ product.retailPrice }} руб.</td>
+                    <td *ngIf="columns['wholesalePrice']">{{ product.wholesalePrice }} руб.</td>
+                    <td *ngIf="columns['createDateTime']">{{ formatShortDate(product.createDateTime) }}</td>
+                    <td *ngIf="columns['manufacturer']">{{ product.manufacturer }}</td>
+                    <td *ngIf="columns['packCount']">{{ product.packCount }}</td>
+                    <td *ngIf="columns['keywords']">{{ product.keywords }}</td>
+                    <td>
+                        <div class="actions">
+                            <button (click)="editProduct(product.id)" class="btn-edit"><svg width="24px" height="24px"
+                                viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                <g id="SVGRepo_iconCarrier">
+                                    <path
+                                        d="M2 12C2 16.714 2 19.0711 3.46447 20.5355C4.92893 22 7.28595 22 12 22C16.714 22 19.0711 22 20.5355 20.5355C22 19.0711 22 16.714 22 12V10.5M13.5 2H12C7.28595 2 4.92893 2 3.46447 3.46447C2.49073 4.43821 2.16444 5.80655 2.0551 8"
+                                        stroke="#207e2b" stroke-width="1.5" stroke-linecap="round"></path>
+                                    <path
+                                        d="M16.652 3.45506L17.3009 2.80624C18.3759 1.73125 20.1188 1.73125 21.1938 2.80624C22.2687 3.88124 22.2687 5.62415 21.1938 6.69914L20.5449 7.34795M16.652 3.45506C16.652 3.45506 16.7331 4.83379 17.9497 6.05032C19.1662 7.26685 20.5449 7.34795 20.5449 7.34795M16.652 3.45506L10.6872 9.41993C10.2832 9.82394 10.0812 10.0259 9.90743 10.2487C9.70249 10.5114 9.52679 10.7957 9.38344 11.0965C9.26191 11.3515 9.17157 11.6225 8.99089 12.1646L8.41242 13.9M20.5449 7.34795L17.5625 10.3304M14.5801 13.3128C14.1761 13.7168 13.9741 13.9188 13.7513 14.0926C13.4886 14.2975 13.2043 14.4732 12.9035 14.6166C12.6485 14.7381 12.3775 14.8284 11.8354 15.0091L10.1 15.5876M10.1 15.5876L8.97709 15.9619C8.71035 16.0508 8.41626 15.9814 8.21744 15.7826C8.01862 15.5837 7.9492 15.2897 8.03811 15.0229L8.41242 13.9M10.1 15.5876L8.41242 13.9"
+                                        stroke="#207e2b" stroke-width="1.5" stroke-linecap="round"></path>
+                                </g>
+                            </svg></button>
+                        <button (click)="deleteProduct(product.id)" class="btn-delete"><svg width="24px" height="24px"
+                                viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                <g id="SVGRepo_iconCarrier">
+                                    <path
+                                        d="M22 12C22 15.7712 22 17.6569 20.7961 18.8284C19.5921 20 17.6544 20 13.779 20H11.142C8.91458 20 7.80085 20 6.87114 19.4986C5.94144 18.9971 5.35117 18.0781 4.17061 16.24L3.48981 15.18C2.4966 13.6336 2 12.8604 2 12C2 11.1396 2.4966 10.3664 3.48981 8.82001L4.17061 7.76001C5.35117 5.92191 5.94144 5.00286 6.87114 4.50143C7.80085 4 8.91458 4 11.142 4L13.779 4C17.6544 4 19.5921 4 20.7961 5.17157C21.4673 5.82475 21.7643 6.69989 21.8957 8"
+                                        stroke="#e51f1f" stroke-width="1.5" stroke-linecap="round"></path>
+                                    <path d="M15.5 9.50002L10.5 14.5M10.5 9.5L15.5 14.5" stroke="#e51f1f"
+                                        stroke-width="1.5" stroke-linecap="round"></path>
+                                </g>
+                            </svg></button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="loading" class="loading-indicator">
+            <p>Загрузка товаров...</p>
+        </div>
+    </div>
 
 </div>
