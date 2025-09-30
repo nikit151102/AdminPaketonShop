@@ -1,0 +1,218 @@
+.container {
+    display: flex;
+    gap: 20px;
+}
+
+app-reference-book {
+    flex-grow: 1;
+}
+
+
+// 🎨 Переменные для стилей
+$primary-color: #5c6bc0;
+$primary-hover: #3f4e9f;
+$bg-light: #f9f9f9;
+$text-dark: #101010;
+$border-radius: 8px;
+$shadow-light: 0 2px 5px rgba(0, 0, 0, 0.05);
+$shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.05);
+
+// ✨ Анимация появления меню
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.counterparties-list {
+    width: 260px;
+    flex-shrink: 0;
+    //   background: $bg-light;
+    padding: 20px;
+    //   border-radius: $border-radius;
+    //   box-shadow: $shadow-medium;
+
+    // 🔘 Кнопка добавления
+    .add-button {
+        background-color: $primary-color;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+            background-color: $primary-hover;
+        }
+    }
+
+    // 📋 Список контрагентов
+    ul {
+        list-style: none;
+        padding: 0;
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 12px;
+            background-color: white;
+            color: $text-dark;
+            border-radius: $border-radius;
+            box-shadow: $shadow-light;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+
+            &:hover {
+                transform: translateX(5px);
+            }
+
+            // 💡 Активный элемент
+            span.active {
+                font-weight: bold;
+                color: $primary-color;
+            }
+
+            .counterparty-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            // ⚙️ Блок действий
+            .actions {
+                position: relative;
+
+                .gear-btn {
+                    background: none;
+                    border: none;
+                    font-size: 20px;
+                    cursor: pointer;
+                    transition: color 0.3s ease;
+
+                    &:hover {
+                        color: $primary-color;
+                    }
+                }
+
+                // 📑 Выпадающее меню
+                .menu {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    display: flex;
+                    flex-direction: column;
+                    width: 150px;
+                    padding: 5px;
+                    background-color: white;
+                    border-radius: 6px;
+                    box-shadow: $shadow-light;
+                    animation: fadeInScale 0.2s ease-out;
+
+                    .menu-item {
+                        background: $bg-light;
+                        color: $text-dark;
+                        border: none;
+                        padding: 8px;
+                        text-align: left;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease;
+
+                        &:hover {
+                            background-color: #e0e0e0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+.p-dialog .p-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.p-dialog .p-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.p-dialog .p-fluid {
+    padding: 20px;
+}
+
+.p-dialog .p-field {
+    margin-bottom: 16px;
+}
+
+.p-dialog .p-field label {
+    font-weight: 600;
+    color: #333;
+}
+
+.p-inputtext {
+    font-size: 1rem;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+    margin-top: 6px;
+    transition: border-color 0.3s;
+    color: #101010;
+    background: #fff;
+}
+
+.p-inputtext:focus {
+    border-color: #5c6bc0;
+}
+
+.p-dropdown {
+    width: 100%;
+    font-size: 1rem;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.p-dropdown:focus {
+    border-color: #5c6bc0;
+}
+
+.p-button {
+    border-radius: 5px;
+    background-color: #5c6bc0;
+    color: white;
+}
+
+.p-button:focus,
+.p-button:active {
+    background-color: #3f4e9f;
+}
+
+.p-button:hover {
+    background-color: #3f4e9f;
+}
+
+:host ::ng-deep .p-dialog {
+    color: #101010 !important;
+    background: #fff !important;
+}

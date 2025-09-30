@@ -19,6 +19,14 @@ const routes: Routes = [
         path: 'products',
         loadChildren: () => import('./tabs/products/products.module').then(m => m.ProductsModule)
       },
+      {
+        path: 'users',
+        loadComponent: () => import('./tabs/users/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'reference',
+        loadComponent: () => import('./tabs/reference/reference.component').then(m => m.ReferenceComponent)
+      },
 
 
     ]

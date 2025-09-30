@@ -45,7 +45,7 @@ export function getSideMenu(sanitizer: DomSanitizer): SideMenuItem[] {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1119.07 7.05M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>`),
       active: false,
-      router: 'home'
+      router: 'users'
     },
     {
       label: 'Аналитика',
@@ -63,7 +63,7 @@ export function getSideMenu(sanitizer: DomSanitizer): SideMenuItem[] {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>`),
       active: false,
-      router: 'home'
+      router: 'reference'
     },
   ];
 }

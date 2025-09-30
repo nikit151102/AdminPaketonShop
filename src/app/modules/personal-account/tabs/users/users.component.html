@@ -1,0 +1,116 @@
+<div class="container">
+  <div class="controls">
+    <div class="column-toggle">
+      <button class="column-toggle-button" (click)="toggleColVisibility()">
+        Показать/скрыть столбцы
+      </button>
+
+      <div class="column-options" [class.show]="columnsVisible">
+        <label class="custom-select">
+          <span>Выбрать столбцы</span>
+          <div class="checkbox-group">
+            <div *ngFor="let column of columnOptions" class="checkbox-item">
+              <input
+                type="checkbox"
+                id="{{ column.key }}"
+                [(ngModel)]="columns[column.key]"
+                (ngModelChange)="toggleColumnVisibility(column.key, $event)"
+              />
+              <label for="{{ column.key }}">{{ column.label }}</label>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="selected-columns">
+      <span *ngFor="let column of filteredSelectedColumns">
+        {{ getColumnLabel(column) }}
+        <button class="btn-delete-column" (click)="removeColumn(column)">
+          &#10005;
+        </button>
+      </span>
+    </div>
+  </div>
+
+  <div class="products-container">
+    <!-- Таблица для десктопа -->
+    <table class="products-table">
+      <thead>
+        <tr>
+          <th *ngIf="columns['firstName']">Имя</th>
+          <th *ngIf="columns['lastName']">Фамилия</th>
+          <th *ngIf="columns['email']">Email</th>
+          <th *ngIf="columns['userName']">Логин</th>
+          <th *ngIf="columns['position']">Должность</th>
+          <th *ngIf="columns['permissions']">Права</th>
+          <th *ngIf="columns['createDateTime']">Дата создания</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td *ngIf="columns['firstName']">{{ user.firstName }}</td>
+          <td *ngIf="columns['lastName']">{{ user.lastName }}</td>
+          <td *ngIf="columns['email']">{{ user.email }}</td>
+          <td *ngIf="columns['userName']">{{ user.userName }}</td>
+          <td *ngIf="columns['position']">{{ user.position?.name }}</td>
+          <td *ngIf="columns['permissions']">
+            <span *ngFor="let p of user.permissions; let i = index">
+              {{ p.name }}<span *ngIf="i < user.permissions.length - 1">, </span>
+            </span>
+          </td>
+          <td *ngIf="columns['createDateTime']">
+            {{ formatShortDate(user.createDateTime) }}
+          </td>
+          <td>
+            <div class="actions">
+              <button (click)="editUser(user.id)" class="btn-edit">
+                ✏️
+              </button>
+              <button (click)="deleteUser(user.id)" class="btn-delete">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Карточки для мобильных -->
+    <div class="product-cards" *ngIf="!isDesktop">
+      <div class="product-card" *ngFor="let user of users">
+        <div class="product-header">
+          <div class="product-main-info">
+            <h3 class="product-title" *ngIf="columns['firstName'] || columns['lastName']">
+              {{ user.lastName }} {{ user.firstName }}
+            </h3>
+            <p *ngIf="columns['email']">{{ user.email }}</p>
+            <p *ngIf="columns['userName']"><strong>Логин:</strong> {{ user.userName }}</p>
+          </div>
+        </div>
+
+        <div class="product-extra-info">
+          <p *ngIf="columns['position']"><strong>Должность:</strong> {{ user.position?.name }}</p>
+          <p *ngIf="columns['permissions']"><strong>Права:</strong>
+            <span *ngFor="let p of user.permissions; let i = index">
+              {{ p.name }}<span *ngIf="i < user.permissions.length - 1">, </span>
+            </span>
+          </p>
+          <p *ngIf="columns['createDateTime']">
+            <strong>Дата создания:</strong> {{ formatShortDate(user.createDateTime) }}
+          </p>
+        </div>
+
+        <div class="product-actions">
+          <button (click)="editUser(user.id)" class="btn-edit">✏️</button>
+          <button (click)="deleteUser(user.id)" class="btn-delete">🗑️</button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading-indicator">
+      <p>Загрузка пользователей...</p>
+    </div>
+  </div>
+</div>

@@ -2,6 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from './auth.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { localStorageEnvironment } from '../../../environment';
+import { StorageUtils } from '../../../utils/storage.utils';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-auth',
@@ -15,7 +18,9 @@ export class AuthComponent implements OnInit {
   authForm: FormGroup;
   isError: any;
   authMode: 'login' | 'register' = 'login';
-  constructor(private authService: AuthService, private fb: FormBuilder) {
+  constructor(private authService: AuthService, private fb: FormBuilder,
+    private router: Router
+  ) {
     this.authForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required,]],
@@ -43,7 +48,9 @@ export class AuthComponent implements OnInit {
         next: (response) => {
           console.log('Login successful', response);
           this.closePopUp();
-          // Перенаправление или другие действия после успешного входа
+          // this.userService.setUser(response.data, 'session', true)
+          StorageUtils.setLocalStorageCache(localStorageEnvironment.auth.key, response.data.token, localStorageEnvironment.auth.ttl)
+          this.router.navigate(['/user']);
         },
         error: (error) => {
           console.error('Login failed', error);
