@@ -422,7 +422,7 @@ export class NewsBannerPromoComponent implements OnInit {
 
           // Добавляем файл (первый параметр - имя поля, которое ожидает сервер)
           formData.append('ImageInstances', this.selectedFile, this.selectedFile.name);
-
+          formData.append('Id', response.data.id);
           // Отправляем запрос
           this.http.put<any>(
             `${environment.production}/api/Entities/NewsBanner/UpdateImages/${response.data.id}`,
@@ -459,7 +459,7 @@ export class NewsBannerPromoComponent implements OnInit {
 
           // Добавляем файл (первый параметр - имя поля, которое ожидает сервер)
           formData.append('ImageInstances', this.selectedFile, this.selectedFile.name);
-
+          formData.append('Id', response.data.id);
           // Отправляем запрос
           this.http.put<any>(
             `${environment.production}/api/Entities/NewsBanner/UpdateImages/${response.data.id}`,
