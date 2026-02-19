@@ -20,6 +20,24 @@ export function getSideMenu(sanitizer: DomSanitizer): SideMenuItem[] {
       router: 'home'
     },
     {
+      label: 'Магазины',
+      icon: sanitizer.bypassSecurityTrustHtml(`
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6M3 13h18v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z"/>
+        </svg>`),
+      active: false,
+      router: 'stores'
+    },
+    {
+      label: 'баннеры, промокоды, новости',
+      icon: sanitizer.bypassSecurityTrustHtml(`
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6M3 13h18v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z"/>
+        </svg>`),
+      active: false,
+      router: 'content'
+    },
+    {
       label: 'Товары',
       icon: sanitizer.bypassSecurityTrustHtml(`
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -27,6 +45,24 @@ export function getSideMenu(sanitizer: DomSanitizer): SideMenuItem[] {
         </svg>`),
       active: false,
       router: 'products'
+    },
+     {
+      label: 'Ниши',
+      icon: sanitizer.bypassSecurityTrustHtml(`
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6M3 13h18v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z"/>
+        </svg>`),
+      active: false,
+      router: 'niches'
+    },
+    {
+      label: 'Категории',
+      icon: sanitizer.bypassSecurityTrustHtml(`
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6M3 13h18v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z"/>
+        </svg>`),
+      active: false,
+      router: 'categories'
     },
     {
       label: 'Заказы',
@@ -56,6 +92,16 @@ export function getSideMenu(sanitizer: DomSanitizer): SideMenuItem[] {
       active: false,
       router: 'home'
     },
+    {
+      label: 'Акции',
+      icon: sanitizer.bypassSecurityTrustHtml(`
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 11V3h2v8h-2zm-4 6v-4h2v4H7zm8 0v-2h2v2h-2z"/>
+        </svg>`),
+      active: false,
+      router: 'stocks'
+    },
+
     {
       label: 'Настройки',
       icon: sanitizer.bypassSecurityTrustHtml(`

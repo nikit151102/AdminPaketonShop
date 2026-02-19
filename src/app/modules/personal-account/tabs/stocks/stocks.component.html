@@ -1,0 +1,1223 @@
+<div class="stocks-manager">
+  <!-- Навигация по вкладкам -->
+  <div class="sticky-header">
+    <div class="tabs-nav">
+      <div class="tabs-buttons">
+        <button [class.active]="activeTab === 'groups'" (click)="setActiveTab('groups')" class="tab-button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M22 7h-2v1h3v1h-4V7c0-.55.45-1 1-1h2V5h-3V4h3c.55 0 1 .45 1 1v1c0 .55-.45 1-1 1zM5.88 20h2.66l3.4-5.42h.12l3.4 5.42h2.66l-4.65-7.27L17.81 6h-2.68l-3.07 4.99h-.12L8.85 6H6.19l4.32 6.73L5.88 20z" />
+          </svg>
+          Группы акций
+        </button>
+
+        <button [class.active]="activeTab === 'conditions'" (click)="setActiveTab('conditions')"
+          [disabled]="!selectedGroupForConditions" class="tab-button" [class.has-badge]="selectedGroupForConditions">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+          </svg>
+          Условия акций
+          <span *ngIf="selectedGroupForConditions" class="tab-badge">
+            {{ selectedGroupForConditions.description | slice:0:15 }}{{ selectedGroupForConditions.description.length >
+            15 ? '...' : '' }}
+          </span>
+        </button>
+
+        <button [class.active]="activeTab === 'orders'" (click)="setActiveTab('orders')"
+          [disabled]="!selectedGroupForOrders" class="tab-button" [class.has-badge]="selectedGroupForOrders">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+          </svg>
+          Акции товаров
+          <span *ngIf="selectedGroupForOrders" class="tab-badge">
+            {{ selectedGroupForOrders.description | slice:0:15 }}{{ selectedGroupForOrders.description.length > 15 ?
+            '...' : '' }}
+          </span>
+        </button>
+      </div>
+
+      <div class="tabs-actions">
+        <div class="stats-summary" *ngIf="activeTab === 'groups'">
+          <div class="stat-item">
+            <span class="stat-value">{{ promoGroups.length }}</span>
+            <span class="stat-label">групп</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ getTotalConditionsCount() }}</span>
+            <span class="stat-label">условий</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ getTotalOrdersCount() }}</span>
+            <span class="stat-label">акций</span>
+          </div>
+        </div>
+
+        <button class="btn-create" (click)="createNewItem()"
+          [disabled]="(activeTab === 'conditions' && !selectedGroupForConditions) || (activeTab === 'orders' && !selectedGroupForOrders)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+          Создать
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Контент вкладок -->
+  <div class="tab-content">
+
+    <!-- Вкладка групп акций -->
+    <div *ngIf="activeTab === 'groups'" class="tab-pane">
+      <div class="content-header">
+        <div class="header-main">
+          <h1 class="page-title">Группы акций</h1>
+          <p class="page-subtitle">Управляйте группами акций и их расписанием</p>
+        </div>
+
+        <div class="header-actions">
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
+                <path
+                  d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+              </svg>
+              <input type="text" [(ngModel)]="searchQuery" placeholder="Поиск по описанию..." (keyup.enter)="search()"
+                class="search-input">
+              <button (click)="search()" class="btn-search">
+                Найти
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-primary" (click)="showCreateGroupForm()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+            Новая группа
+          </button>
+        </div>
+      </div>
+
+      <!-- Панель управления таблицей -->
+      <div class="table-controls">
+        <div class="table-actions">
+          <div class="column-manager" #groupColumnManager>
+            <button class="btn-columns" (click)="toggleColVisibility('group')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M6 5H3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1zm14 0h-3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1zm-7 0h-3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1z" />
+              </svg>
+              Колонки
+            </button>
+
+            <div class="columns-dropdown" [class.show]="groupColumnsVisible">
+              <div class="dropdown-header">
+                <span>Выберите колонки</span>
+                <button class="btn-close-dropdown" (click)="groupColumnsVisible = false">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="columns-list">
+                <div *ngFor="let column of groupColumnOptions" class="column-option">
+                  <label class="checkbox-label">
+                    <input type="checkbox" [id]="'group-' + column.key" [checked]="groupColumns[column.key]"
+                      (change)="onColumnCheckboxChange($event, 'group', column.key)">
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-text">{{ column.label }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="dropdown-actions">
+                <button (click)="resetColumns('group')" class="btn-reset">
+                  Сбросить
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-export" (click)="exportData()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+            </svg>
+            Экспорт
+          </button>
+        </div>
+
+        <div class="selected-filters" *ngIf="getFilteredSelectedColumns('group').length > 0">
+          <span class="filter-label">Показаны колонки:</span>
+          <div class="filter-tags">
+            <span *ngFor="let column of getFilteredSelectedColumns('group')" class="filter-tag">
+              {{ getColumnLabel('group', column) }}
+              <button (click)="removeColumn('group', column)" class="btn-remove-tag">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Таблица групп -->
+      <div class="table-wrapper">
+        <div class="table-container">
+          <!-- Для десктопов -->
+          <table *ngIf="isDesktop" class="data-table">
+            <thead>
+              <tr>
+                <th *ngIf="groupColumns['description']" class="sortable" (click)="sortGroups('description')">
+                  Описание
+                  <span class="sort-icon" *ngIf="groupSortField === 'description'">
+                    {{ groupSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th *ngIf="groupColumns['beginDateTime']" class="sortable" (click)="sortGroups('beginDateTime')">
+                  Начало
+                  <span class="sort-icon" *ngIf="groupSortField === 'beginDateTime'">
+                    {{ groupSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th *ngIf="groupColumns['endDateTime']" class="sortable" (click)="sortGroups('endDateTime')">
+                  Окончание
+                  <span class="sort-icon" *ngIf="groupSortField === 'endDateTime'">
+                    {{ groupSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th *ngIf="groupColumns['promoOrderConditionsCount']" class="sortable"
+                  (click)="sortGroups('conditionsCount')">
+                  Условия
+                  <span class="sort-icon" *ngIf="groupSortField === 'conditionsCount'">
+                    {{ groupSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th *ngIf="groupColumns['promoOrdersCount']" class="sortable" (click)="sortGroups('ordersCount')">
+                  Акции товаров
+                  <span class="sort-icon" *ngIf="groupSortField === 'ordersCount'">
+                    {{ groupSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" (click)="sortGroups('status')">
+                  Статус
+                  <span class="sort-icon" *ngIf="groupSortField === 'status'">
+                    {{ groupSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let group of sortedGroups" [class.active-row]="isGroupActive(group)">
+                <td *ngIf="groupColumns['description']">
+                  <div class="group-info">
+                    <h3 class="group-title" (click)="viewGroupDetails(group)">
+                      {{ group.description }}
+                    </h3>
+                    <div class="group-id">ID: {{ group.id | slice:0:8 }}...</div>
+                  </div>
+                </td>
+                <td *ngIf="groupColumns['beginDateTime']">
+                  <div class="date-cell">
+                    <span class="date">{{ formatDate(group.beginDateTime) }}</span>
+                    <span class="time">{{ formatTime(group.beginDateTime) }}</span>
+                  </div>
+                </td>
+                <td *ngIf="groupColumns['endDateTime']">
+                  <div class="date-cell">
+                    <span class="date">{{ formatDate(group.endDateTime) }}</span>
+                    <span class="time">{{ formatTime(group.endDateTime) }}</span>
+                  </div>
+                </td>
+                <td *ngIf="groupColumns['promoOrderConditionsCount']">
+                  <div class="count-cell">
+                    <div class="count-value">{{ getConditionsCount(group) }}</div>
+                    <div class="count-actions">
+                      <button *ngIf="getConditionsCount(group) > 0" class="btn-view-small"
+                        (click)="viewConditionsForGroup(group)" title="Просмотреть условия">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path
+                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                        </svg>
+                      </button>
+                      <button class="btn-add-small" (click)="addConditionToGroup(group)" title="Добавить условие">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+                <td *ngIf="groupColumns['promoOrdersCount']">
+                  <div class="count-cell">
+                    <div class="count-value">{{ getOrdersCount(group) }}</div>
+                    <div class="count-actions">
+                      <button *ngIf="getOrdersCount(group) > 0" class="btn-view-small"
+                        (click)="viewOrdersForGroup(group)" title="Просмотреть акции">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path
+                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                        </svg>
+                      </button>
+                      <button class="btn-add-small" (click)="addOrderToGroup(group)" title="Добавить акцию товара">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="status-cell">
+                    <span class="status-badge" [class.active]="isGroupActive(group)"
+                      [class.expired]="isGroupExpired(group)">
+                      <span class="status-dot"></span>
+                      {{ getGroupStatus(group) }}
+                    </span>
+                    <div class="status-duration" *ngIf="isGroupActive(group)">
+                      {{ getRemainingTime(group) }}
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button (click)="editGroup(group)" class="btn-action btn-edit" title="Редактировать">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                      </svg>
+                    </button>
+                    <button (click)="duplicateGroup(group)" class="btn-action btn-duplicate" title="Дублировать">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                      </svg>
+                    </button>
+                    <button (click)="deleteGroup(group.id!)" class="btn-action btn-delete" title="Удалить">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Для мобильных -->
+          <div *ngIf="!isDesktop" class="cards-container">
+            <div *ngFor="let group of sortedGroups" class="group-card" [class.active-card]="isGroupActive(group)">
+              <div class="card-header">
+                <div class="card-title-section">
+                  <h3 class="card-title" (click)="viewGroupDetails(group)">
+                    {{ group.description }}
+                  </h3>
+                  <span class="status-badge" [class.active]="isGroupActive(group)"
+                    [class.expired]="isGroupExpired(group)">
+                    {{ getGroupStatus(group) }}
+                  </span>
+                </div>
+                <div class="card-actions">
+                  <button (click)="editGroup(group)" class="btn-action btn-edit">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-content">
+                <div class="date-range">
+                  <div class="date-item">
+                    <span class="date-label">Начало:</span>
+                    <span class="date-value">{{ formatDateTime(group.beginDateTime) }}</span>
+                  </div>
+                  <div class="date-item">
+                    <span class="date-label">Окончание:</span>
+                    <span class="date-value">{{ formatDateTime(group.endDateTime) }}</span>
+                  </div>
+                </div>
+
+                <div class="card-stats">
+                  <div class="stat-item" (click)="viewConditionsForGroup(group)">
+                    <span class="stat-icon">📋</span>
+                    <div class="stat-content">
+                      <span class="stat-value">{{ getConditionsCount(group) }}</span>
+                      <span class="stat-label">Условия</span>
+                    </div>
+                    <button class="btn-add-stat" (click)="$event.stopPropagation(); addConditionToGroup(group)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="stat-item" (click)="viewOrdersForGroup(group)">
+                    <span class="stat-icon">🛒</span>
+                    <div class="stat-content">
+                      <span class="stat-value">{{ getOrdersCount(group) }}</span>
+                      <span class="stat-label">Акции товаров</span>
+                    </div>
+                    <button class="btn-add-stat" (click)="$event.stopPropagation(); addOrderToGroup(group)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="isGroupActive(group)" class="time-remaining">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                  </svg>
+                  {{ getRemainingTime(group) }}
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <button (click)="duplicateGroup(group)" class="btn-secondary">
+                  Дублировать
+                </button>
+                <button (click)="deleteGroup(group.id!)" class="btn-danger">
+                  Удалить
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Пагинация -->
+      <div class="pagination-wrapper" *ngIf="totalItems > pageSize">
+        <div class="pagination">
+          <button (click)="previousPage()" [disabled]="currentPage === 1" class="btn-pagination">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+            </svg>
+            Назад
+          </button>
+
+          <div class="page-numbers">
+            <button *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage" (click)="goToPage(page)"
+              class="page-number">
+              {{ page }}
+            </button>
+            <span *ngIf="showEllipsis" class="page-ellipsis">...</span>
+          </div>
+
+          <button (click)="nextPage()" [disabled]="currentPage * pageSize >= totalItems" class="btn-pagination">
+            Вперед
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+            </svg>
+          </button>
+
+          <div class="page-info">
+            <span>Страница {{ currentPage }} из {{ Math.ceil(totalItems / pageSize) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Вкладка условий акций -->
+    <div *ngIf="activeTab === 'conditions' && selectedGroupForConditions" class="tab-pane">
+      <div class="content-header">
+        <div class="header-main">
+          <div class="breadcrumbs">
+            <button class="btn-back" (click)="backToGroups()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+              </svg>
+              К группам
+            </button>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Условия акций</span>
+          </div>
+
+          <div class="header-group-info">
+            <h1 class="page-title">Условия акций</h1>
+            <div class="group-banner">
+              <span class="group-name">{{ selectedGroupForConditions.description }}</span>
+              <span class="group-period">
+                {{ formatDate(selectedGroupForConditions.beginDateTime) }} – {{
+                formatDate(selectedGroupForConditions.endDateTime) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
+                <path
+                  d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+              </svg>
+              <input type="text" [(ngModel)]="searchQuery" placeholder="Поиск по названию..." (keyup.enter)="search()"
+                class="search-input">
+              <button (click)="search()" class="btn-search">
+                Найти
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-primary" (click)="showCreateConditionForm()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+            Новое условие
+          </button>
+        </div>
+      </div>
+
+      <!-- Таблица условий -->
+      <div class="table-wrapper">
+        <div class="table-container">
+          <table *ngIf="isDesktop" class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable" (click)="sortConditions('fullName')">
+                  Название
+                  <span class="sort-icon" *ngIf="conditionSortField === 'fullName'">
+                    {{ conditionSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" (click)="sortConditions('shortName')">
+                  Краткое название
+                  <span class="sort-icon" *ngIf="conditionSortField === 'shortName'">
+                    {{ conditionSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th>Описание</th>
+                <th class="sortable" (click)="sortConditions('value')">
+                  Значение
+                  <span class="sort-icon" *ngIf="conditionSortField === 'value'">
+                    {{ conditionSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" (click)="sortConditions('dateTime')">
+                  Действует с
+                  <span class="sort-icon" *ngIf="conditionSortField === 'dateTime'">
+                    {{ conditionSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" (click)="sortConditions('dateTimeExpire')">
+                  Действует до
+                  <span class="sort-icon" *ngIf="conditionSortField === 'dateTimeExpire'">
+                    {{ conditionSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let condition of sortedConditions" [class.expiring-soon]="isConditionExpiringSoon(condition)">
+                <td>
+                  <div class="condition-title">{{ condition.fullName }}</div>
+                </td>
+                <td>
+                  <span class="condition-shortname">{{ condition.shortName }}</span>
+                </td>
+                <td>
+                  <div class="condition-description" *ngIf="condition.description">
+                    {{ condition.description }}
+                  </div>
+                  <span class="empty-text" *ngIf="!condition.description">—</span>
+                </td>
+                <td>
+                  <span class="condition-value">{{ condition.value }}</span>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <span class="date">{{ formatDate(condition.dateTime) }}</span>
+                    <span class="time">{{ formatTime(condition.dateTime) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <span class="date">{{ formatDate(condition.dateTimeExpire) }}</span>
+                    <span class="time">{{ formatTime(condition.dateTimeExpire) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="isConditionActive(condition)">
+                    {{ isConditionActive(condition) ? 'Активно' : 'Неактивно' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button (click)="editCondition(condition)" class="btn-action btn-edit" title="Редактировать">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                      </svg>
+                    </button>
+                    <button (click)="duplicateCondition(condition)" class="btn-action btn-duplicate"
+                      title="Дублировать">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                      </svg>
+                    </button>
+                    <button (click)="deleteCondition(condition.id!)" class="btn-action btn-delete" title="Удалить">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Вкладка акций товаров -->
+    <div *ngIf="activeTab === 'orders' && selectedGroupForOrders" class="tab-pane">
+      <div class="content-header">
+        <div class="header-main">
+          <div class="breadcrumbs">
+            <button class="btn-back" (click)="backToGroups()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+              </svg>
+              К группам
+            </button>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Акции товаров</span>
+          </div>
+
+          <div class="header-group-info">
+            <h1 class="page-title">Акции товаров</h1>
+            <div class="group-banner">
+              <span class="group-name">{{ selectedGroupForOrders.description }}</span>
+              <span class="group-period">
+                {{ formatDate(selectedGroupForOrders.beginDateTime) }} – {{
+                formatDate(selectedGroupForOrders.endDateTime) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
+                <path
+                  d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+              </svg>
+              <input type="text" [(ngModel)]="searchQuery" placeholder="Поиск по товару..." (keyup.enter)="search()"
+                class="search-input">
+              <button (click)="search()" class="btn-search">
+                Найти
+              </button>
+            </div>
+          </div>
+
+          <div class="header-buttons">
+            <button class="btn-secondary" (click)="showAddProductsModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
+              Массовое добавление
+            </button>
+            <button class="btn-primary" (click)="showCreateOrderForm()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+              </svg>
+              Добавить акцию
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Статистика акций -->
+      <div class="promo-stats">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M11 9h2V7h-2v2zm1 11c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-18c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2V7h-2v10z" />
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ promoOrders.length }}</span>
+            <span class="stat-label">Товаров в акции</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z" />
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ getAverageDiscount() }}%</span>
+            <span class="stat-label">Средняя скидка</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
+              <path d="M7.5 13h2v2H11v-6h-1.5v2.5h-2v-2H6v6h1.5zM17.5 15.5H19V17h-4v-6h4v1.5h-2.5v1H19v1.5h-1.5z" />
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ getTotalSavings() | currency:'RUB':'symbol':'1.0-0' }}</span>
+            <span class="stat-label">Общая экономия</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Таблица акций товаров -->
+      <div class="table-wrapper">
+        <div class="table-container">
+          <table class="data-table promo-orders-table">
+            <thead>
+              <tr>
+                <th>Товар</th>
+                <th class="sortable" (click)="sortOrders('salePercent')">
+                  Скидка
+                  <span class="sort-icon" *ngIf="orderSortField === 'salePercent'">
+                    {{ orderSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th>Цены</th>
+                <th>Экономия</th>
+                <th class="sortable" (click)="sortOrders('isRecountNeed')">
+                  Пересчет
+                  <span class="sort-icon" *ngIf="orderSortField === 'isRecountNeed'">
+                    {{ orderSortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of sortedOrders">
+                <td>
+                  <div class="product-cell">
+                    <div class="product-image" *ngIf="getProductImage(order.productId)">
+                      <img [src]="getProductImage(order.productId)" [alt]="getProductName(order.productId)">
+                    </div>
+                    <div class="product-info">
+                      <h4 class="product-name">{{ getProductName(order.productId) }}</h4>
+                      <div class="product-details">
+                        <span class="product-article">{{ getProductArticle(order.productId) }}</span>
+                        <span class="product-price original">{{ getProductPrice(order.productId) |
+                          currency:'RUB':'symbol':'1.0-2' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="discount-cell">
+                    <span class="discount-badge">{{ order.salePercent }}%</span>
+                    <div class="discount-bar">
+                      <div class="discount-fill" [style.width.%]="order.salePercent"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="price-comparison">
+                    <div class="price-original">
+                      <span class="price-label">Обычная:</span>
+                      <span class="price-value">{{ getProductPrice(order.productId) | currency:'RUB':'symbol':'1.0-2'
+                        }}</span>
+                    </div>
+                    <div class="price-discounted">
+                      <span class="price-label">Со скидкой:</span>
+                      <span class="price-value highlighted">{{ calculateDiscountedPrice(order) |
+                        currency:'RUB':'symbol':'1.0-2' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="savings-cell">
+                    <span class="savings-value">{{ calculateSavings(order) | currency:'RUB':'symbol':'1.0-2' }}</span>
+                    <div class="savings-percent">{{ getSavingsPercent(order) }}% экономии</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="recount-cell">
+                    <span class="recount-badge" [class.active]="order.isRecountNeed">
+                      {{ order.isRecountNeed ? 'Да' : 'Нет' }}
+                    </span>
+                    <div class="recount-info" *ngIf="order.isRecountNeed">
+                      Требуется пересчет остатков
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button (click)="editOrder(order)" class="btn-action btn-edit" title="Редактировать">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                      </svg>
+                    </button>
+                    <button (click)="removeProductFromPromo(order)" class="btn-action btn-remove"
+                      title="Убрать из акции">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13H5v-2h14v2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Загрузка данных...</p>
+      </div>
+    </div>
+
+    <!-- Состояние без данных -->
+    <div *ngIf="!loading && isEmptyState()" class="empty-state">
+      <div class="empty-state-content">
+        <div class="empty-state-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+            <path *ngIf="activeTab === 'groups'"
+              d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+            <path *ngIf="activeTab === 'conditions'"
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            <path *ngIf="activeTab === 'orders'"
+              d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+          </svg>
+        </div>
+        <h3>{{ getEmptyStateTitle() }}</h3>
+        <p>{{ getEmptyStateMessage() }}</p>
+        <button *ngIf="activeTab === 'groups'" (click)="showCreateGroupForm()" class="btn-primary">
+          Создать первую группу
+        </button>
+        <button *ngIf="activeTab === 'conditions' && selectedGroupForConditions" (click)="showCreateConditionForm()"
+          class="btn-primary">
+          Добавить первое условие
+        </button>
+        <button *ngIf="activeTab === 'orders' && selectedGroupForOrders" (click)="showCreateOrderForm()"
+          class="btn-primary">
+          Добавить первый товар
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальные окна -->
+  <div *ngIf="isModalOpen()" class="modal-overlay" (click)="closeModal()">
+    <!-- Модальное окно создания/редактирования группы -->
+    <div *ngIf="showCreateGroupFormFlag" class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ selectedGroup ? 'Редактирование группы' : 'Новая группа акций' }}</h2>
+        <button class="btn-close" (click)="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="groupForm" (ngSubmit)="saveGroup()">
+          <div class="form-section">
+            <h3 class="form-section-title">Основная информация</h3>
+
+            <div class="form-group">
+              <label class="form-label required">Описание группы</label>
+              <textarea formControlName="description" rows="3" placeholder="Введите описание группы акций..."
+                class="form-textarea"
+                [class.error]="groupForm.get('description')?.invalid && groupForm.get('description')?.touched">
+              </textarea>
+              <div *ngIf="groupForm.get('description')?.invalid && groupForm.get('description')?.touched"
+                class="form-error">
+                Введите описание (минимум 3 символа)
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="form-section-title">Период действия</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Дата начала</label>
+                <input type="datetime-local" formControlName="beginDateTime" class="form-input"
+                  [class.error]="groupForm.get('beginDateTime')?.invalid && groupForm.get('beginDateTime')?.touched">
+                <div *ngIf="groupForm.get('beginDateTime')?.invalid && groupForm.get('beginDateTime')?.touched"
+                  class="form-error">
+                  Укажите дату начала
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Дата окончания</label>
+                <input type="datetime-local" formControlName="endDateTime" class="form-input"
+                  [class.error]="groupForm.get('endDateTime')?.invalid && groupForm.get('endDateTime')?.touched">
+                <div *ngIf="groupForm.get('endDateTime')?.invalid && groupForm.get('endDateTime')?.touched"
+                  class="form-error">
+                  Укажите дату окончания
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="groupForm.get('beginDateTime')?.value && groupForm.get('endDateTime')?.value"
+              class="duration-preview">
+              <div class="duration-info">
+                <span class="duration-label">Длительность:</span>
+                <span class="duration-value">{{ calculateDuration() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="closeModal()" class="btn-cancel">
+              Отмена
+            </button>
+            <button type="submit" [disabled]="groupForm.invalid || loading" class="btn-submit">
+              <span *ngIf="!loading">{{ selectedGroup ? 'Сохранить изменения' : 'Создать группу' }}</span>
+              <span *ngIf="loading">Сохранение...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно создания/редактирования условия -->
+    <div *ngIf="showCreateConditionFormFlag" class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h2>{{ selectedCondition ? 'Редактирование условия' : 'Новое условие акции' }}</h2>
+          <div class="modal-subtitle">
+            Группа: {{ selectedGroupForConditions?.description }}
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="conditionForm" (ngSubmit)="saveCondition()">
+          <div class="form-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Полное название</label>
+                <input type="text" formControlName="fullName" placeholder="Например: Скидка на все товары"
+                  class="form-input"
+                  [class.error]="conditionForm.get('fullName')?.invalid && conditionForm.get('fullName')?.touched">
+                <div *ngIf="conditionForm.get('fullName')?.invalid && conditionForm.get('fullName')?.touched"
+                  class="form-error">
+                  Введите название (минимум 3 символа)
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Краткое название</label>
+                <input type="text" formControlName="shortName" placeholder="Например: SALE" class="form-input"
+                  [class.error]="conditionForm.get('shortName')?.invalid && conditionForm.get('shortName')?.touched">
+                <div *ngIf="conditionForm.get('shortName')?.invalid && conditionForm.get('shortName')?.touched"
+                  class="form-error">
+                  Введите краткое название
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Описание условия</label>
+              <textarea formControlName="description" rows="2" placeholder="Подробное описание условия..."
+                class="form-textarea">
+              </textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Значение</label>
+                <div class="input-with-unit">
+                  <input type="number" formControlName="value" placeholder="0" min="0" step="0.01" class="form-input"
+                    [class.error]="conditionForm.get('value')?.invalid && conditionForm.get('value')?.touched">
+                  <span class="input-unit">ед.</span>
+                </div>
+                <div *ngIf="conditionForm.get('value')?.invalid && conditionForm.get('value')?.touched"
+                  class="form-error">
+                  Значение должно быть положительным числом
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Группа акций</label>
+                <div class="form-display">
+                  {{ selectedGroupForConditions?.description }}
+                  <input type="hidden" formControlName="promoOrderGroupId" [value]="selectedGroupForConditions?.id">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="form-section-title">Период действия</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Действует с</label>
+                <input type="datetime-local" formControlName="dateTime" class="form-input"
+                  [class.error]="conditionForm.get('dateTime')?.invalid && conditionForm.get('dateTime')?.touched">
+                <div *ngIf="conditionForm.get('dateTime')?.invalid && conditionForm.get('dateTime')?.touched"
+                  class="form-error">
+                  Укажите дату начала
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Действует до</label>
+                <input type="datetime-local" formControlName="dateTimeExpire" class="form-input"
+                  [class.error]="conditionForm.get('dateTimeExpire')?.invalid && conditionForm.get('dateTimeExpire')?.touched">
+                <div
+                  *ngIf="conditionForm.get('dateTimeExpire')?.invalid && conditionForm.get('dateTimeExpire')?.touched"
+                  class="form-error">
+                  Укажите дату окончания
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="closeModal()" class="btn-cancel">
+              Отмена
+            </button>
+            <button type="submit" [disabled]="conditionForm.invalid || loading" class="btn-submit">
+              <span *ngIf="!loading">{{ selectedCondition ? 'Сохранить изменения' : 'Создать условие' }}</span>
+              <span *ngIf="loading">Сохранение...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно создания/редактирования акции товара -->
+    <div *ngIf="showCreateOrderFormFlag" class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h2>{{ selectedOrder ? 'Редактирование акции' : 'Новая акция товара' }}</h2>
+          <div class="modal-subtitle">
+            Группа: {{ selectedGroupForOrders?.description }}
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="orderForm" (ngSubmit)="saveOrder()">
+          <div class="form-section">
+            <div class="form-group">
+              <label class="form-label required">Выберите товар</label>
+              <div class="product-select">
+                <div class="selected-product" *ngIf="selectedProductForPreview" (click)="showProductSelector = true">
+                  <div class="product-info-preview">
+                    <div class="product-image-preview" *ngIf="getProductImage(selectedProductForPreview.id)">
+                      <img [src]="getProductImage(selectedProductForPreview.id)"
+                        [alt]="selectedProductForPreview.fullName">
+                    </div>
+                    <div class="product-details-preview">
+                      <h4>{{ selectedProductForPreview.fullName }}</h4>
+                      <div class="product-meta">
+                        <span class="product-article">{{ selectedProductForPreview.article }}</span>
+                        <span class="product-price">{{ selectedProductForPreview.retailPrice |
+                          currency:'RUB':'symbol':'1.0-2' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="select-arrow">
+                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                  </svg>
+                </div>
+                <button type="button" *ngIf="!selectedProductForPreview" (click)="showProductSelector = true"
+                  class="btn-select-product">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                  </svg>
+                  Выбрать товар
+                </button>
+                <input type="hidden" formControlName="productId">
+              </div>
+              <div *ngIf="orderForm.get('productId')?.invalid && orderForm.get('productId')?.touched"
+                class="form-error">
+                Выберите товар
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label required">Процент скидки</label>
+                <div class="slider-input">
+                  <input type="range" formControlName="salePercent" min="0" max="100" step="1" class="discount-slider">
+                  <div class="slider-value">
+                    <span class="value-display">{{ orderForm.get('salePercent')?.value || 0 }}%</span>
+                    <input type="number" formControlName="salePercent" min="0" max="100" class="discount-input">
+                  </div>
+                </div>
+                <div *ngIf="orderForm.get('salePercent')?.invalid && orderForm.get('salePercent')?.touched"
+                  class="form-error">
+                  Процент скидки должен быть от 0 до 100
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Группа акций</label>
+                <div class="form-display">
+                  {{ selectedGroupForOrders?.description }}
+                  <input type="hidden" formControlName="promoOrderGroupId" [value]="selectedGroupForOrders?.id">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="isRecountNeed" class="checkbox-input">
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-text">
+                  <strong>Требуется пересчет остатков</strong>
+                  <span class="checkbox-description">При применении акции система будет автоматически пересчитывать
+                    остатки товаров</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div *ngIf="selectedProductForPreview && orderForm.get('salePercent')?.value > 0"
+            class="form-section preview-section">
+            <h3 class="form-section-title">Предварительный расчет</h3>
+
+            <div class="price-preview">
+              <div class="price-comparison-preview">
+                <div class="price-original-preview">
+                  <span class="price-label">Обычная цена:</span>
+                  <span class="price-value">{{ selectedProductForPreview.retailPrice | currency:'RUB':'symbol':'1.0-2'
+                    }}</span>
+                </div>
+                <div class="price-discounted-preview">
+                  <span class="price-label">Цена со скидкой {{ orderForm.get('salePercent')?.value || 0 }}%:</span>
+                  <span class="price-value highlighted">{{ calculatePreviewPrice() | currency:'RUB':'symbol':'1.0-2'
+                    }}</span>
+                </div>
+              </div>
+
+              <div class="savings-preview">
+                <div class="savings-amount">
+                  <span class="savings-label">Экономия:</span>
+                  <span class="savings-value">{{ selectedProductForPreview.retailPrice - calculatePreviewPrice() |
+                    currency:'RUB':'symbol':'1.0-2' }}</span>
+                </div>
+                <div class="savings-percent">
+                  Вы экономите {{ ((selectedProductForPreview.retailPrice - calculatePreviewPrice()) /
+                  selectedProductForPreview.retailPrice * 100).toFixed(1) }}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="closeModal()" class="btn-cancel">
+              Отмена
+            </button>
+            <button type="submit" [disabled]="orderForm.invalid || loading" class="btn-submit">
+              <span *ngIf="!loading">{{ selectedOrder ? 'Сохранить изменения' : 'Добавить акцию' }}</span>
+              <span *ngIf="loading">Сохранение...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Модальное окно выбора товара -->
+    <div *ngIf="showProductSelector" class="modal product-selector-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Выбор товара</h2>
+        <button class="btn-close" (click)="showProductSelector = false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="product-search">
+          <input type="text" [(ngModel)]="productSearchQuery" placeholder="Поиск по названию или артикулу..."
+            (input)="filterProducts()" class="product-search-input">
+        </div>
+
+        <div class="product-list">
+          <div *ngFor="let product of filteredProducts" class="product-item"
+            [class.selected]="selectedProductForPreview?.id === product.id" (click)="selectProduct(product)">
+            <div class="product-item-image" *ngIf="getProductImage(product.id)">
+              <img [src]="getProductImage(product.id)" [alt]="product.fullName">
+            </div>
+            <div class="product-item-info">
+              <h4>{{ product.fullName }}</h4>
+              <div class="product-item-details">
+                <span class="article">{{ product.article }}</span>
+                <span class="price">{{ product.retailPrice | currency:'RUB':'symbol':'1.0-2' }}</span>
+              </div>
+              <div class="product-item-description" *ngIf="product.description">
+                {{ product.description | slice:0:100 }}{{ product.description.length > 100 ? '...' : '' }}
+              </div>
+            </div>
+            <div class="product-item-check" *ngIf="selectedProductForPreview?.id === product.id">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="filteredProducts.length === 0" class="no-products">
+          <p>Товары не найдены</p>
+        </div>
+
+        <div class="product-selector-actions">
+          <button type="button" (click)="showProductSelector = false" class="btn-cancel">
+            Отмена
+          </button>
+          <button type="button" (click)="confirmProductSelection()" [disabled]="!selectedProductForPreview"
+            class="btn-submit">
+            Выбрать
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

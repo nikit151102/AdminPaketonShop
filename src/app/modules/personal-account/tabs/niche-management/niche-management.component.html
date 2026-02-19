@@ -1,0 +1,1184 @@
+<div class="niche-management">
+  <!-- Уведомления -->
+  <div class="notifications-container"></div>
+
+  <!-- Заголовок и управление -->
+  <div class="management-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="page-title-section">
+          <h1 class="page-title">
+            <i class="icon-folder"></i>
+            Управление нишами
+          </h1>
+          <p class="page-subtitle">Организация и управление товарными нишами</p>
+        </div>
+        
+        <div class="stats-overview">
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.totalNiches }}</div>
+            <div class="stat-label">Всего ниш</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.activeNiches }}</div>
+            <div class="stat-label">Активных</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.totalProducts }}</div>
+            <div class="stat-label">Товаров</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.avgProductsPerNiche }}</div>
+            <div class="stat-label">Среднее/ниша</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="action-group">
+          <button class="btn-icon" title="Обновить" (click)="refreshData()" [disabled]="isLoading">
+            <i class="icon-refresh"></i>
+          </button>
+          <button class="btn-icon" title="Экспорт CSV" (click)="exportData('csv')">
+            <i class="icon-download"></i>
+          </button>
+          <button class="btn-icon" title="Отчет" (click)="generateReport()" [disabled]="isLoading">
+            <i class="icon-chart"></i>
+          </button>
+        </div>
+        
+        <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
+          <i class="icon-plus"></i>
+          Новая ниша
+        </button>
+      </div>
+    </div>
+
+    <!-- Быстрые фильтры -->
+    <div class="quick-filters">
+      <div class="filter-group">
+        <input type="text" 
+               [(ngModel)]="searchQuery" 
+               (ngModelChange)="onSearchChange()"
+               placeholder="Поиск по названию, коду..."
+               class="search-input">
+        <i class="icon-search"></i>
+      </div>
+      
+      <div class="filter-group">
+        <select [(ngModel)]="filters.status" (change)="applyFilters()">
+          <option value="all">Все статусы</option>
+          <option value="active">Активные</option>
+          <option value="inactive">Неактивные</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <input type="number" 
+               [(ngModel)]="filters.minProducts" 
+               (change)="applyFilters()"
+               placeholder="Мин. товаров"
+               min="0">
+      </div>
+      
+      <div class="filter-group">
+        <input type="number" 
+               [(ngModel)]="filters.maxProducts" 
+               (change)="applyFilters()"
+               placeholder="Макс. товаров"
+               min="0">
+      </div>
+      
+      <button class="btn-secondary btn-sm" (click)="clearSearch()">
+        <i class="icon-clear"></i>
+        Сбросить
+      </button>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="management-content">
+    <!-- Левая панель: Список ниш -->
+    <div class="niches-sidebar">
+      <div class="sidebar-header">
+        <div class="header-section">
+          <h3>Список ниш</h3>
+          <span class="badge">{{ filteredNiches.length }}</span>
+        </div>
+        
+        <div class="sort-controls">
+          <select [(ngModel)]="sortField" (change)="sortNiches()">
+            <option value="sortIndex">По порядку</option>
+            <option value="name">По названию</option>
+            <option value="productCount">По товарам</option>
+            <option value="createdAt">По дате</option>
+          </select>
+          
+          <button class="btn-icon-sm" (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; sortNiches()">
+            <i class="icon-sort" [class.flipped]="sortDirection === 'desc'"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Массовые действия -->
+      <div class="bulk-actions" *ngIf="selectedNiches.size > 0">
+        <div class="bulk-info">
+          <span>Выбрано: {{ selectedNiches.size }}</span>
+        </div>
+        <div class="bulk-buttons">
+          <button class="btn-success btn-sm" (click)="activateSelectedNiches()">
+            <i class="icon-check"></i>
+            Активировать
+          </button>
+          <button class="btn-danger btn-sm" (click)="deleteSelectedNiches()">
+            <i class="icon-trash"></i>
+            Удалить
+          </button>
+          <button class="btn-secondary btn-sm" (click)="selectedNiches.clear()">
+            <i class="icon-clear"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Список ниш -->
+      <div class="niches-list-container">
+        <div class="niches-list-header">
+          <div class="header-checkbox">
+            <label class="checkbox">
+            <input type="checkbox" 
+       [checked]="isAllNichesSelected()"
+       (change)="selectAllNiches()">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+          <div class="header-name">Название</div>
+          <div class="header-products">Товары</div>
+          <div class="header-status">Статус</div>
+        </div>
+
+        <div class="niches-list" *ngIf="!isLoading; else loading">
+          <div *ngFor="let niche of getCurrentPageNiches()" 
+               class="niche-list-item"
+               [class.selected]="selectedNiche?.id === niche.id"
+               [class.inactive]="niche.isDeleted"
+               (click)="selectNiche(niche)">
+            
+            <div class="item-checkbox" (click)="$event.stopPropagation()">
+              <label class="checkbox">
+                <input type="checkbox" 
+                       [checked]="selectedNiches.has(niche.id)"
+                       (change)="toggleNicheSelection(niche.id)">
+                <span class="checkmark"></span>
+              </label>
+            </div>
+
+            <div class="item-content">
+              <div class="item-main">
+                <div class="niche-icon">
+                  <i class="icon-folder"></i>
+                </div>
+                <div class="niche-info">
+                  <div class="niche-name">{{ niche.name }}</div>
+                  <div class="niche-code">{{ niche.code }}</div>
+                </div>
+              </div>
+              
+              <div class="item-products">
+                <i class="icon-product"></i>
+                {{ niche.productCount }}
+              </div>
+              
+              <div class="item-status">
+                <span class="status-badge" [class.active]="!niche.isDeleted">
+                  {{ niche.isDeleted ? 'Неактивна' : 'Активна' }}
+                </span>
+              </div>
+              
+              <div class="item-actions">
+                <button class="action-btn" 
+                        (click)="showQuickViewMethod('niche', {niche}); $event.stopPropagation()"
+                        title="Быстрый просмотр">
+                  <i class="icon-eye"></i>
+                </button>
+                <button class="action-btn" 
+                        (click)="startEdit(niche); $event.stopPropagation()"
+                        title="Редактировать">
+                  <i class="icon-edit"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="filteredNiches.length === 0" class="empty-state">
+            <div class="empty-icon">
+              <i class="icon-search"></i>
+            </div>
+            <h4>Ниши не найдены</h4>
+            <p>Попробуйте изменить параметры поиска</p>
+            <button class="btn-secondary" (click)="clearSearch()">
+              Сбросить фильтры
+            </button>
+          </div>
+        </div>
+
+        <!-- Пагинация -->
+        <div class="pagination" *ngIf="filteredNiches.length > 0">
+          <!-- <div class="pagination-info">
+            Показано {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, filteredNiches.length) }} из {{ filteredNiches.length }}
+          </div> -->
+          <div class="pagination-controls">
+            <button class="btn-icon-sm" 
+                    [disabled]="currentPage === 1"
+                    (click)="goToPage(currentPage - 1)">
+              <i class="icon-chevron-left"></i>
+            </button>
+            
+            <div class="page-numbers">
+              <button *ngFor="let page of getPaginationPages()" 
+                      class="page-btn"
+                      [class.active]="page === currentPage"
+                      (click)="goToPage(page)"
+                      [disabled]="page === '...'">
+                {{ page }}
+              </button>
+            </div>
+            
+            <button class="btn-icon-sm" 
+                    [disabled]="currentPage === totalPages"
+                    (click)="goToPage(currentPage + 1)">
+              <i class="icon-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Правая панель: Детали -->
+    <div class="details-panel">
+      <div *ngIf="selectedNiche && !isCreating && !isEditing" class="panel-content">
+        <!-- Заголовок панели -->
+        <div class="panel-header">
+          <div class="header-left">
+            <h2>{{ selectedNiche.name }}</h2>
+            <div class="header-tags">
+              <span class="tag tag-primary">{{ selectedNiche.code }}</span>
+              <span class="tag" [class.tag-success]="!selectedNiche.isDeleted" [class.tag-danger]="selectedNiche.isDeleted">
+                {{ selectedNiche.isDeleted ? 'Неактивна' : 'Активна' }}
+              </span>
+              <span class="tag tag-info">
+                <i class="icon-product"></i>
+                {{ selectedNiche.productCount }} товаров
+              </span>
+            </div>
+          </div>
+          
+          <div class="header-actions">
+            <div class="action-buttons">
+              <button class="btn-secondary" (click)="startEdit(selectedNiche)">
+                <i class="icon-edit"></i>
+                Редактировать
+              </button>
+              <button class="btn-danger" (click)="showDeleteConfirm = true">
+                <i class="icon-trash"></i>
+                Удалить
+              </button>
+            </div>
+            
+            <div class="view-tabs">
+              <button class="tab-btn" [class.active]="viewMode === 'details'" (click)="switchView('details')">
+                <i class="icon-info"></i>
+                Детали
+              </button>
+              <button class="tab-btn" [class.active]="viewMode === 'products'" (click)="switchView('products')">
+                <i class="icon-product"></i>
+                Товары
+                <span class="tab-badge">{{ selectedNiche.productCount }}</span>
+              </button>
+              <button class="tab-btn" [class.active]="viewMode === 'categories'" (click)="switchView('categories')">
+                <i class="icon-category"></i>
+                Категории
+                <span class="tab-badge">{{ selectedNiche.subCategories?.length || 0 }}</span>
+              </button>
+              <button class="tab-btn" [class.active]="viewMode === 'analytics'" (click)="switchView('analytics')">
+                <i class="icon-chart"></i>
+                Аналитика
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Контент вкладок -->
+        <div class="tab-content">
+          <!-- Детали -->
+          <div *ngIf="viewMode === 'details'" class="details-view">
+            <div class="details-grid">
+              <div class="detail-card">
+                <div class="detail-header">
+                  <i class="icon-info"></i>
+                  <h3>Основная информация</h3>
+                </div>
+                <div class="detail-content">
+                  <div class="info-row">
+                    <span class="info-label">Название:</span>
+                    <span class="info-value">{{ selectedNiche.name }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Код:</span>
+                    <span class="info-value code">{{ selectedNiche.code }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Порядок:</span>
+                    <span class="info-value">{{ selectedNiche.sortIndex }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Статус:</span>
+                    <span class="info-value status" [class.active]="!selectedNiche.isDeleted">
+                      {{ selectedNiche.isDeleted ? 'Неактивна' : 'Активна' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-header">
+                  <i class="icon-description"></i>
+                  <h3>Описание</h3>
+                </div>
+                <div class="detail-content">
+                  <p>{{ selectedNiche.description || 'Описание отсутствует' }}</p>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-header">
+                  <i class="icon-stats"></i>
+                  <h3>Статистика</h3>
+                </div>
+                <div class="detail-content stats">
+                  <div class="stat-item">
+                    <div class="stat-value">{{ selectedNiche.productCount }}</div>
+                    <div class="stat-label">Товаров</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">{{ selectedNiche.subCategories?.length || 0 }}</div>
+                    <div class="stat-label">Категорий</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">{{ selectedNiche.sortIndex }}</div>
+                    <div class="stat-label">Порядок</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card full-width" *ngIf="selectedNiche.imageInstances && selectedNiche.imageInstances.length > 0">
+                <div class="detail-header">
+                  <i class="icon-image"></i>
+                  <h3>Изображения</h3>
+                </div>
+                <div class="detail-content">
+                  <div class="images-grid">
+                    <div *ngFor="let image of selectedNiche.imageInstances" class="image-item">
+                      <div class="image-container">
+                        <img [src]="getImageUrl(image.fileInfoId)" [alt]="selectedNiche.name">
+                        <div class="image-overlay">
+                          <button class="btn-icon-sm btn-danger" (click)="removeImage(image.id)">
+                            <i class="icon-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="image-info">
+                        <span>{{ getImageTypeName(image.imageType) }}</span>
+                        <span>{{ image.resolutionWidth }}×{{ image.resolutionHeight }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Товары -->
+          <div *ngIf="viewMode === 'products'" class="products-view">
+            <div class="view-header">
+              <div class="search-section">
+                <div class="search-box">
+                  <input type="text" 
+                         [(ngModel)]="productSearchQuery" 
+                         (ngModelChange)="onProductSearchChange($event)"
+                         placeholder="Поиск товаров...">
+                  <i class="icon-search"></i>
+                  <div *ngIf="isSearchingProducts" class="search-loading">
+                    <div class="spinner"></div>
+                  </div>
+                </div>
+                
+                <button *ngIf="selectedProductIds.size > 0" 
+                        class="btn-primary"
+                        (click)="addProductsToNiche()"
+                        [disabled]="isLoading">
+                  <i class="icon-plus"></i>
+                  Добавить ({{ selectedProductIds.size }})
+                </button>
+              </div>
+              
+              <div class="view-actions">
+                <button class="btn-secondary" (click)="loadNicheProducts()">
+                  <i class="icon-refresh"></i>
+                  Обновить
+                </button>
+              </div>
+            </div>
+
+            <!-- Результаты поиска -->
+            <div *ngIf="productSearchResults.length > 0" class="search-results">
+              <h4>Найдено товаров: {{ productSearchResults.length }}</h4>
+              <div class="products-grid compact">
+                <div *ngFor="let product of productSearchResults" 
+                     class="product-card"
+                     [class.selected]="selectedProductIds.has(product.id)"
+                     (click)="toggleProductSelection(product.id)">
+                  
+                  <div class="product-selection">
+                    <label class="checkbox">
+                      <input type="checkbox" [checked]="selectedProductIds.has(product.id)">
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                  
+                  <div class="product-image">
+                    <img [src]="getProductImage(product)" [alt]="product.fullName">
+                  </div>
+                  
+                  <div class="product-info">
+                    <div class="product-name">{{ product.fullName }}</div>
+                    <div class="product-meta">
+                      <span class="product-article">{{ product.article }}</span>
+                      <span class="product-price">{{ getProductPrice(product) }} ₽</span>
+                    </div>
+                    <div class="product-manufacturer">{{ product.manufacturer }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Товары ниши -->
+            <div class="niche-products">
+              <div class="section-header">
+                <h3>Товары в нише ({{ nicheProducts.length }})</h3>
+                
+                <div class="section-actions" *ngIf="selectedNicheProducts.size > 0">
+                  <div class="batch-actions">
+                    <button class="btn-danger btn-sm" (click)="removeSelectedProducts()">
+                      <i class="icon-trash"></i>
+                      Удалить выбранные ({{ selectedNicheProducts.size }})
+                    </button>
+                    <button class="btn-secondary btn-sm" (click)="clearNicheProductSelection()">
+                      Снять выделение
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="isLoadingProducts" class="loading-state">
+                <div class="spinner"></div>
+                <p>Загрузка товаров...</p>
+              </div>
+
+              <div *ngIf="!isLoadingProducts && nicheProducts.length > 0" class="products-grid">
+                <div *ngFor="let product of nicheProducts" class="product-card">
+                  <div class="product-selection" (click)="toggleNicheProductSelection(product.id)">
+                    <label class="checkbox">
+                      <input type="checkbox" [checked]="selectedNicheProducts.has(product.id)">
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                  
+                  <div class="product-image">
+                    <img [src]="getProductImage(product)" [alt]="product.fullName">
+                  </div>
+                  
+                  <div class="product-info">
+                    <div class="product-header">
+                      <div class="product-name">{{ product.fullName }}</div>
+                      <div class="product-actions">
+                        <button class="btn-icon-sm" 
+                                (click)="showQuickViewMethod('product', {product})"
+                                title="Быстрый просмотр">
+                          <i class="icon-eye"></i>
+                        </button>
+                        <button class="btn-icon-sm btn-danger" 
+                                (click)="removeProductFromNiche(product.id)"
+                                title="Удалить из ниши">
+                          <i class="icon-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="product-details">
+                      <div class="detail-row">
+                        <span class="detail-label">Артикул:</span>
+                        <span class="detail-value">{{ product.article }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Цена:</span>
+                        <span class="detail-value price">{{ getProductPrice(product) }} ₽</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Производитель:</span>
+                        <span class="detail-value">{{ product.manufacturer || 'Не указан' }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Рейтинг:</span>
+                        <span class="detail-value rating">
+                          <i class="icon-star"></i>
+                          {{ product.rating || 'Нет' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="!isLoadingProducts && nicheProducts.length === 0" class="empty-state">
+                <div class="empty-icon">
+                  <i class="icon-product"></i>
+                </div>
+                <h4>Товаров пока нет</h4>
+                <p>Добавьте товары в нишу с помощью поиска выше</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Категории -->
+          <div *ngIf="viewMode === 'categories'" class="categories-view">
+            <div class="view-header">
+              <div class="search-section">
+                <div class="search-box">
+                  <input type="text" 
+                         [(ngModel)]="categorySearchQuery" 
+                         (ngModelChange)="onCategorySearchChange($event)"
+                         placeholder="Поиск категорий...">
+                  <i class="icon-search"></i>
+                  <div *ngIf="isSearchingCategories" class="search-loading">
+                    <div class="spinner"></div>
+                  </div>
+                </div>
+                
+                <button *ngIf="selectedCategoryIds.size > 0" 
+                        class="btn-primary"
+                        (click)="addCategoriesToNiche()"
+                        [disabled]="isLoading">
+                  <i class="icon-plus"></i>
+                  Добавить ({{ selectedCategoryIds.size }})
+                </button>
+              </div>
+            </div>
+
+            <!-- Результаты поиска категорий -->
+            <div *ngIf="categorySearchResults.length > 0" class="search-results">
+              <h4>Найдено категорий: {{ categorySearchResults.length }}</h4>
+              <div class="categories-grid">
+                <div *ngFor="let category of categorySearchResults" 
+                     class="category-card"
+                     [class.selected]="selectedCategoryIds.has(category.id)"
+                     (click)="toggleCategorySelection(category.id)">
+                  
+                  <div class="category-selection">
+                    <label class="checkbox">
+                      <input type="checkbox" [checked]="selectedCategoryIds.has(category.id)">
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                  
+                  <div class="category-icon">
+                    <i class="icon-category"></i>
+                  </div>
+                  
+                  <div class="category-info">
+                    <div class="category-name">{{ category.name }}</div>
+                    <div class="category-meta">
+                      <span class="category-code">{{ category.code }}</span>
+                      <span class="category-products">{{ category.productCount }} товаров</span>
+                    </div>
+                    <p class="category-description">{{ category.description | truncate:100 }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Категории ниши -->
+            <div class="niche-categories">
+              <div class="section-header">
+                <h3>Категории в нише ({{ selectedNiche.subCategories?.length || 0 }})</h3>
+                
+                <div class="section-actions" *ngIf="selectedNicheCategories.size > 0">
+                  <div class="batch-actions">
+                    <button class="btn-danger btn-sm" (click)="removeSelectedCategories()">
+                      <i class="icon-trash"></i>
+                      Удалить выбранные ({{ selectedNicheCategories.size }})
+                    </button>
+                    <button class="btn-secondary btn-sm" (click)="clearNicheCategorySelection()">
+                      Снять выделение
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="isLoadingCategories" class="loading-state">
+                <div class="spinner"></div>
+                <p>Загрузка категорий...</p>
+              </div>
+
+              <div *ngIf="!isLoadingCategories && selectedNiche.subCategories && selectedNiche.subCategories.length > 0" class="categories-grid">
+                <div *ngFor="let category of selectedNiche.subCategories" class="category-card">
+                  <div class="category-selection" (click)="toggleNicheCategorySelection(category.id)">
+                    <label class="checkbox">
+                      <input type="checkbox" [checked]="selectedNicheCategories.has(category.id)">
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                  
+                  <div class="category-icon">
+                    <i class="icon-category"></i>
+                  </div>
+                  
+                  <div class="category-info">
+                    <div class="category-header">
+                      <div class="category-name">{{ category.name }}</div>
+                      <div class="category-actions">
+                        <button class="btn-icon-sm" 
+                                (click)="showQuickViewMethod('category', {category})"
+                                title="Быстрый просмотр">
+                          <i class="icon-eye"></i>
+                        </button>
+                        <button class="btn-icon-sm btn-danger" 
+                                (click)="removeCategoryFromNiche(category.id)"
+                                title="Удалить из ниши">
+                          <i class="icon-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="category-meta">
+                      <span class="category-code">{{ category.code || 'Без кода' }}</span>
+                      <span *ngIf="category.productCount" class="category-products">
+                        {{ category.productCount }} товаров
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="!isLoadingCategories && (!selectedNiche.subCategories || selectedNiche.subCategories.length === 0)" class="empty-state">
+                <div class="empty-icon">
+                  <i class="icon-category"></i>
+                </div>
+                <h4>Категорий пока нет</h4>
+                <p>Добавьте категории в нишу с помощью поиска выше</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Аналитика -->
+          <div *ngIf="viewMode === 'analytics'" class="analytics-view">
+            <div class="analytics-grid">
+              <div class="analytics-card full-width">
+                <div class="card-header">
+                  <h3>Рост количества товаров</h3>
+                  <div class="card-actions">
+                    <select>
+                      <option>За 6 месяцев</option>
+                      <option>За год</option>
+                      <option>За все время</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="card-content">
+                  <div class="chart-container">
+                    <div class="chart-placeholder">
+                      <div class="chart-bars">
+                        <div *ngFor="let value of nicheAnalytics.growth; let i = index" 
+                             class="chart-bar"
+                             [style.height]="value + '%'"
+                             [attr.title]="'Месяц ' + (i + 1) + ': ' + value">
+                          <span class="bar-value">{{ value }}</span>
+                        </div>
+                      </div>
+                      <div class="chart-labels">
+                        <span *ngFor="let i of [1,2,3,4,5,6]">Месяц {{ i }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="analytics-card">
+                <div class="card-header">
+                  <h3>Топ товары</h3>
+                </div>
+                <div class="card-content">
+                  <div class="top-products">
+                    <div *ngFor="let product of nicheAnalytics.topProducts; let i = index" class="top-product">
+                      <div class="product-rank">{{ i + 1 }}</div>
+                      <div class="product-info">
+                        <div class="product-name">{{ product.fullName | truncate:30 }}</div>
+                        <div class="product-price">{{ getProductPrice(product) }} ₽</div>
+                      </div>
+                      <button class="btn-icon-sm" (click)="showQuickViewMethod('product', {product})">
+                        <i class="icon-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="analytics-card">
+                <div class="card-header">
+                  <h3>Распределение по цене</h3>
+                </div>
+                <div class="card-content">
+                  <div class="distribution-chart">
+                    <div *ngFor="let value of nicheAnalytics.productDistribution; let i = index" 
+                         class="distribution-item">
+                      <div class="distribution-label">
+                        {{ ['До 1000₽', '1000-5000₽', '5000-10000₽', '10000-20000₽', 'От 20000₽'][i] }}
+                      </div>
+                      <div class="distribution-bar">
+                        <div class="bar-fill" [style.width]="value + '%'"></div>
+                        <span class="bar-value">{{ value }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Форма создания -->
+      <div *ngIf="isCreating" class="form-view">
+        <div class="form-header">
+          <h2><i class="icon-plus"></i> Создание новой ниши</h2>
+          <button class="btn-icon" (click)="cancelCreate()">
+            <i class="icon-close"></i>
+          </button>
+        </div>
+
+        <form class="niche-form" (ngSubmit)="createNiche()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Название ниши *</label>
+              <input type="text" 
+                     [(ngModel)]="newNiche.name" 
+                     name="name"
+                     required
+                     placeholder="Введите название">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Код *</label>
+                <input type="text" 
+                       [(ngModel)]="newNiche.code" 
+                       name="code"
+                       required
+                       placeholder="Уникальный код">
+              </div>
+              
+              <div class="form-group">
+                <label>Порядок сортировки</label>
+                <input type="number" 
+                       [(ngModel)]="newNiche.sortIndex" 
+                       name="sortIndex"
+                       min="0">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Описание</label>
+              <textarea [(ngModel)]="newNiche.description" 
+                        name="description"
+                        rows="4"
+                        placeholder="Описание ниши..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Изображения</label>
+              <div class="image-upload-area" (click)="fileInput.click()">
+                <input type="file" 
+                       #fileInput
+                       (change)="onImageUpload($event, false)"
+                       multiple
+                       accept="image/*"
+                       style="display: none">
+                
+                <div class="upload-content" *ngIf="uploadedImages.length === 0">
+                  <i class="icon-upload"></i>
+                  <p>Перетащите сюда изображения или кликните для выбора</p>
+                  <span class="upload-hint">Поддерживаются JPG, PNG, GIF до 5MB</span>
+                </div>
+                
+                <div *ngIf="uploadedImages.length > 0" class="upload-preview">
+                  <div *ngFor="let image of uploadedImages; let i = index" class="preview-item">
+                    <img [src]="image.preview" [alt]="'Изображение ' + (i + 1)">
+                    <button type="button" 
+                            class="btn-icon-sm btn-danger"
+                            (click)="removeUploadedImage(i, false)">
+                      <i class="icon-trash"></i>
+                    </button>
+                  </div>
+                  <div class="add-more" (click)="fileInput.click()">
+                    <i class="icon-plus"></i>
+                    Добавить ещё
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-field">
+                <input type="checkbox" 
+                       [(ngModel)]="newNiche.isActive"
+                       name="isActive">
+                <span class="checkmark"></span>
+                Активная ниша
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="isLoading">
+              <span *ngIf="!isLoading">Создать нишу</span>
+              <span *ngIf="isLoading" class="loading">
+                <div class="spinner"></div>
+                Создание...
+              </span>
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelCreate()">
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Форма редактирования -->
+      <div *ngIf="isEditing" class="form-view">
+        <div class="form-header">
+          <h2><i class="icon-edit"></i> Редактирование ниши</h2>
+          <button class="btn-icon" (click)="cancelEdit()">
+            <i class="icon-close"></i>
+          </button>
+        </div>
+
+        <form class="niche-form" (ngSubmit)="updateNiche()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Название ниши *</label>
+              <input type="text" 
+                     [(ngModel)]="editNiche.name" 
+                     name="editName"
+                     required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Код *</label>
+                <input type="text" 
+                       [(ngModel)]="editNiche.code" 
+                       name="editCode"
+                       required>
+              </div>
+              
+              <div class="form-group">
+                <label>Порядок сортировки</label>
+                <input type="number" 
+                       [(ngModel)]="editNiche.sortIndex" 
+                       name="editSortIndex"
+                       min="0">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Описание</label>
+              <textarea [(ngModel)]="editNiche.description" 
+                        name="editDescription"
+                        rows="4"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Статус</label>
+                <label class="checkbox-field">
+                  <input type="checkbox" 
+                         [(ngModel)]="editNiche.isActive"
+                         name="editIsActive">
+                  <span class="checkmark"></span>
+                  Активная ниша
+                </label>
+              </div>
+              
+              <div class="form-group">
+                <label>Удалить старые изображения</label>
+                <label class="checkbox-field">
+                  <input type="checkbox" 
+                         [(ngModel)]="editNiche.removeOldImages"
+                         name="removeOldImages">
+                  <span class="checkmark"></span>
+                  Удалить существующие изображения
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Новые изображения</label>
+              <div class="image-upload-area" (click)="editFileInput.click()">
+                <input type="file" 
+                       #editFileInput
+                       (change)="onImageUpload($event, true)"
+                       multiple
+                       accept="image/*"
+                       style="display: none">
+                
+                <div class="upload-content" *ngIf="editUploadedImages.length === 0">
+                  <i class="icon-upload"></i>
+                  <p>Добавить новые изображения</p>
+                </div>
+                
+                <div *ngIf="editUploadedImages.length > 0" class="upload-preview">
+                  <div *ngFor="let image of editUploadedImages; let i = index" class="preview-item">
+                    <img [src]="image.preview" [alt]="'Изображение ' + (i + 1)">
+                    <button type="button" 
+                            class="btn-icon-sm btn-danger"
+                            (click)="removeUploadedImage(i, true)">
+                      <i class="icon-trash"></i>
+                    </button>
+                  </div>
+                  <div class="add-more" (click)="editFileInput.click()">
+                    <i class="icon-plus"></i>
+                    Добавить ещё
+                  </div>
+                </div>
+              </div>
+              
+              <div *ngIf="selectedNiche?.imageInstances && selectedNiche.imageInstances.length > 0" class="existing-images">
+                <h4>Текущие изображения</h4>
+                <div class="images-list">
+                  <div *ngFor="let image of selectedNiche.imageInstances" class="existing-image">
+                    <img [src]="getImageUrl(image.fileInfoId)" [alt]="selectedNiche.name">
+                    <div class="image-info">
+                      {{ getImageTypeName(image.imageType) }}
+                      <small>{{ image.resolutionWidth }}×{{ image.resolutionHeight }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="isLoading">
+              <span *ngIf="!isLoading">Сохранить изменения</span>
+              <span *ngIf="isLoading" class="loading">
+                <div class="spinner"></div>
+                Сохранение...
+              </span>
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelEdit()">
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Пустое состояние -->
+      <div *ngIf="!selectedNiche && !isCreating && !isEditing" class="empty-state-panel">
+        <div class="empty-content">
+          <div class="empty-icon">
+            <i class="icon-folder"></i>
+          </div>
+          <h3>Выберите нишу</h3>
+          <p>Выберите нишу из списка слева для просмотра и редактирования</p>
+          <button class="btn-primary" (click)="startCreate()">
+            <i class="icon-plus"></i>
+            Создать новую нишу
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно удаления -->
+  <div *ngIf="showDeleteConfirm" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="icon-warning"></i> Подтверждение удаления</h3>
+        <button class="btn-icon" (click)="showDeleteConfirm = false">
+          <i class="icon-close"></i>
+        </button>
+      </div>
+      
+      <div class="modal-content">
+        <div class="warning-message">
+          <p>Вы уверены, что хотите удалить нишу <strong>"{{ selectedNiche?.name }}"</strong>?</p>
+          <p class="text-muted">Это действие нельзя отменить.</p>
+        </div>
+        
+        <div class="warning-details">
+          <h4>Последствия удаления:</h4>
+          <ul>
+            <li>Все связи с товарами будут удалены</li>
+            <li>Категории будут отвязаны от ниши</li>
+            <li>Изображения будут удалены</li>
+            <li>Ниша перестанет отображаться в каталоге</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-danger" (click)="deleteNiche()" [disabled]="isLoading">
+          <span *ngIf="!isLoading">Удалить</span>
+          <span *ngIf="isLoading" class="loading">
+            <div class="spinner"></div>
+            Удаление...
+          </span>
+        </button>
+        <button class="btn-secondary" (click)="showDeleteConfirm = false" [disabled]="isLoading">
+          Отмена
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно быстрого просмотра -->
+  <div *ngIf="showQuickView" class="modal-overlay">
+    <div class="modal-container quickview">
+      <div class="modal-header">
+        <h3>
+          <i *ngIf="quickViewData.type === 'niche'" class="icon-folder"></i>
+          <i *ngIf="quickViewData.type === 'product'" class="icon-product"></i>
+          <i *ngIf="quickViewData.type === 'category'" class="icon-category"></i>
+          Быстрый просмотр
+        </h3>
+        <button class="btn-icon" (click)="showQuickView = false">
+          <i class="icon-close"></i>
+        </button>
+      </div>
+      
+      <div class="modal-content">
+        <div *ngIf="quickViewData.type === 'niche' && quickViewData.niche" class="quickview-content">
+          <div class="quickview-header">
+            <div class="header-icon">
+              <i class="icon-folder"></i>
+            </div>
+            <div class="header-info">
+              <h4>{{ quickViewData.niche.name }}</h4>
+              <div class="header-tags">
+                <span class="tag">{{ quickViewData.niche.code }}</span>
+                <span class="tag" [class.tag-success]="!quickViewData.niche.isDeleted">
+                  {{ quickViewData.niche.isDeleted ? 'Неактивна' : 'Активна' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="quickview-details">
+            <div class="detail-item">
+              <span class="label">Товаров:</span>
+              <span class="value">{{ quickViewData.niche.productCount }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Категорий:</span>
+              <span class="value">{{ quickViewData.niche.subCategories?.length || 0 }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Порядок:</span>
+              <span class="value">{{ quickViewData.niche.sortIndex }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="label">Описание:</span>
+              <span class="value">{{ quickViewData.niche.description || 'Отсутствует' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="quickViewData.type === 'product' && quickViewData.product" class="quickview-content">
+          <div class="quickview-header">
+            <div class="header-image">
+              <img [src]="getProductImage(quickViewData.product)" [alt]="quickViewData.product.fullName">
+            </div>
+            <div class="header-info">
+              <h4>{{ quickViewData.product.fullName }}</h4>
+              <div class="header-tags">
+                <span class="tag">{{ quickViewData.product.article }}</span>
+                <span class="tag tag-success" *ngIf="quickViewData.product.inStock">В наличии</span>
+                <span class="tag tag-danger" *ngIf="!quickViewData.product.inStock">Нет в наличии</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="quickview-details">
+            <div class="detail-item">
+              <span class="label">Цена:</span>
+              <span class="value price">{{ getProductPrice(quickViewData.product) }} ₽</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Производитель:</span>
+              <span class="value">{{ quickViewData.product.manufacturer || 'Не указан' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Рейтинг:</span>
+              <span class="value rating">
+                <i class="icon-star"></i>
+                {{ quickViewData.product.rating || 'Нет' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="quickViewData.type === 'category' && quickViewData.category" class="quickview-content">
+          <div class="quickview-header">
+            <div class="header-icon">
+              <i class="icon-category"></i>
+            </div>
+            <div class="header-info">
+              <h4>{{ quickViewData.category.name }}</h4>
+              <div class="header-tags">
+                <span class="tag">{{ quickViewData.category.code }}</span>
+                <span class="tag">
+                  {{ quickViewData.category.productCount }} товаров
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="quickview-details">
+            <div class="detail-item full-width">
+              <span class="label">Описание:</span>
+              <span class="value">{{ quickViewData.category.description || 'Отсутствует' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button *ngIf="quickViewData.type === 'niche' && quickViewData.niche" 
+                class="btn-primary"
+                (click)="selectNiche(quickViewData.niche!); showQuickView = false">
+          <i class="icon-folder"></i>
+          Открыть нишу
+        </button>
+        <button class="btn-secondary" (click)="showQuickView = false">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Загрузка ниш...</p>
+  </div>
+</ng-template>

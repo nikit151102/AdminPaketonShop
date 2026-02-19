@@ -1,0 +1,871 @@
+<div class="category-management">
+    <!-- Заголовок и управление -->
+    <div class="management-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                </svg>
+                Управление категориями товаров
+            </h1>
+            <p class="page-subtitle">Создание, редактирование и организация категорий</p>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+                Новая категория
+            </button>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="management-content">
+        <!-- Левая панель: Список категорий -->
+        <div class="categories-sidebar">
+            <div class="sidebar-header">
+                <h3>Все категории</h3>
+                <div class="category-count">{{ categories.length }}</div>
+            </div>
+
+            <!-- Хлебные крошки -->
+            <div *ngIf="breadcrumbs.length > 0" class="breadcrumbs">
+                <button class="breadcrumb-home" (click)="selectedCategory = null; breadcrumbs = []; subCategories = []">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                </button>
+
+                <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
+                    <div class="breadcrumb-separator">/</div>
+                    <button class="breadcrumb-item" [class.active]="last" (click)="!last && selectCategory(crumb)">
+                        {{ crumb.name }}
+                    </button>
+                </ng-container>
+            </div>
+
+            <!-- Список категорий -->
+            <div class="categories-list" *ngIf="!isLoading; else loading">
+                <!-- Если выбрана категория - показываем подкатегории -->
+                <ng-container *ngIf="selectedCategory; else rootCategories">
+                    <div class="subcategories-header">
+                        <h4>Подкатегории "{{ selectedCategory.name }}"</h4>
+                        <div class="subcategory-count">{{ subCategories.length }}</div>
+                    </div>
+
+                    <div class="subcategories-list">
+                        <div *ngFor="let subCat of subCategories" class="subcategory-item"
+                            (click)="navigateToSubCategory(subCat)">
+
+                            <div class="subcategory-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                                </svg>
+                            </div>
+
+                            <div class="subcategory-info">
+                                <div class="subcategory-name">{{ subCat.name }}</div>
+                                <div class="subcategory-meta">
+                                    <span>{{ subCat.productCount || 0 }} товаров</span>
+                                </div>
+                            </div>
+
+                            <div class="subcategory-arrow">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div *ngIf="subCategories.length === 0" class="empty-subcategories">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                            </svg>
+                            <p>Подкатегории отсутствуют</p>
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-template #rootCategories>
+                    <div class="root-categories">
+                        <div *ngFor="let category of categories" class="category-item"
+                            [class.active]="selectedCategory?.id === category.id" (click)="selectCategory(category)">
+
+                            <div class="category-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                                </svg>
+                            </div>
+
+                            <div class="category-info">
+                                <div class="category-name">{{ category.name }}</div>
+                                <div class="category-meta">
+                                    <span class="meta-item">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" />
+                                        </svg>
+                                        {{ category.code }}
+                                    </span>
+                                    <span class="meta-item">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                        </svg>
+                                        {{ category.productCount }} товаров
+                                    </span>
+                                    <span class="meta-item" *ngIf="category.subCategories.length > 0">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                                        </svg>
+                                        {{ category.subCategories.length }} подкатегорий
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="category-actions">
+                                <button class="action-btn" (click)="startEdit(category); $event.stopPropagation()"
+                                    title="Редактировать">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+            </div>
+
+            <ng-template #loading>
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка категорий...</p>
+                </div>
+            </ng-template>
+        </div>
+
+        <!-- Правая панель: Детали и управление -->
+        <div class="details-panel">
+            <!-- Выбранная категория -->
+            <div *ngIf="selectedCategory && !isCreating && !isEditing && !isMoving" class="category-content">
+
+                <!-- Заголовок категории -->
+                <div class="category-header">
+                    <div class="header-main">
+                        <div class="header-title-section">
+                            <h2>{{ selectedCategory.name }}</h2>
+                            <div class="category-badge">{{ selectedCategory.code }}</div>
+                        </div>
+
+                        <div class="header-tabs">
+                            <button class="tab-btn" [class.active]="viewMode === 'details'"
+                                (click)="switchView('details')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
+                                </svg>
+                                Детали
+                            </button>
+
+                            <button class="tab-btn" [class.active]="viewMode === 'products'"
+                                (click)="switchView('products')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                </svg>
+                                Товары ({{ selectedCategory.productCount }})
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="header-actions">
+                        <button class="btn-secondary" (click)="startEdit(selectedCategory)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                            </svg>
+                            Редактировать
+                        </button>
+                        <button class="btn-danger" (click)="showDeleteConfirm = true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                            </svg>
+                            Удалить
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Контент в зависимости от режима просмотра -->
+                <div class="content-area">
+                    <!-- Режим деталей -->
+                    <div *ngIf="viewMode === 'details'" class="details-view">
+                        <div class="details-content">
+                            <div class="description-section">
+                                <h3>Описание</h3>
+                                <p>{{ selectedCategory.description || 'Описание отсутствует' }}</p>
+                            </div>
+
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-value">{{ selectedCategory.productCount }}</div>
+                                        <div class="stat-label">Товаров</div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-value">{{ selectedCategory.shortCode }}</div>
+                                        <div class="stat-label">Короткий код</div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-value">{{ selectedCategory.subCategories.length }}</div>
+                                        <div class="stat-label">Подкатегорий</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Подкатегории -->
+                            <div class="subcategories-section">
+                                <div class="section-header">
+                                    <h3>Подкатегории</h3>
+                                    <div class="section-actions">
+                                        <button class="btn-small" (click)="isAddingSubCategories = true"
+                                            *ngIf="!isAddingSubCategories">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                            </svg>
+                                            Добавить подкатегории
+                                        </button>
+                                        <button class="btn-small" (click)="isAddingSubCategories = false"
+                                            *ngIf="isAddingSubCategories">
+                                            Отмена
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Форма добавления подкатегорий -->
+                                <div *ngIf="isAddingSubCategories" class="add-subcategories-form">
+                                    <h4>Выберите категории для добавления</h4>
+
+                                    <div *ngIf="availableCategoriesForAddition.length > 0"
+                                        class="available-categories-grid">
+                                        <div *ngFor="let category of availableCategoriesForAddition"
+                                            class="available-category-card"
+                                            [class.selected]="selectedCategoriesForAddition.includes(category.id)"
+                                            (click)="toggleCategoryForAddition(category.id)">
+
+                                            <div class="category-checkbox">
+                                                <div class="checkbox"
+                                                    [class.checked]="selectedCategoriesForAddition.includes(category.id)">
+                                                    <svg *ngIf="selectedCategoriesForAddition.includes(category.id)"
+                                                        width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+
+                                            <div class="category-info">
+                                                <div class="category-name">{{ category.name }}</div>
+                                                <div class="category-meta">
+                                                    <span>{{ category.code }}</span>
+                                                    <span>{{ category.productCount }} товаров</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="availableCategoriesForAddition.length === 0" class="no-categories">
+                                        <p>Нет доступных категорий для добавления</p>
+                                    </div>
+
+                                    <div class="form-actions" *ngIf="availableCategoriesForAddition.length > 0">
+                                        <button class="btn-primary" (click)="addSubCategoriesToCategory()"
+                                            [disabled]="selectedCategoriesForAddition.length === 0 || isLoading">
+                                            Добавить выбранные ({{ selectedCategoriesForAddition.length }})
+                                        </button>
+                                        <button class="btn-secondary" (click)="cancelAddSubCategories()">
+                                            Отмена
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Список подкатегорий -->
+                                <div *ngIf="selectedCategory && selectedCategory.subCategories && selectedCategory.subCategories.length > 0 && !isAddingSubCategories"
+                                    class="subcategories-grid">
+
+                                    <div *ngFor="let subCat of selectedCategory.subCategories" class="subcategory-card">
+
+                                        <div class="subcategory-content">
+                                            <div class="subcategory-header">
+                                                <div class="subcategory-name">{{ subCat.name }}</div>
+                                                <div class="subcategory-actions">
+                                                    <button class="action-btn-small"
+                                                        (click)="navigateToSubCategory(subCat)" title="Перейти">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24"
+                                                            fill="currentColor">
+                                                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button class="action-btn-small danger"
+                                                        (click)="removeSubCategoryFromCategory(subCat.id)"
+                                                        title="Удалить из категории">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24"
+                                                            fill="currentColor">
+                                                            <path
+                                                                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="subcategory-id">ID: {{ subCat.id.substring(0, 8) }}...</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <ng-template #noSubcategories>
+
+                                    <div class="empty-state">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                                        </svg>
+                                        <p>Подкатегории отсутствуют</p>
+                                        <button class="btn-small" (click)="startCreate()">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                            </svg>
+                                            Создать подкатегорию
+                                        </button>
+                                    </div>
+                                </ng-template>
+                            </div>
+
+                            <!-- Свойства -->
+                            <div class="properties-section" *ngIf="selectedCategory.properties.length > 0">
+                                <h3>Свойства категории</h3>
+                                <div class="properties-grid">
+                                    <div *ngFor="let prop of selectedCategory.properties" class="property-card">
+                                        <div class="property-name">{{ prop.fullName }}</div>
+                                        <div class="property-details">
+                                            <span>{{ prop.description }}</span>
+                                            <span *ngIf="prop.measurementUnit">
+                                                Ед. изм.: {{ prop.measurementUnit.name }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Режим просмотра товаров -->
+                    <div *ngIf="viewMode === 'products'" class="products-view">
+                        <!-- Поиск и добавление товаров -->
+                        <div class="products-search-section">
+                            <div class="search-container">
+                                <input type="text" [(ngModel)]="productSearchQuery" name="productSearch"
+                                    (ngModelChange)="onSearchQueryChange($event)"
+                                    placeholder="Поиск товаров для добавления...">
+
+                                <div *ngIf="isSearching" class="search-loading">
+                                    <div class="spinner-small"></div>
+                                </div>
+
+                                <button *ngIf="productSearchQuery" class="clear-search-btn" (click)="clearSearch()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <button *ngIf="selectedProducts.length > 0" class="btn-primary btn-add-products"
+                                (click)="addSelectedProductsToCategory()" [disabled]="isLoading">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                </svg>
+                                Добавить ({{ selectedProducts.length }})
+                            </button>
+                        </div>
+
+                        <!-- Результаты поиска -->
+                        <div *ngIf="searchResults.length > 0" class="search-results-section">
+                            <h4>Результаты поиска</h4>
+                            <div class="search-results-grid">
+                                <div *ngFor="let product of searchResults" class="search-product-card"
+                                    [class.selected]="selectedProducts.includes(product.id)"
+                                    (click)="toggleProductSelection(product.id)">
+
+                                    <div class="product-checkbox">
+                                        <div class="checkbox" [class.checked]="selectedProducts.includes(product.id)">
+                                            <svg *ngIf="selectedProducts.includes(product.id)" width="12" height="12"
+                                                viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="product.imageLinks.length > 0" class="product-image">
+                                        <img [src]="product.imageLinks[0]" [alt]="product.fullName">
+                                    </div>
+
+                                    <div class="product-info">
+                                        <div class="product-name">{{ product.fullName }}</div>
+                                        <div class="product-meta">
+                                            <span class="product-article">Арт: {{ product.article }}</span>
+                                            <span class="product-price">{{ product.price }} ₽</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Товары категории -->
+                        <div class="category-products-section">
+                            <div class="section-header">
+                                <h3>Товары в категории ({{ totalProducts }})</h3>
+                                <div class="pagination-controls" *ngIf="productsTotalPages > 1">
+                                    <button class="pagination-btn" (click)="prevProductsPage()"
+                                        [disabled]="productsPage === 0">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                                        </svg>
+                                    </button>
+
+                                    <span class="pagination-info">
+                                        Страница {{ productsPage + 1 }} из {{ productsTotalPages }}
+                                    </span>
+
+                                    <button class="pagination-btn" (click)="nextProductsPage()"
+                                        [disabled]="productsPage >= productsTotalPages - 1">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div *ngIf="isProductsLoading" class="loading-products">
+                                <div class="loading-spinner"></div>
+                                <p>Загрузка товаров...</p>
+                            </div>
+
+                            <div *ngIf="!isProductsLoading && categoryProducts.length > 0" class="products-grid">
+                                <div *ngFor="let product of categoryProducts" class="product-card">
+                                    <div class="product-image-container">
+                                        <ng-container *ngIf="product">
+                                            <img *ngIf="product.imageLinks && product.imageLinks.length > 0"
+                                                [src]="product.imageLinks[0]" [alt]="product.fullName || 'Товар'"
+                                                class="product-img">
+                                            <div *ngIf="!product.imageLinks || product.imageLinks.length === 0"
+                                                class="product-image-placeholder">
+                                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path
+                                                        d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                                </svg>
+                                            </div>
+                                        </ng-container>
+                                        <div *ngIf="!product.imageLinks?.length" class="product-image-placeholder">
+                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                                <path
+                                                    d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div class="product-content">
+                                        <div class="product-title">{{ product.fullName }}</div>
+                                        <div class="product-details">
+                                            <div class="detail-row">
+                                                <span class="detail-label">Артикул:</span>
+                                                <span class="detail-value">{{ product.article }}</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">Цена:</span>
+                                                <span class="detail-value">{{ product.price }} ₽</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">Остатки:</span>
+                                                <!-- <span class="detail-value">
+                                                    {{ Object.keys(product.remains || {}).length }} складов
+                                                </span> -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="product-actions">
+                                        <button class="action-btn danger"
+                                            (click)="removeProductFromCategory(product.id)"
+                                            title="Удалить из категории">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                                <path
+                                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div *ngIf="!isProductsLoading && categoryProducts.length === 0" class="empty-products">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                </svg>
+                                <h4>Товары не найдены</h4>
+                                <p>Используйте поиск выше, чтобы добавить товары в категорию</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Форма создания -->
+            <div *ngIf="isCreating" class="form-container">
+                <form class="category-form" (ngSubmit)="createCategory()">
+                    <div class="form-header">
+                        <h2>Создание новой категории</h2>
+                        <button type="button" class="btn-close" (click)="cancelCreate()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Название *</label>
+                            <input type="text" [(ngModel)]="newCategory.name" name="name" required
+                                placeholder="Введите название категории">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Код *</label>
+                                <input type="text" [(ngModel)]="newCategory.code" name="code" required
+                                    placeholder="Уникальный код">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Короткий код</label>
+                                <div class="input-with-button">
+                                    <input type="number" [(ngModel)]="newCategory.shortCode" name="shortCode"
+                                        placeholder="Автогенерация">
+                                    <button type="button" class="btn-generate" (click)="generateShortCode()">
+                                        Сгенерировать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Описание</label>
+                            <textarea [(ngModel)]="newCategory.description" name="description" rows="4"
+                                placeholder="Описание категории..."></textarea>
+                        </div>
+
+                        <div *ngIf="selectedCategory" class="form-info">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                            </svg>
+                            <span>Будет создана как подкатегория для "{{ selectedCategory.name }}"</span>
+                        </div>
+
+                        <!-- Поиск товаров -->
+                        <div class="form-group">
+                            <label>Добавить товары (опционально)</label>
+                            <div class="search-container">
+                                <input type="text" [(ngModel)]="productSearchQuery" name="productSearch"
+                                    (input)="onSearchQueryChange($any($event.target).value)"
+                                    placeholder="Поиск товаров...">
+
+                                <div *ngIf="isSearching" class="search-loading">
+                                    <div class="spinner-small"></div>
+                                </div>
+                            </div>
+
+                            <div *ngIf="searchResults.length > 0" class="search-results">
+                                <div *ngFor="let product of searchResults" class="product-item"
+                                    [class.selected]="selectedProducts.includes(product.id)"
+                                    (click)="toggleProductSelection(product.id)">
+
+                                    <div class="product-checkbox">
+                                        <div class="checkbox" [class.checked]="selectedProducts.includes(product.id)">
+                                            <svg *ngIf="selectedProducts.includes(product.id)" width="12" height="12"
+                                                viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div class="product-info">
+                                        <div class="product-name">{{ product.fullName }}</div>
+                                        <div class="product-meta">
+                                            <span>Арт: {{ product.article }}</span>
+                                            <span>Цена: {{ product.price }} ₽</span>
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="product.imageLinks.length > 0" class="product-image">
+                                        <img [src]="product.imageLinks[0]" [alt]="product.fullName">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" [disabled]="isLoading">
+                            <span *ngIf="!isLoading">Создать категорию</span>
+                            <span *ngIf="isLoading" class="loading">
+                                <div class="spinner-small"></div>
+                                Создание...
+                            </span>
+                        </button>
+                        <button type="button" class="btn-secondary" (click)="cancelCreate()">
+                            Отмена
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Форма редактирования -->
+            <div *ngIf="isEditing" class="form-container">
+                <form class="category-form" (ngSubmit)="updateCategory()">
+                    <div class="form-header">
+                        <h2>Редактирование категории</h2>
+                        <button type="button" class="btn-close" (click)="cancelEdit()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Название *</label>
+                            <input type="text" [(ngModel)]="editCategory.name" name="editName" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Код *</label>
+                                <input type="text" [(ngModel)]="editCategory.code" name="editCode" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Короткий код</label>
+                                <input type="number" [(ngModel)]="editCategory.shortCode" name="editShortCode">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Описание</label>
+                            <textarea [(ngModel)]="editCategory.description" name="editDescription" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" [disabled]="isLoading">
+                            <span *ngIf="!isLoading">Сохранить изменения</span>
+                            <span *ngIf="isLoading" class="loading">
+                                <div class="spinner-small"></div>
+                                Сохранение...
+                            </span>
+                        </button>
+                        <button type="button" class="btn-secondary" (click)="cancelEdit()">
+                            Отмена
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Перемещение подкатегории -->
+            <div *ngIf="isMoving" class="form-container">
+                <div class="move-form">
+                    <div class="form-header">
+                        <h2>Перемещение подкатегории</h2>
+                        <button type="button" class="btn-close" (click)="cancelMove()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="move-content">
+                        <div class="move-instructions">
+                            <p>Выберите подкатегорию для перемещения и целевую категорию</p>
+                        </div>
+
+                        <div class="move-sections">
+                            <div class="move-section">
+                                <h3>Подкатегории</h3>
+                                <div class="select-container">
+                                    <select [(ngModel)]="moveData.subCategoryId" class="form-select">
+                                        <option value="">Выберите подкатегорию</option>
+                                        <option *ngFor="let subCat of selectedCategory?.subCategories"
+                                            [value]="subCat.id">
+                                            {{ subCat.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="move-section">
+                                <h3>Целевая категория</h3>
+                                <div class="categories-dropzone" (dragover)="onDragOver($event)"
+                                    (drop)="onDrop($event, cat)" *ngFor="let cat of categories"
+                                    [class.active]="moveData.targetCategoryId === cat.id">
+
+                                    <div class="dropzone-content">
+                                        <div class="category-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                                <path
+                                                    d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                                            </svg>
+                                        </div>
+                                        <div class="category-info">
+                                            <div class="category-name">{{ cat.name }}</div>
+                                            <div class="category-code">{{ cat.code }}</div>
+                                        </div>
+                                        <button type="button" class="btn-select"
+                                            (click)="moveData.targetCategoryId = cat.id">
+                                            Выбрать
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="move-summary" *ngIf="moveData.subCategoryId && moveData.targetCategoryId">
+                            <h3>Подтверждение перемещения</h3>
+                            <div class="summary-content">
+                                <p>
+                                    Подкатегория
+                                    <strong>{{ getSubCategoryName(moveData.subCategoryId) }}</strong>
+                                    будет перемещена в категорию
+                                    <strong>{{ getCategoryName(moveData.targetCategoryId) }}</strong>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" (click)="moveSubCategory()"
+                                [disabled]="!moveData.subCategoryId || !moveData.targetCategoryId || isLoading">
+                                <span *ngIf="!isLoading">Переместить</span>
+                                <span *ngIf="isLoading" class="loading">
+                                    <div class="spinner-small"></div>
+                                    Перемещение...
+                                </span>
+                            </button>
+                            <button type="button" class="btn-secondary" (click)="cancelMove()">
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Пустое состояние -->
+            <div *ngIf="!selectedCategory && !isCreating && !isEditing && !isMoving" class="empty-state-full">
+
+                <div class="empty-content">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                    </svg>
+                    <h3>Выберите категорию</h3>
+                    <p>Выберите категорию из списка слева для просмотра и редактирования</p>
+                    <button class="btn-primary" (click)="startCreate()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                        Создать новую категорию
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div *ngIf="showDeleteConfirm" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Подтверждение удаления</h3>
+                <button class="modal-close" (click)="showDeleteConfirm = false">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-content">
+                <div class="warning-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                    </svg>
+                </div>
+
+                <p>Вы уверены, что хотите удалить категорию <strong>{{ selectedCategory?.name }}</strong>?</p>
+
+                <div class="warning-list">
+                    <p>Это действие приведет к:</p>
+                    <ul>
+                        <li>Удалению всех подкатегорий</li>
+                        <li>Удалению связи с товарами</li>
+                        <li>Невозможности восстановления</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-danger" (click)="deleteCategory()" [disabled]="isLoading">
+                    <span *ngIf="!isLoading">Удалить</span>
+                    <span *ngIf="isLoading" class="loading">
+                        <div class="spinner-small"></div>
+                        Удаление...
+                    </span>
+                </button>
+                <button class="btn-secondary" (click)="showDeleteConfirm = false" [disabled]="isLoading">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

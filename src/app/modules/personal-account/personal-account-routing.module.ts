@@ -17,18 +17,36 @@ const routes: Routes = [
       },
       {
         path: 'products',
-        loadChildren: () => import('./tabs/products/products.module').then(m => m.ProductsModule)
+        loadComponent: () => import('./tabs/products/products.component').then(m => m.ProductsComponent)
       },
       {
         path: 'users',
         loadComponent: () => import('./tabs/users/users.component').then(m => m.UsersComponent)
       },
       {
+        path: 'stores',
+        loadComponent: () => import('./tabs/stores/stores.component').then(m => m.StoresComponent)
+      },
+      {
         path: 'reference',
         loadComponent: () => import('./tabs/reference/reference.component').then(m => m.ReferenceComponent)
       },
-
-
+      {
+        path: 'content',
+        loadComponent: () => import('./tabs/news-banner-promo-management/news-banner-promo-management.component').then(m => m.NewsBannerPromoComponent)
+      },
+      {
+        path: 'stocks',
+        loadComponent: () => import('./tabs/stocks/stocks.component').then(m => m.StocksComponent)
+      },
+      {
+        path: 'categories',
+        loadComponent: () => import('./tabs/product-category-manager/product-category-manager.component').then(m => m.ProductCategoryManagerComponent)
+      },
+      {
+        path: 'niches',
+        loadComponent: () => import('./tabs/niche-management/niche-management.component').then(m => m.NicheManagementComponent)
+      }
     ]
   }
 ];

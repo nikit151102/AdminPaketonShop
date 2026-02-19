@@ -1,173 +1,712 @@
-<div class="container">
-    <div class="controls">
-        <div class="column-toggle">
-            <!-- Кнопка для открытия/закрытия панели с выбором столбцов -->
-            <button class="column-toggle-button" (click)="toggleColVisibility()">
-                Показать/скрыть столбцы
-            </button>
-
-            <!-- Панель с выбором столбцов -->
-            <div class="column-options" [class.show]="columnsVisible">
-                <label class="custom-select">
-                    <span>Выбрать столбцы</span>
-                    <div class="checkbox-group">
-                        <div *ngFor="let column of columnOptions" class="checkbox-item">
-                            <input type="checkbox" id="{{ column.key }}" [(ngModel)]="columns[column.key]"
-                                (ngModelChange)="toggleColumnVisibility(column.key, $event)" />
-                            <label for="{{ column.key }}">{{ column.label }}</label>
-                        </div>
-                    </div>
-                </label>
-            </div>
+<div class="products-management">
+    <!-- Заголовок и управление -->
+    <div class="management-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z" />
+                    <path d="M9.5 5C7.01 5 5 7.01 5 9.5S7.01 14 9.5 14 14 11.99 14 9.5 11.99 5 9.5 5z" />
+                </svg>
+                Управление товарами
+            </h1>
+            <p class="page-subtitle">Создание, редактирование и управление товарами магазина</p>
         </div>
 
-        <!-- Отображение выбранных столбцов -->
-        <div class="selected-columns">
-            <span *ngFor="let column of filteredSelectedColumns">
-                {{ getColumnLabel(column) }}
-                <button class="btn-delete-column" (click)="removeColumn(column)">&#10005;</button> <!-- Крестик -->
-            </span>
+        <div class="header-actions">
+            <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+                Добавить товар
+            </button>
+
+            <div class="header-dropdown">
+                <button class="btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                    Экспорт
+                </button>
+                <div class="dropdown-menu">
+                    <button (click)="exportToCSV()">CSV</button>
+                    <button (click)="importFromCSV()">Импорт из CSV</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="products-container">
-        <!-- Таблица для больших экранов -->
-        <table class="products-table">
-            <thead>
-                <tr>
-                    <th *ngIf="columns['article']">Артикул</th>
-                    <th *ngIf="columns['productImageLinks']">Изображение</th>
-                    <th *ngIf="columns['fullName']">Название</th>
-                    <th *ngIf="columns['description']">Описание</th>
-                    <th *ngIf="columns['retailPrice']">Розничная цена</th>
-                    <th *ngIf="columns['wholesalePrice']">Оптовая цена</th>
-                    <th *ngIf="columns['createDateTime']">Дата создания</th>
-                    <th *ngIf="columns['manufacturer']">Производитель</th>
-                    <th *ngIf="columns['packCount']">Кол-во в упаковке</th>
-                    <th *ngIf="columns['keywords']">Ключевые слова</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let product of products">
-                    <td *ngIf="columns['article']">{{ product.article }} <a
-                            [href]="domain + '/product/' + product.id"><svg width="24px" height="24px"
-                                viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                <g id="SVGRepo_iconCarrier">
-                                    <path
-                                        d="M19.5 12L14.5 7M19.5 12L14.5 17M19.5 12L13 12M9.5 12C7.83333 12 4.5 13 4.5 17"
-                                        stroke="#199a51" stroke-width="1.5" stroke-linecap="round"
-                                        stroke-linejoin="round"></path>
-                                </g>
-                            </svg></a></td>
-                    <td *ngIf="columns['productImageLinks']">
-                        <img *ngIf="product.productImageLinks && product.productImageLinks.length > 0"
-                            [src]="product.productImageLinks[0]" alt="Product Image" width="50" />
-                    </td>
-                    <td *ngIf="columns['fullName']">{{ product.fullName }}</td>
-                    <td *ngIf="columns['description']">{{ product.description }}</td>
-                    <td *ngIf="columns['retailPrice']">{{ product.retailPrice }} руб.</td>
-                    <td *ngIf="columns['wholesalePrice']">{{ product.wholesalePrice }} руб.</td>
-                    <td *ngIf="columns['createDateTime']">{{ formatShortDate(product.createDateTime) }}</td>
-                    <td *ngIf="columns['manufacturer']">{{ product.manufacturer }}</td>
-                    <td *ngIf="columns['packCount']">{{ product.packCount }}</td>
-                    <td *ngIf="columns['keywords']">{{ product.keywords }}</td>
-                    <td>
-                        <div class="actions">
-                            <button (click)="editProduct(product.id)" class="btn-edit"><svg width="24px" height="24px"
-                                    viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path
-                                            d="M2 12C2 16.714 2 19.0711 3.46447 20.5355C4.92893 22 7.28595 22 12 22C16.714 22 19.0711 22 20.5355 20.5355C22 19.0711 22 16.714 22 12V10.5M13.5 2H12C7.28595 2 4.92893 2 3.46447 3.46447C2.49073 4.43821 2.16444 5.80655 2.0551 8"
-                                            stroke="#207e2b" stroke-width="1.5" stroke-linecap="round"></path>
-                                        <path
-                                            d="M16.652 3.45506L17.3009 2.80624C18.3759 1.73125 20.1188 1.73125 21.1938 2.80624C22.2687 3.88124 22.2687 5.62415 21.1938 6.69914L20.5449 7.34795M16.652 3.45506C16.652 3.45506 16.7331 4.83379 17.9497 6.05032C19.1662 7.26685 20.5449 7.34795 20.5449 7.34795M16.652 3.45506L10.6872 9.41993C10.2832 9.82394 10.0812 10.0259 9.90743 10.2487C9.70249 10.5114 9.52679 10.7957 9.38344 11.0965C9.26191 11.3515 9.17157 11.6225 8.99089 12.1646L8.41242 13.9M20.5449 7.34795L17.5625 10.3304M14.5801 13.3128C14.1761 13.7168 13.9741 13.9188 13.7513 14.0926C13.4886 14.2975 13.2043 14.4732 12.9035 14.6166C12.6485 14.7381 12.3775 14.8284 11.8354 15.0091L10.1 15.5876M10.1 15.5876L8.97709 15.9619C8.71035 16.0508 8.41626 15.9814 8.21744 15.7826C8.01862 15.5837 7.9492 15.2897 8.03811 15.0229L8.41242 13.9M10.1 15.5876L8.41242 13.9"
-                                            stroke="#207e2b" stroke-width="1.5" stroke-linecap="round"></path>
-                                    </g>
-                                </svg></button>
-                            <button (click)="deleteProduct(product.id)" class="btn-delete"><svg width="24px"
-                                    height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path
-                                            d="M22 12C22 15.7712 22 17.6569 20.7961 18.8284C19.5921 20 17.6544 20 13.779 20H11.142C8.91458 20 7.80085 20 6.87114 19.4986C5.94144 18.9971 5.35117 18.0781 4.17061 16.24L3.48981 15.18C2.4966 13.6336 2 12.8604 2 12C2 11.1396 2.4966 10.3664 3.48981 8.82001L4.17061 7.76001C5.35117 5.92191 5.94144 5.00286 6.87114 4.50143C7.80085 4 8.91458 4 11.142 4L13.779 4C17.6544 4 19.5921 4 20.7961 5.17157C21.4673 5.82475 21.7643 6.69989 21.8957 8"
-                                            stroke="#e51f1f" stroke-width="1.5" stroke-linecap="round"></path>
-                                        <path d="M15.5 9.50002L10.5 14.5M10.5 9.5L15.5 14.5" stroke="#e51f1f"
-                                            stroke-width="1.5" stroke-linecap="round"></path>
-                                    </g>
-                                </svg></button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Панель управления -->
+    <div class="control-panel">
+        <div class="control-section">
+            <!-- Поиск -->
+            <div class="search-container">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z" />
+                </svg>
+                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchQueryChange($event)"
+                    placeholder="Поиск товаров по названию или артикулу..." />
+                <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; loadProducts()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
 
-
-        <!-- Карточки для мобильных экранов -->
-        <div class="product-cards" *ngIf="!isDesktop">
-            <div class="product-card" *ngFor="let product of products">
-                <!-- Верхняя часть: изображение + основные данные -->
-                <div class="product-header">
-                    <img *ngIf="columns['productImageLinks'] && product.productImageLinks && product.productImageLinks.length > 0"
-                        [src]="product.productImageLinks[0]" alt="Product Image" class="product-image" />
-
-                    <div class="product-main-info">
-                        <h3 class="product-title" *ngIf="columns['fullName']">{{ product.fullName }}</h3>
-                        <p class="product-price" *ngIf="columns['retailPrice']">{{ product.retailPrice }} руб.</p>
-                        <p class="product-description" *ngIf="columns['description']">{{ product.description }}</p>
-                    </div>
+            <!-- Фильтры -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label>Категория:</label>
+                    <select [(ngModel)]="selectedCategory" (change)="filterByCategory(selectedCategory)">
+                        <option value="">Все категории</option>
+                        <option *ngFor="let category of categories" [value]="category.id">
+                            {{ category.name }}
+                        </option>
+                    </select>
                 </div>
 
-                <!-- Дополнительная информация -->
-                <div class="product-extra-info">
-                    <p *ngIf="columns['article']"><strong>Артикул:</strong> {{ product.article }}</p>
-                    <p *ngIf="columns['wholesalePrice']"><strong>Оптовая цена:</strong> {{ product.wholesalePrice }}
-                        руб.</p>
-                    <p *ngIf="columns['createDateTime']"><strong>Дата создания:</strong> {{
-                        formatShortDate(product.createDateTime) }}</p>
-                    <p *ngIf="columns['manufacturer']"><strong>Производитель:</strong> {{ product.manufacturer }}</p>
-                    <p *ngIf="columns['packCount']"><strong>Кол-во в упаковке:</strong> {{ product.packCount }}</p>
-                    <p *ngIf="columns['keywords']"><strong>Ключевые слова:</strong> {{ product.keywords }}</p>
+                <div class="filter-group">
+                    <label>Сортировка:</label>
+                    <select [(ngModel)]="sortField" (change)="sortBy(sortField)">
+                        <option value="fullName">По названию</option>
+                        <option value="article">По артикулу</option>
+                        <option value="price">По цене</option>
+                    </select>
+                    <button class="sort-direction" (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path *ngIf="sortDirection === 'asc'" d="M7 14l5-5 5 5z" />
+                            <path *ngIf="sortDirection === 'desc'" d="M7 10l5 5 5-5z" />
+                        </svg>
+                    </button>
                 </div>
+            </div>
 
-                <div class="product-actions">
-                    <button (click)="editProduct(product.id)" class="btn-edit"><svg width="24px" height="24px"
-                            viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                            <g id="SVGRepo_iconCarrier">
-                                <path
-                                    d="M2 12C2 16.714 2 19.0711 3.46447 20.5355C4.92893 22 7.28595 22 12 22C16.714 22 19.0711 22 20.5355 20.5355C22 19.0711 22 16.714 22 12V10.5M13.5 2H12C7.28595 2 4.92893 2 3.46447 3.46447C2.49073 4.43821 2.16444 5.80655 2.0551 8"
-                                    stroke="#207e2b" stroke-width="1.5" stroke-linecap="round"></path>
-                                <path
-                                    d="M16.652 3.45506L17.3009 2.80624C18.3759 1.73125 20.1188 1.73125 21.1938 2.80624C22.2687 3.88124 22.2687 5.62415 21.1938 6.69914L20.5449 7.34795M16.652 3.45506C16.652 3.45506 16.7331 4.83379 17.9497 6.05032C19.1662 7.26685 20.5449 7.34795 20.5449 7.34795M16.652 3.45506L10.6872 9.41993C10.2832 9.82394 10.0812 10.0259 9.90743 10.2487C9.70249 10.5114 9.52679 10.7957 9.38344 11.0965C9.26191 11.3515 9.17157 11.6225 8.99089 12.1646L8.41242 13.9M20.5449 7.34795L17.5625 10.3304M14.5801 13.3128C14.1761 13.7168 13.9741 13.9188 13.7513 14.0926C13.4886 14.2975 13.2043 14.4732 12.9035 14.6166C12.6485 14.7381 12.3775 14.8284 11.8354 15.0091L10.1 15.5876M10.1 15.5876L8.97709 15.9619C8.71035 16.0508 8.41626 15.9814 8.21744 15.7826C8.01862 15.5837 7.9492 15.2897 8.03811 15.0229L8.41242 13.9M10.1 15.5876L8.41242 13.9"
-                                    stroke="#207e2b" stroke-width="1.5" stroke-linecap="round"></path>
-                            </g>
-                        </svg></button>
-                    <button (click)="deleteProduct(product.id)" class="btn-delete"><svg width="24px" height="24px"
-                            viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                            <g id="SVGRepo_iconCarrier">
-                                <path
-                                    d="M22 12C22 15.7712 22 17.6569 20.7961 18.8284C19.5921 20 17.6544 20 13.779 20H11.142C8.91458 20 7.80085 20 6.87114 19.4986C5.94144 18.9971 5.35117 18.0781 4.17061 16.24L3.48981 15.18C2.4966 13.6336 2 12.8604 2 12C2 11.1396 2.4966 10.3664 3.48981 8.82001L4.17061 7.76001C5.35117 5.92191 5.94144 5.00286 6.87114 4.50143C7.80085 4 8.91458 4 11.142 4L13.779 4C17.6544 4 19.5921 4 20.7961 5.17157C21.4673 5.82475 21.7643 6.69989 21.8957 8"
-                                    stroke="#e51f1f" stroke-width="1.5" stroke-linecap="round"></path>
-                                <path d="M15.5 9.50002L10.5 14.5M10.5 9.5L15.5 14.5" stroke="#e51f1f" stroke-width="1.5"
-                                    stroke-linecap="round"></path>
-                            </g>
-                        </svg></button>
-                </div>
+            <!-- Быстрые действия -->
+            <div class="quick-actions">
+                <button class="btn-view-mode" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
+                    </svg>
+                </button>
+                <button class="btn-view-mode" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                    </svg>
+                </button>
+                <button class="btn-clear-filters" (click)="clearFilters()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                    Очистить фильтры
+                </button>
             </div>
         </div>
 
+        <!-- Массовые действия -->
+        <div *ngIf="selectedProducts.length > 0" class="bulk-actions-panel">
+            <div class="bulk-selection-info">
+                <span>Выбрано: {{ selectedProducts.length }} товаров</span>
+                <button class="btn-clear-selection" (click)="selectedProducts = []">
+                    Очистить выбор
+                </button>
+            </div>
+            <div class="bulk-actions">
+                <select [(ngModel)]="bulkAction">
+                    <option value="">Выберите действие...</option>
+                    <option value="delete">Удалить выбранное</option>
+                    <option value="category">Изменить категорию</option>
+                    <option value="price">Изменить цену</option>
+                </select>
+                <button class="btn-primary" (click)="executeBulkAction()" [disabled]="!bulkAction">
+                    Применить
+                </button>
+            </div>
+        </div>
+    </div>
 
-        <div *ngIf="loading" class="loading-indicator">
-            <p>Загрузка товаров...</p>
+    <!-- Основной контент -->
+    <div class="products-content">
+        <!-- Сетка товаров -->
+        <div *ngIf="!isLoading; else loading" class="products-container">
+            <!-- Список товаров -->
+            <div *ngIf="products.length > 0; else emptyProducts">
+                <!-- Режим сетки -->
+                <div *ngIf="viewMode === 'grid'" class="products-grid">
+                    <div *ngFor="let product of products" class="product-card">
+                        <div class="product-checkbox">
+                            <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
+                                (change)="toggleProductSelection(product.id)" />
+                        </div>
+
+                        <div class="product-image" (click)="selectProduct(product)">
+                            <img *ngIf="product.imageLinks.length > 0" [src]="product.imageLinks[0]"
+                                [alt]="product.fullName" />
+                            <div *ngIf="!product.imageLinks?.length" class="image-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                </svg>
+                            </div>
+                            <div class="product-badge" *ngIf="getTotalStock(product) === 0">
+                                Нет в наличии
+                            </div>
+                        </div>
+
+                        <div class="product-info">
+                            <h3 class="product-title" (click)="selectProduct(product)">{{ product.fullName }}</h3>
+                            <div class="product-meta">
+                                <span class="product-article">Арт: {{ product.article }}</span>
+                                <span class="product-price">{{ product.price }} ₽</span>
+                            </div>
+
+                            <div class="product-categories">
+                                <span class="category-tag"
+                                    *ngFor="let categoryId of product.productCategoryIds.slice(0, 2)">
+                                    {{ getProductCategories(product) }}
+                                </span>
+                                <span *ngIf="product.productCategoryIds.length > 2" class="category-more">
+                                    +{{ product.productCategoryIds.length - 2 }}
+                                </span>
+                            </div>
+
+                            <div class="product-properties">
+                                <div class="property-item"
+                                    *ngFor="let prop of product.properties | keyvalue | slice:0:2">
+                                    <span class="property-key">{{ prop.key }}:</span>
+                                    <span class="property-value">{{ prop.value }}</span>
+                                </div>
+                            </div>
+
+                            <div class="product-stock">
+                                <span>Остатки: {{ getTotalStock(product) }} шт.</span>
+                            </div>
+
+                            <div class="product-actions">
+                                <button class="btn-action" (click)="startEdit(product)" title="Редактировать">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-action danger"
+                                    (click)="selectedProduct = product; showDeleteConfirm = true" title="Удалить">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Режим списка -->
+                <div *ngIf="viewMode === 'list'" class="products-list">
+                    <div class="list-header">
+                        <div class="list-column">Изображение</div>
+                        <div class="list-column">Артикул</div>
+                        <div class="list-column">Название</div>
+                        <div class="list-column">Цена</div>
+                        <div class="list-column">Категории</div>
+                        <div class="list-column">Остатки</div>
+                        <div class="list-column">Действия</div>
+                    </div>
+
+                    <div *ngFor="let product of products" class="list-item">
+                        <div class="list-checkbox">
+                            <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
+                                (change)="toggleProductSelection(product.id)" />
+                        </div>
+
+                        <div class="list-column">
+                            <img *ngIf="product.imageLinks.length > 0" [src]="product.imageLinks[0]"
+                                [alt]="product.fullName" class="list-image" />
+                            <div *ngIf="!product.imageLinks?.length" class="list-image-placeholder">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="list-column">
+                            <span class="list-article">{{ product.article }}</span>
+                        </div>
+
+                        <div class="list-column">
+                            <span class="list-title" (click)="selectProduct(product)">{{ product.fullName }}</span>
+                        </div>
+
+                        <div class="list-column">
+                            <span class="list-price">{{ product.price }} ₽</span>
+                        </div>
+
+                        <div class="list-column">
+                            <span class="list-categories">{{ getProductCategories(product) }}</span>
+                        </div>
+
+                        <div class="list-column">
+                            <span class="list-stock" [class.out-of-stock]="getTotalStock(product) === 0">
+                                {{ getTotalStock(product) }} шт.
+                            </span>
+                        </div>
+
+                        <div class="list-column">
+                            <div class="list-actions">
+                                <button class="btn-action" (click)="startEdit(product)" title="Редактировать">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-action danger"
+                                    (click)="selectedProduct = product; showDeleteConfirm = true" title="Удалить">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Пустой список -->
+            <ng-template #emptyProducts>
+                <div class="empty-products">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z" />
+                    </svg>
+                    <h3>Товары не найдены</h3>
+                    <p>Попробуйте изменить условия поиска или фильтры</p>
+                    <button class="btn-primary" (click)="clearFilters()">
+                        Сбросить фильтры
+                    </button>
+                </div>
+            </ng-template>
+        </div>
+
+        <!-- Загрузка -->
+        <ng-template #loading>
+            <div class="loading-products">
+                <div class="loading-spinner"></div>
+                <p>Загрузка товаров...</p>
+            </div>
+        </ng-template>
+
+        <!-- Пагинация -->
+        <div *ngIf="products.length > 0 && totalPages > 1" class="pagination">
+            <button class="pagination-btn" (click)="prevPage()" [disabled]="currentPage === 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                </svg>
+                Назад
+            </button>
+
+            <div class="pagination-pages">
+                <button *ngFor="let page of generatePageNumbers()" class="pagination-page"
+                    [class.active]="page === currentPage + 1" (click)="goToPage(page)" [disabled]="page === '...'">
+                    {{ page }}
+                </button>
+            </div>
+
+            <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+                Вперед
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                </svg>
+            </button>
+
+            <div class="pagination-info">
+                Показано {{ products.length }} из {{ totalProducts }} товаров
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма создания товара -->
+    <div *ngIf="isCreating" class="modal-overlay active">
+        <div class="modal-container large">
+            <form class="product-form" (ngSubmit)="createProduct()">
+                <div class="modal-header">
+                    <h2>Добавление нового товара</h2>
+                    <button type="button" class="modal-close" (click)="cancelCreate()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-content">
+                    <!-- Основная информация -->
+                    <div class="form-section">
+                        <h3>Основная информация</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Артикул *</label>
+                                <input type="text" [(ngModel)]="newProduct.article" name="article" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Название *</label>
+                                <input type="text" [(ngModel)]="newProduct.fullName" name="fullName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Короткое название</label>
+                                <input type="text" [(ngModel)]="newProduct.shortName" name="shortName">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Описание</label>
+                            <textarea [(ngModel)]="newProduct.description" name="description" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Цены -->
+                    <div class="form-section">
+                        <h3>Цены</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Розничная цена *</label>
+                                <input type="number" [(ngModel)]="newProduct.retailPrice" name="retailPrice" required
+                                    step="0.01">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Оптовая цена</label>
+                                <input type="number" [(ngModel)]="newProduct.wholesalePrice" name="wholesalePrice"
+                                    step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Категории -->
+                    <div class="form-section">
+                        <h3>Категории</h3>
+                        <div class="categories-selector">
+                            <div class="categories-list">
+                                <div *ngFor="let category of categories" class="category-option">
+                                    <input type="checkbox" [id]="'cat-' + category.id" [value]="category.id"
+                                        [(ngModel)]="newProduct.productCategories"
+                                        [ngModelOptions]="{standalone: true}">
+                                    <label [for]="'cat-' + category.id">{{ category.name }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Изображения -->
+                    <div class="form-section">
+                        <h3>Изображения</h3>
+                        <div class="image-upload-section">
+                            <div class="image-upload-dropzone" (click)="imageUpload.click()">
+                                <input #imageUpload type="file" accept="image/*" (change)="onImageUpload($event)"
+                                    hidden />
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                </svg>
+                                <p>Перетащите или выберите изображения</p>
+                                <span>JPG, PNG, размер до 5MB</span>
+                            </div>
+
+                            <div *ngIf="isUploadingImage" class="uploading-images">
+                                <div class="spinner-small"></div>
+                                <span>Загрузка...</span>
+                            </div>
+
+                            <div *ngIf="uploadedImages.length > 0" class="uploaded-images">
+                                <div *ngFor="let image of uploadedImages; let i = index" class="uploaded-image">
+                                    <img [src]="image.url" [alt]="'Изображение ' + (i + 1)">
+                                    <button type="button" class="remove-image" (click)="removeImage(i)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Свойства -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h3>Свойства товара</h3>
+                            <button type="button" class="btn-small" (click)="addProperty()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                </svg>
+                                Добавить свойство
+                            </button>
+                        </div>
+
+                        <div class="properties-form">
+                            <div *ngFor="let prop of productProperties; let i = index" class="property-row">
+                                <input type="text" [(ngModel)]="prop.key" [name]="'prop-key-' + i"
+                                    placeholder="Название свойства">
+                                <input type="text" [(ngModel)]="prop.value" [name]="'prop-value-' + i"
+                                    placeholder="Значение">
+                                <button type="button" class="btn-remove-property" (click)="removeProperty(i)"
+                                    [disabled]="productProperties.length === 1">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary" [disabled]="isLoading">
+                        <span *ngIf="!isLoading">Создать товар</span>
+                        <span *ngIf="isLoading" class="loading">
+                            <div class="spinner-small"></div>
+                            Создание...
+                        </span>
+                    </button>
+                    <button type="button" class="btn-secondary" (click)="cancelCreate()">
+                        Отмена
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма редактирования -->
+    <div *ngIf="isEditing" class="modal-overlay active">
+        <div class="modal-container large">
+            <form class="product-form" (ngSubmit)="updateProduct()">
+                <div class="modal-header">
+                    <h2>Редактирование товара</h2>
+                    <button type="button" class="modal-close" (click)="cancelEdit()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-content">
+                    <!-- Аналогичная форма, но с данными editProduct -->
+                    <!-- Для краткости показана только структура -->
+                    <div class="form-section">
+                        <h3>Основная информация</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Артикул *</label>
+                                <input type="text" [(ngModel)]="editProduct.article" name="editArticle" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Название *</label>
+                                <input type="text" [(ngModel)]="editProduct.fullName" name="editFullName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Короткое название</label>
+                                <input type="text" [(ngModel)]="editProduct.shortName" name="editShortName">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Описание</label>
+                            <textarea [(ngModel)]="editProduct.description" name="editDescription" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Остальные секции аналогично форме создания -->
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary" [disabled]="isLoading">
+                        <span *ngIf="!isLoading">Сохранить изменения</span>
+                        <span *ngIf="isLoading" class="loading">
+                            <div class="spinner-small"></div>
+                            Сохранение...
+                        </span>
+                    </button>
+                    <button type="button" class="btn-secondary" (click)="cancelEdit()">
+                        Отмена
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Детали товара -->
+    <div *ngIf="isViewingDetails && selectedProduct" class="modal-overlay active">
+        <div class="modal-container extra-large">
+            <div class="product-details">
+                <div class="modal-header">
+                    <h2>{{ selectedProduct.fullName }}</h2>
+                    <button type="button" class="modal-close" (click)="closeDetails()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-content">
+                    <div class="details-content">
+                        <!-- Галерея изображений -->
+                        <div class="details-gallery">
+                            <div class="main-image">
+                                <img *ngIf="selectedProduct.imageLinks.length > 0" [src]="selectedProduct.imageLinks[0]"
+                                    [alt]="selectedProduct.fullName" />
+                                <div *ngIf="!selectedProduct.imageLinks?.length" class="image-placeholder-large">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div *ngIf="selectedProduct.imageLinks.length > 1" class="thumbnail-list">
+                                <div *ngFor="let image of selectedProduct.imageLinks.slice(1, 5)" class="thumbnail">
+                                    <img [src]="image" [alt]="selectedProduct.fullName">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Основная информация -->
+                        <div class="details-info">
+                            <div class="info-section">
+                                <h3>Основная информация</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Артикул:</span>
+                                        <span class="info-value">{{ selectedProduct.article }}</span>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <span class="info-label">Цена:</span>
+                                        <span class="info-value price">{{ selectedProduct.price }} ₽</span>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <span class="info-label">Общее количество:</span>
+                                        <span class="info-value">{{ getTotalStock(selectedProduct) }} шт.</span>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <span class="info-label">Категории:</span>
+                                        <span class="info-value">{{ getProductCategories(selectedProduct) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Описание -->
+                            <div *ngIf="selectedProduct.description" class="info-section">
+                                <h3>Описание</h3>
+                                <p class="description">{{ selectedProduct.description }}</p>
+                            </div>
+
+                            <!-- Остатки на складах -->
+                            <div class="info-section">
+                                <h3>Остатки на складах</h3>
+                                <div class="remains-list">
+                                    <div *ngFor="let remain of selectedProduct.remains | keyvalue" class="remain-item">
+                                        <span class="remain-location">{{ remain.key }}</span>
+                                        <span class="remain-count">{{ remain.value }} шт.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Свойства -->
+                            <div *ngIf="selectedProduct.properties" class="info-section">
+                                <h3>Характеристики</h3>
+                                <div class="properties-list">
+                                    <div *ngFor="let prop of selectedProduct.properties | keyvalue"
+                                        class="property-item">
+                                        <span class="property-key">{{ prop.key }}:</span>
+                                        <span class="property-value">{{ prop.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-primary" (click)="startEdit(selectedProduct)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                        </svg>
+                        Редактировать
+                    </button>
+                    <button class="btn-danger" (click)="showDeleteConfirm = true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                        </svg>
+                        Удалить
+                    </button>
+                    <button class="btn-secondary" (click)="closeDetails()">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подтверждение удаления -->
+    <div *ngIf="showDeleteConfirm" class="modal-overlay active">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Подтверждение удаления</h3>
+                <button class="modal-close" (click)="showDeleteConfirm = false">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-content">
+                <div class="warning-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                    </svg>
+                </div>
+
+                <p>Вы уверены, что хотите удалить товар <strong>{{ selectedProduct?.fullName }}</strong>?</p>
+
+                <div class="warning-list">
+                    <p>Это действие приведет к:</p>
+                    <ul>
+                        <li>Полному удалению товара из системы</li>
+                        <li>Удалению всех связанных изображений</li>
+                        <li>Удалению истории изменений цен</li>
+                        <li>Невозможности восстановления</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-danger" (click)="deleteProduct()" [disabled]="isLoading">
+                    <span *ngIf="!isLoading">Удалить</span>
+                    <span *ngIf="isLoading" class="loading">
+                        <div class="spinner-small"></div>
+                        Удаление...
+                    </span>
+                </button>
+                <button class="btn-secondary" (click)="showDeleteConfirm = false" [disabled]="isLoading">
+                    Отмена
+                </button>
+            </div>
         </div>
     </div>
 </div>
