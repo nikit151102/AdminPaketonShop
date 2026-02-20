@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize } from 'rxjs';
 import { CategoryService } from '../../../../core/services/category.service';
 import { NicheService } from '../../../../core/services/niche.service';
 import { ProductService } from '../../../../core/services/product.service';
 import { TruncatePipe } from "../../../../core/pipes/truncate.pipe";
 import { ImageUploadService } from '../../../../core/services/image-upload.service';
 
-// Интерфейсы остаются без изменений
+// Интерфейсы
 interface Niche {
   id: string;
   code: string;
@@ -115,26 +115,6 @@ interface Category {
   level?: number;
 }
 
-interface SearchRequest {
-  filters: Array<{
-    field: string;
-    values: string[];
-    type?: number;
-  }>;
-  sorts: any[];
-  page: number;
-  pageSize: number;
-}
-
-interface SearchResponse {
-  message: string;
-  status: number;
-  pageCount: number;
-  page: number;
-  pageSize: number;
-  data: any[];
-}
-
 @Component({
   selector: 'app-niche-management',
   standalone: true,
@@ -146,7 +126,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   // Основные данные
   niches: Niche[] = [];
   filteredNiches: Niche[] = [];
-  selectedNiche: any = null;
+  selectedNiche: Niche | null = null;
   stats = {
     totalNiches: 0,
     activeNiches: 0,
@@ -154,7 +134,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     avgProductsPerNiche: 0
   };
   
-  // Товары
+  // Товары и категории
   nicheProducts: Product[] = [];
   productSearchResults: Product[] = [];
   categorySearchResults: Category[] = [];
@@ -166,7 +146,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   isEditing = false;
   isManaging = false;
   showDeleteConfirm = false;
-  showQuickView = false;
+  isShowQuickView = false;
   showBulkActions = false;
   
   // Поиск и фильтрация
@@ -176,7 +156,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   sortField = 'sortIndex';
   sortDirection: 'asc' | 'desc' = 'asc';
   filters = {
-    status: 'all', // all, active, inactive
+    status: 'all',
     minProducts: 0,
     maxProducts: 1000,
     dateRange: {
@@ -308,18 +288,19 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   // Загрузка ниш
   loadNiches(): void {
     this.isLoading = true;
-    this.nicheService.getAllNiches().subscribe({
+    this.nicheService.getAllNiches().pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
       next: (response: any) => {
         this.niches = response.data || [];
         this.filteredNiches = [...this.niches];
         this.calculateStats();
         this.sortNiches();
         this.updatePagination();
-        this.isLoading = false;
       },
       error: (error) => {
         console.error('Ошибка загрузки ниш:', error);
-        this.isLoading = false;
+        this.showNotification('Ошибка загрузки ниш', 'error');
       }
     });
   }
@@ -356,6 +337,24 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     
     // Загружаем аналитику
     this.loadNicheAnalytics();
+    
+    // Загружаем полные данные ниши
+    this.loadNicheDetails(niche.id);
+  }
+
+  // Загрузка деталей ниши
+  loadNicheDetails(id: string): void {
+    this.nicheService.getNicheById(id).subscribe({
+      next: (response: any) => {
+        if (response.data) {
+          this.selectedNiche = response.data;
+          this.nicheProducts = response.data.products || [];
+        }
+      },
+      error: (error) => {
+        console.error('Ошибка загрузки деталей ниши:', error);
+      }
+    });
   }
 
   // Загрузка аналитики ниши
@@ -421,24 +420,24 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     
     try {
       // Загрузка изображений если есть
-      const imageIds = await this.uploadImages(this.uploadedImages);
+      // const imageIds = await this.uploadImages(this.uploadedImages);
       
       const createData = {
-        ...this.newNiche,
-        imageInstances: imageIds
+        ...this.newNiche
+        // imageInstances: imageIds
       };
       
-      this.nicheService.createNiche(createData).subscribe({
+      this.nicheService.createNiche(createData).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
         next: (response: any) => {
           console.log('Ниша создана:', response);
           this.loadNiches();
           this.isCreating = false;
-          this.isLoading = false;
           this.showNotification('Ниша успешно создана!', 'success');
         },
         error: (error) => {
           console.error('Ошибка создания ниши:', error);
-          this.isLoading = false;
           this.showNotification('Ошибка при создании ниши', 'error');
         }
       });
@@ -479,7 +478,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     
     try {
       // Загрузка новых изображений
-      const newImageIds = await this.uploadImages(this.editUploadedImages);
+      const newImageIds = await this.uploadImages(this.editNiche.id, this.editUploadedImages);
       
       const updateData = {
         ...this.editNiche,
@@ -489,7 +488,9 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
         ]
       };
       
-      this.nicheService.updateNiche(this.editNiche.id, updateData).subscribe({
+      this.nicheService.updateNiche(this.editNiche.id, updateData).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
         next: (response: any) => {
           console.log('Ниша обновлена:', response);
           this.loadNiches();
@@ -497,12 +498,10 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
             this.selectedNiche = response.data;
           }
           this.isEditing = false;
-          this.isLoading = false;
           this.showNotification('Ниша успешно обновлена!', 'success');
         },
         error: (error) => {
           console.error('Ошибка обновления ниши:', error);
-          this.isLoading = false;
           this.showNotification('Ошибка при обновлении ниши', 'error');
         }
       });
@@ -518,40 +517,44 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   }
 
   // Загрузка изображений
-  private async uploadImages(images: { file: File; preview: string }[]): Promise<string[]> {
-    const imageIds: string[] = [];
-    
-    for (const image of images) {
-      try {
-        const result = await this.imageUploadService.uploadImage(image.file).toPromise();
-        if (result?.data?.id) {
-          imageIds.push(result.data.id);
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки изображения:', error);
+private async uploadImages(id:string, images: { file: File; preview: string }[]): Promise<string[]> {
+  const imageIds: string[] = [];
+  
+  for (const image of images) {
+    try {
+      // Берем первый файл из массива (или обрабатываем каждый файл)
+      const result = await this.nicheService
+        .updateNicheImages(id, image.file) // Передаем ID и файл
+        .toPromise();
+      
+      if (result?.data?.id) {
+        imageIds.push(result.data.id);
       }
+    } catch (error) {
+      console.error('Ошибка загрузки изображения:', error);
     }
-    
-    return imageIds;
   }
+  
+  return imageIds;
+}
 
   // Удаление ниши
   deleteNiche(): void {
     if (!this.selectedNiche) return;
     
     this.isLoading = true;
-    this.nicheService.deleteNiche(this.selectedNiche.id).subscribe({
+    this.nicheService.deleteNiche(this.selectedNiche.id).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
       next: (response: any) => {
         console.log('Ниша удалена:', response);
         this.loadNiches();
         this.selectedNiche = null;
         this.showDeleteConfirm = false;
-        this.isLoading = false;
         this.showNotification('Ниша успешно удалена!', 'success');
       },
       error: (error) => {
         console.error('Ошибка удаления ниши:', error);
-        this.isLoading = false;
         this.showNotification('Ошибка при удалении ниши', 'error');
       }
     });
@@ -577,23 +580,36 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     }
   }
 
+  isAllNichesSelected(): boolean {
+    const currentPageNiches = this.getCurrentPageNiches();
+    return currentPageNiches.length > 0 && currentPageNiches.every(n => this.selectedNiches.has(n.id));
+  }
+
   deleteSelectedNiches(): void {
     const selectedCount = this.selectedNiches.size;
     if (selectedCount === 0 || !confirm(`Удалить ${selectedCount} выбранных ниш?`)) return;
     
     this.isLoading = true;
     const nicheIds = Array.from(this.selectedNiches);
+    let completed = 0;
     
-    // Имитация массового удаления
-    setTimeout(() => {
-      this.niches = this.niches.filter(n => !nicheIds.includes(n.id));
-      this.filteredNiches = this.filteredNiches.filter(n => !nicheIds.includes(n.id));
-      this.selectedNiches.clear();
-      this.calculateStats();
-      this.updatePagination();
-      this.isLoading = false;
-      this.showNotification(`${selectedCount} ниш удалено`, 'success');
-    }, 1000);
+    nicheIds.forEach(id => {
+      this.nicheService.deleteNiche(id).pipe(
+        finalize(() => {
+          completed++;
+          if (completed === nicheIds.length) {
+            this.loadNiches();
+            this.selectedNiches.clear();
+            this.isLoading = false;
+            this.showNotification(`${selectedCount} ниш удалено`, 'success');
+          }
+        })
+      ).subscribe({
+        error: (error) => {
+          console.error('Ошибка удаления ниши:', error);
+        }
+      });
+    });
   }
 
   activateSelectedNiches(): void {
@@ -601,25 +617,45 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (selectedCount === 0) return;
     
     this.isLoading = true;
+    const nicheIds = Array.from(this.selectedNiches);
+    let completed = 0;
     
-    // Имитация активации
-    setTimeout(() => {
-      this.niches.forEach(n => {
-        if (this.selectedNiches.has(n.id)) {
-          n.isDeleted = false;
-          n.isActive = true;
-        }
-      });
-      this.filteredNiches.forEach(n => {
-        if (this.selectedNiches.has(n.id)) {
-          n.isDeleted = false;
-          n.isActive = true;
-        }
-      });
-      this.calculateStats();
-      this.isLoading = false;
-      this.showNotification(`${selectedCount} ниш активировано`, 'success');
-    }, 1000);
+    nicheIds.forEach(id => {
+      const niche = this.niches.find(n => n.id === id);
+      if (niche) {
+        const updateData = {
+          id: niche.id,
+          updaterId: 'current-user-id',
+          removeOldImages: false,
+          code: niche.code,
+          sortIndex: niche.sortIndex,
+          productCount: niche.productCount,
+          lastProductCountUpdateDateTime: niche.lastProductCountUpdateDateTime,
+          name: niche.name,
+          description: niche.description,
+          imageInstances: niche.imageInstanceLinks || [],
+          isActive: true
+        };
+        
+        this.nicheService.updateNiche(id, updateData).pipe(
+          finalize(() => {
+            completed++;
+            if (completed === nicheIds.length) {
+              this.loadNiches();
+              this.selectedNiches.clear();
+              this.isLoading = false;
+              this.showNotification(`${selectedCount} ниш активировано`, 'success');
+            }
+          })
+        ).subscribe({
+          error: (error) => {
+            console.error('Ошибка активации ниши:', error);
+          }
+        });
+      } else {
+        completed++;
+      }
+    });
   }
 
   // Работа с товарами
@@ -627,11 +663,39 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedNiche) return;
     
     this.isLoadingProducts = true;
-    // В реальном приложении здесь был бы запрос к API
-    setTimeout(() => {
-      this.nicheProducts = this.selectedNiche?.products || [];
+    
+    // Загружаем товары ниши через API
+    const productIds = this.selectedNiche.products?.map(p => p.id) || [];
+    
+    if (productIds.length === 0) {
+      this.nicheProducts = [];
       this.isLoadingProducts = false;
-    }, 500);
+      return;
+    }
+    
+    const searchRequest = {
+      filters: [
+        {
+          field: 'id',
+          values: productIds,
+          type: 0
+        }
+      ],
+      sorts: [],
+      page: 0,
+      pageSize: 1000
+    };
+    
+    this.productService.searchProducts(searchRequest).pipe(
+      finalize(() => this.isLoadingProducts = false)
+    ).subscribe({
+      next: (response: any) => {
+        this.nicheProducts = response.data || [];
+      },
+      error: (error) => {
+        console.error('Ошибка загрузки товаров:', error);
+      }
+    });
   }
 
   onProductSearchChange(query: string): void {
@@ -646,48 +710,30 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     
     this.isSearchingProducts = true;
     
-    // Имитация поиска товаров
-    setTimeout(() => {
-      this.productSearchResults = [
+    const searchRequest = {
+      filters: [
         {
-          id: '1',
-          article: 'PROD001',
-          shortName: 'Товар 1',
-          fullName: 'Полное название товара 1',
-          description: 'Описание товара 1',
-          retailPrice: 1500,
-          retailPriceDest: 1400,
-          wholesalePrice: 1200,
-          wholesalePriceDest: 1100,
-          measurementUnitId: 'unit1',
-          saleTypeId: 'type1',
-          productImageLink: '',
-          isDeleted: false,
-          manufacturer: 'Производитель 1',
-          inStock: true,
-          rating: 4.5
-        },
-        {
-          id: '2',
-          article: 'PROD002',
-          shortName: 'Товар 2',
-          fullName: 'Полное название товара 2',
-          description: 'Описание товара 2',
-          retailPrice: 2500,
-          retailPriceDest: 2300,
-          wholesalePrice: 2000,
-          wholesalePriceDest: 1800,
-          measurementUnitId: 'unit1',
-          saleTypeId: 'type1',
-          productImageLink: '',
-          isDeleted: false,
-          manufacturer: 'Производитель 2',
-          inStock: false,
-          rating: 4.2
+          field: 'searchQuery',
+          values: [query],
+          type: 0
         }
-      ];
-      this.isSearchingProducts = false;
-    }, 800);
+      ],
+      sorts: [],
+      page: 0,
+      pageSize: 20
+    };
+    
+    this.productService.searchProducts(searchRequest).pipe(
+      finalize(() => this.isSearchingProducts = false)
+    ).subscribe({
+      next: (response: any) => {
+        this.productSearchResults = response.data || [];
+      },
+      error: (error) => {
+        console.error('Ошибка поиска товаров:', error);
+        this.productSearchResults = [];
+      }
+    });
   }
 
   toggleProductSelection(productId: string): void {
@@ -702,37 +748,24 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedNiche || this.selectedProductIds.size === 0) return;
     
     this.isLoading = true;
+    const productIds = Array.from(this.selectedProductIds);
     
-    // Имитация добавления товаров
-    setTimeout(() => {
-      const productsToAdd = this.productSearchResults.filter(p => 
-        this.selectedProductIds.has(p.id)
-      );
-      
-      if (this.selectedNiche) {
-        this.selectedNiche.products = [
-          ...(this.selectedNiche.products || []),
-          ...productsToAdd
-        ];
-        this.selectedNiche.productCount += productsToAdd.length;
-        this.nicheProducts = this.selectedNiche.products;
+    this.nicheService.addProductsToNiche(this.selectedNiche.id, productIds).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (response: any) => {
+        console.log('Товары добавлены:', response);
+        this.loadNicheDetails(this.selectedNiche!.id);
+        this.selectedProductIds.clear();
+        this.productSearchResults = [];
+        this.productSearchQuery = '';
+        this.showNotification(`${productIds.length} товаров добавлено в нишу`, 'success');
+      },
+      error: (error) => {
+        console.error('Ошибка добавления товаров:', error);
+        this.showNotification('Ошибка при добавлении товаров', 'error');
       }
-      
-      // Обновляем список ниш
-      const nicheIndex = this.niches.findIndex(n => n.id === this.selectedNiche?.id);
-      if (nicheIndex > -1) {
-        this.niches[nicheIndex] = { ...this.selectedNiche! };
-        this.filteredNiches = [...this.niches];
-      }
-      
-      // Очищаем выбор и результаты поиска
-      this.selectedProductIds.clear();
-      this.productSearchResults = [];
-      this.productSearchQuery = '';
-      
-      this.isLoading = false;
-      this.showNotification(`${productsToAdd.length} товаров добавлено в нишу`, 'success');
-    }, 1000);
+    });
   }
 
   removeProductFromNiche(productId: string): void {
@@ -741,25 +774,56 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (confirm('Удалить товар из ниши?')) {
       this.isLoading = true;
       
-      // Имитация удаления
-      setTimeout(() => {
-        if (this.selectedNiche) {
-          this.selectedNiche.products = this.selectedNiche.products?.filter((p: any) => p.id !== productId) || [];
-          this.selectedNiche.productCount = Math.max(0, this.selectedNiche.productCount - 1);
-          this.nicheProducts = this.selectedNiche.products;
+      this.nicheService.removeProductsFromNiche(this.selectedNiche.id, [productId]).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (response: any) => {
+          console.log('Товар удален:', response);
+          this.loadNicheDetails(this.selectedNiche!.id);
+          this.showNotification('Товар удален из ниши', 'success');
+        },
+        error: (error) => {
+          console.error('Ошибка удаления товара:', error);
+          this.showNotification('Ошибка при удалении товара', 'error');
         }
-        
-        // Обновляем список ниш
-        const nicheIndex = this.niches.findIndex(n => n.id === this.selectedNiche?.id);
-        if (nicheIndex > -1) {
-          this.niches[nicheIndex] = { ...this.selectedNiche! };
-          this.filteredNiches = [...this.niches];
-        }
-        
-        this.isLoading = false;
-        this.showNotification('Товар удален из ниши', 'success');
-      }, 800);
+      });
     }
+  }
+
+  toggleNicheProductSelection(productId: string): void {
+    if (this.selectedNicheProducts.has(productId)) {
+      this.selectedNicheProducts.delete(productId);
+    } else {
+      this.selectedNicheProducts.add(productId);
+    }
+  }
+
+  removeSelectedProducts(): void {
+    if (!this.selectedNiche || this.selectedNicheProducts.size === 0) return;
+    
+    if (confirm(`Удалить ${this.selectedNicheProducts.size} выбранных товаров из ниши?`)) {
+      this.isLoading = true;
+      const productIds = Array.from(this.selectedNicheProducts);
+      
+      this.nicheService.removeProductsFromNiche(this.selectedNiche.id, productIds).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (response: any) => {
+          console.log('Товары удалены:', response);
+          this.loadNicheDetails(this.selectedNiche!.id);
+          this.selectedNicheProducts.clear();
+          this.showNotification('Товары удалены из ниши', 'success');
+        },
+        error: (error) => {
+          console.error('Ошибка удаления товаров:', error);
+          this.showNotification('Ошибка при удалении товаров', 'error');
+        }
+      });
+    }
+  }
+
+  clearNicheProductSelection(): void {
+    this.selectedNicheProducts.clear();
   }
 
   // Работа с категориями
@@ -767,9 +831,11 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedNiche) return;
     
     this.isLoadingCategories = true;
+    
+    // Категории уже загружены в selectedNiche.subCategories
     setTimeout(() => {
       this.isLoadingCategories = false;
-    }, 500);
+    }, 300);
   }
 
   onCategorySearchChange(query: string): void {
@@ -784,16 +850,17 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     
     this.isSearchingCategories = true;
     
-    // Имитация поиска категорий
+    // Поиск категорий
     setTimeout(() => {
       this.categorySearchResults = this.allCategories
         .filter(cat => 
           cat.name.toLowerCase().includes(query.toLowerCase()) ||
           cat.code.toLowerCase().includes(query.toLowerCase())
         )
-        .slice(0, 10);
+        .slice(0, 20);
+        console.log('this.categorySearchResults',this.categorySearchResults)
       this.isSearchingCategories = false;
-    }, 800);
+    }, 500);
   }
 
   toggleCategorySelection(categoryId: string): void {
@@ -808,40 +875,24 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedNiche || this.selectedCategoryIds.size === 0) return;
     
     this.isLoading = true;
+    const categoryIds = Array.from(this.selectedCategoryIds);
     
-    // Имитация добавления категорий
-    setTimeout(() => {
-      const categoriesToAdd = this.categorySearchResults.filter(c => 
-        this.selectedCategoryIds.has(c.id)
-      );
-      
-      if (this.selectedNiche) {
-        this.selectedNiche.subCategories = [
-          ...(this.selectedNiche.subCategories || []),
-          ...categoriesToAdd.map(c => ({
-            id: c.id,
-            name: c.name,
-            code: c.code,
-            productCount: c.productCount
-          }))
-        ];
+    this.nicheService.addCategoriesToNiche(this.selectedNiche.id, categoryIds).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (response: any) => {
+        console.log('Категории добавлены:', response);
+        this.loadNicheDetails(this.selectedNiche!.id);
+        this.selectedCategoryIds.clear();
+        this.categorySearchResults = [];
+        this.categorySearchQuery = '';
+        this.showNotification(`${categoryIds.length} категорий добавлено в нишу`, 'success');
+      },
+      error: (error) => {
+        console.error('Ошибка добавления категорий:', error);
+        this.showNotification('Ошибка при добавлении категорий', 'error');
       }
-      
-      // Обновляем список ниш
-      const nicheIndex = this.niches.findIndex(n => n.id === this.selectedNiche?.id);
-      if (nicheIndex > -1) {
-        this.niches[nicheIndex] = { ...this.selectedNiche! };
-        this.filteredNiches = [...this.niches];
-      }
-      
-      // Очищаем выбор
-      this.selectedCategoryIds.clear();
-      this.categorySearchResults = [];
-      this.categorySearchQuery = '';
-      
-      this.isLoading = false;
-      this.showNotification(`${categoriesToAdd.length} категорий добавлено в нишу`, 'success');
-    }, 1000);
+    });
   }
 
   removeCategoryFromNiche(categoryId: string): void {
@@ -850,36 +901,62 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (confirm('Удалить категорию из ниши?')) {
       this.isLoading = true;
       
-      // Имитация удаления
-      setTimeout(() => {
-        if (this.selectedNiche) {
-          this.selectedNiche.subCategories = this.selectedNiche.subCategories?.filter(
-            (c: any) => c.id !== categoryId
-          ) || [];
+      this.nicheService.removeCategoriesFromNiche(this.selectedNiche.id, [categoryId]).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (response: any) => {
+          console.log('Категория удалена:', response);
+          this.loadNicheDetails(this.selectedNiche!.id);
+          this.showNotification('Категория удалена из ниши', 'success');
+        },
+        error: (error) => {
+          console.error('Ошибка удаления категории:', error);
+          this.showNotification('Ошибка при удалении категории', 'error');
         }
-        
-        // Обновляем список ниш
-        const nicheIndex = this.niches.findIndex(n => n.id === this.selectedNiche?.id);
-        if (nicheIndex > -1) {
-          this.niches[nicheIndex] = { ...this.selectedNiche! };
-          this.filteredNiches = [...this.niches];
-        }
-        
-        this.isLoading = false;
-        this.showNotification('Категория удалена из ниши', 'success');
-      }, 800);
+      });
     }
   }
 
-  isAllNichesSelected(): boolean {
-  const currentPageNiches = this.getCurrentPageNiches();
-  return currentPageNiches.length > 0 && currentPageNiches.every(n => this.selectedNiches.has(n.id));
-}
+  toggleNicheCategorySelection(categoryId: string): void {
+    if (this.selectedNicheCategories.has(categoryId)) {
+      this.selectedNicheCategories.delete(categoryId);
+    } else {
+      this.selectedNicheCategories.add(categoryId);
+    }
+  }
+
+  removeSelectedCategories(): void {
+    if (!this.selectedNiche || this.selectedNicheCategories.size === 0) return;
+    
+    if (confirm(`Удалить ${this.selectedNicheCategories.size} выбранных категорий из ниши?`)) {
+      this.isLoading = true;
+      const categoryIds = Array.from(this.selectedNicheCategories);
+      
+      this.nicheService.removeCategoriesFromNiche(this.selectedNiche.id, categoryIds).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (response: any) => {
+          console.log('Категории удалены:', response);
+          this.loadNicheDetails(this.selectedNiche!.id);
+          this.selectedNicheCategories.clear();
+          this.showNotification('Категории удалены из ниши', 'success');
+        },
+        error: (error) => {
+          console.error('Ошибка удаления категорий:', error);
+          this.showNotification('Ошибка при удалении категорий', 'error');
+        }
+      });
+    }
+  }
+
+  clearNicheCategorySelection(): void {
+    this.selectedNicheCategories.clear();
+  }
 
   // Быстрый просмотр
-  showQuickViewMethod(type: 'niche' | 'product' | 'category', data: any): void {
+  showQuickView(type: 'niche' | 'product' | 'category', data: any): void {
     this.quickViewData = { type, ...data };
-    this.showQuickView = true;
+    this.isShowQuickView = true;
   }
 
   // Вспомогательные методы
@@ -918,7 +995,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    let filtered = this.niches;
+    let filtered = this.filteredNiches;
     
     // Фильтр по статусу
     if (this.filters.status === 'active') {
@@ -960,23 +1037,11 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     this.filterNiches('');
   }
 
-  clearProductSearch(): void {
-    this.productSearchQuery = '';
-    this.productSearchResults = [];
-    this.selectedProductIds.clear();
-  }
-
-  clearCategorySearch(): void {
-    this.categorySearchQuery = '';
-    this.categorySearchResults = [];
-    this.selectedCategoryIds.clear();
-  }
-
   refreshData(): void {
     this.loadNiches();
     this.loadCategories();
     if (this.selectedNiche) {
-      this.loadNicheProducts();
+      this.loadNicheDetails(this.selectedNiche.id);
     }
   }
 
@@ -1018,95 +1083,44 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedNiche || !confirm('Удалить изображение?')) return;
     
     this.isLoading = true;
-    // TODO: Реализовать удаление изображения через API
-    setTimeout(() => {
-      if (this.selectedNiche) {
-        this.selectedNiche.imageInstances = this.selectedNiche.imageInstances?.filter(
-          (img: any) => img.id !== imageId
-        ) || [];
+    
+    // Обновляем нишу с удаленным изображением
+    const updateData = {
+      id: this.selectedNiche.id,
+      updaterId: 'current-user-id',
+      removeOldImages: true,
+      code: this.selectedNiche.code,
+      sortIndex: this.selectedNiche.sortIndex,
+      productCount: this.selectedNiche.productCount,
+      lastProductCountUpdateDateTime: this.selectedNiche.lastProductCountUpdateDateTime,
+      name: this.selectedNiche.name,
+      description: this.selectedNiche.description,
+      imageInstances: [],
+      isActive: !this.selectedNiche.isDeleted
+    };
+    
+    this.nicheService.updateNiche(this.selectedNiche.id, updateData).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (response: any) => {
+        console.log('Изображение удалено:', response);
+        this.loadNicheDetails(this.selectedNiche!.id);
+        this.showNotification('Изображение удалено', 'success');
+      },
+      error: (error) => {
+        console.error('Ошибка удаления изображения:', error);
+        this.showNotification('Ошибка при удалении изображения', 'error');
       }
-      this.isLoading = false;
-      this.showNotification('Изображение удалено', 'success');
-    }, 800);
+    });
   }
 
   getImageUrl(fileInfoId: string): string {
-    // Временные изображения для демонстрации
     return `https://picsum.photos/seed/${fileInfoId}/300/200`;
   }
 
   getImageTypeName(imageType: number): string {
     const types = ['Основное', 'Дополнительное', 'Иконка', 'Баннер', 'Превью'];
     return types[imageType] || 'Неизвестно';
-  }
-
-  // Выбор товаров/категорий в нише
-  toggleNicheProductSelection(productId: string): void {
-    if (this.selectedNicheProducts.has(productId)) {
-      this.selectedNicheProducts.delete(productId);
-    } else {
-      this.selectedNicheProducts.add(productId);
-    }
-  }
-
-  toggleNicheCategorySelection(categoryId: string): void {
-    if (this.selectedNicheCategories.has(categoryId)) {
-      this.selectedNicheCategories.delete(categoryId);
-    } else {
-      this.selectedNicheCategories.add(categoryId);
-    }
-  }
-
-  removeSelectedProducts(): void {
-    if (!this.selectedNiche || this.selectedNicheProducts.size === 0) return;
-    
-    if (confirm(`Удалить ${this.selectedNicheProducts.size} выбранных товаров из ниши?`)) {
-      this.isLoading = true;
-      
-      // Имитация удаления
-      setTimeout(() => {
-        if (this.selectedNiche) {
-          this.selectedNiche.products = this.selectedNiche.products?.filter(
-            (p: any) => !this.selectedNicheProducts.has(p.id)
-          ) || [];
-          this.selectedNiche.productCount = this.selectedNiche.products.length;
-          this.nicheProducts = this.selectedNiche.products;
-          this.selectedNicheProducts.clear();
-        }
-        
-        this.isLoading = false;
-        this.showNotification('Товары удалены из ниши', 'success');
-      }, 1000);
-    }
-  }
-
-  removeSelectedCategories(): void {
-    if (!this.selectedNiche || this.selectedNicheCategories.size === 0) return;
-    
-    if (confirm(`Удалить ${this.selectedNicheCategories.size} выбранных категорий из ниши?`)) {
-      this.isLoading = true;
-      
-      // Имитация удаления
-      setTimeout(() => {
-        if (this.selectedNiche) {
-          this.selectedNiche.subCategories = this.selectedNiche.subCategories?.filter(
-            (c: any) => !this.selectedNicheCategories.has(c.id)
-          ) || [];
-          this.selectedNicheCategories.clear();
-        }
-        
-        this.isLoading = false;
-        this.showNotification('Категории удалены из ниши', 'success');
-      }, 1000);
-    }
-  }
-
-  clearNicheProductSelection(): void {
-    this.selectedNicheProducts.clear();
-  }
-
-  clearNicheCategorySelection(): void {
-    this.selectedNicheCategories.clear();
   }
 
   private resetSelections(): void {
@@ -1128,13 +1142,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     if (product.imageLinks && product.imageLinks.length > 0) {
       return product.imageLinks[0];
     }
-    // Заглушка
     return `https://picsum.photos/seed/${product.id}/100/100`;
-  }
-
-  // Получение полного названия товара
-  getProductFullName(product: Product): string {
-    return product.fullName || product.shortName || 'Без названия';
   }
 
   // Получение цены товара
@@ -1142,7 +1150,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     return product.retailPrice || product.retailPriceDest || 0;
   }
 
-  // Пагинация - НОВЫЕ МЕТОДЫ
+  // Пагинация
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredNiches.length / this.itemsPerPage);
     this.currentPage = Math.min(this.currentPage, this.totalPages || 1);
@@ -1164,28 +1172,23 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     const maxVisiblePages = 5;
     
     if (this.totalPages <= maxVisiblePages) {
-      // Если страниц немного, показываем все
       for (let i = 1; i <= this.totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Если страниц много, показываем с эллипсами
       if (this.currentPage <= 3) {
-        // В начале
         for (let i = 1; i <= 4; i++) {
           pages.push(i);
         }
         pages.push('...');
         pages.push(this.totalPages);
       } else if (this.currentPage >= this.totalPages - 2) {
-        // В конце
         pages.push(1);
         pages.push('...');
         for (let i = this.totalPages - 3; i <= this.totalPages; i++) {
           pages.push(i);
         }
       } else {
-        // В середине
         pages.push(1);
         pages.push('...');
         for (let i = this.currentPage - 1; i <= this.currentPage + 1; i++) {
@@ -1201,25 +1204,25 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
 
   // Уведомления
   showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
-    // В реальном приложении можно использовать сервис уведомлений
     console.log(`${type.toUpperCase()}: ${message}`);
-    // Имитация toast уведомления
+    
+    const container = document.getElementById('notifications-container');
+    if (!container) return;
+    
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
     notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
       padding: 12px 20px;
       background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
       color: white;
       border-radius: 8px;
-      z-index: 9999;
+      margin-bottom: 10px;
       animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     `;
     
-    document.body.appendChild(notification);
+    container.appendChild(notification);
     
     setTimeout(() => {
       notification.style.animation = 'slideOut 0.3s ease';
@@ -1238,16 +1241,35 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
       'Дата создания': niche.createdAt || 'Неизвестно'
     }));
     
-    // Имитация экспорта
-    console.log(`Экспорт данных в формате ${format}:`, data);
+    if (format === 'csv') {
+      this.exportToCSV(data);
+    }
+    
     this.showNotification(`Данные экспортированы в ${format.toUpperCase()}`, 'success');
+  }
+
+  private exportToCSV(data: any[]): void {
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(obj => Object.values(obj).map(val => `"${val}"`).join(','));
+    const csv = [headers, ...rows].join('\n');
+    
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `niches_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   // Генерация отчета
   generateReport(): void {
     this.isLoading = true;
     
-    // Имитация генерации отчета
     setTimeout(() => {
       this.isLoading = false;
       const reportData = {
@@ -1255,21 +1277,18 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
         activeNiches: this.stats.activeNiches,
         totalProducts: this.stats.totalProducts,
         avgProductsPerNiche: this.stats.avgProductsPerNiche,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
+        niches: this.niches.map(n => ({
+          name: n.name,
+          code: n.code,
+          productCount: n.productCount,
+          categoryCount: n.subCategories?.length || 0,
+          status: n.isDeleted ? 'inactive' : 'active'
+        }))
       };
       
       console.log('Отчет сгенерирован:', reportData);
       this.showNotification('Отчет успешно сгенерирован!', 'success');
     }, 1500);
-  }
-
-  // Получение минимального значения для отображения в пагинации
-  getMinDisplay(): number {
-    return Math.min((this.currentPage - 1) * this.itemsPerPage + 1, this.filteredNiches.length);
-  }
-
-  // Получение максимального значения для отображения в пагинации
-  getMaxDisplay(): number {
-    return Math.min(this.currentPage * this.itemsPerPage, this.filteredNiches.length);
   }
 }

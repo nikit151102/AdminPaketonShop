@@ -1,6 +1,6 @@
 <div class="niche-management">
   <!-- Уведомления -->
-  <div class="notifications-container"></div>
+  <div class="notifications-container" id="notifications-container"></div>
 
   <!-- Заголовок и управление -->
   <div class="management-header">
@@ -145,9 +145,9 @@
         <div class="niches-list-header">
           <div class="header-checkbox">
             <label class="checkbox">
-            <input type="checkbox" 
-       [checked]="isAllNichesSelected()"
-       (change)="selectAllNiches()">
+              <input type="checkbox" 
+                     [checked]="isAllNichesSelected()"
+                     (change)="selectAllNiches()">
               <span class="checkmark"></span>
             </label>
           </div>
@@ -196,7 +196,7 @@
               
               <div class="item-actions">
                 <button class="action-btn" 
-                        (click)="showQuickViewMethod('niche', {niche}); $event.stopPropagation()"
+                        (click)="showQuickView('niche', niche); $event.stopPropagation()"
                         title="Быстрый просмотр">
                   <i class="icon-eye"></i>
                 </button>
@@ -223,9 +223,6 @@
 
         <!-- Пагинация -->
         <div class="pagination" *ngIf="filteredNiches.length > 0">
-          <!-- <div class="pagination-info">
-            Показано {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, filteredNiches.length) }} из {{ filteredNiches.length }}
-          </div> -->
           <div class="pagination-controls">
             <button class="btn-icon-sm" 
                     [disabled]="currentPage === 1"
@@ -405,7 +402,7 @@
                   <input type="text" 
                          [(ngModel)]="productSearchQuery" 
                          (ngModelChange)="onProductSearchChange($event)"
-                         placeholder="Поиск товаров...">
+                         placeholder="Поиск товаров для добавления...">
                   <i class="icon-search"></i>
                   <div *ngIf="isSearchingProducts" class="search-loading">
                     <div class="spinner"></div>
@@ -417,19 +414,12 @@
                         (click)="addProductsToNiche()"
                         [disabled]="isLoading">
                   <i class="icon-plus"></i>
-                  Добавить ({{ selectedProductIds.size }})
-                </button>
-              </div>
-              
-              <div class="view-actions">
-                <button class="btn-secondary" (click)="loadNicheProducts()">
-                  <i class="icon-refresh"></i>
-                  Обновить
+                  Добавить в нишу ({{ selectedProductIds.size }})
                 </button>
               </div>
             </div>
 
-            <!-- Результаты поиска -->
+            <!-- Результаты поиска товаров -->
             <div *ngIf="productSearchResults.length > 0" class="search-results">
               <h4>Найдено товаров: {{ productSearchResults.length }}</h4>
               <div class="products-grid compact">
@@ -502,12 +492,12 @@
                       <div class="product-name">{{ product.fullName }}</div>
                       <div class="product-actions">
                         <button class="btn-icon-sm" 
-                                (click)="showQuickViewMethod('product', {product})"
+                                (click)="showQuickView('product', {product}); $event.stopPropagation()"
                                 title="Быстрый просмотр">
                           <i class="icon-eye"></i>
                         </button>
                         <button class="btn-icon-sm btn-danger" 
-                                (click)="removeProductFromNiche(product.id)"
+                                (click)="removeProductFromNiche(product.id); $event.stopPropagation()"
                                 title="Удалить из ниши">
                           <i class="icon-trash"></i>
                         </button>
@@ -526,13 +516,6 @@
                       <div class="detail-row">
                         <span class="detail-label">Производитель:</span>
                         <span class="detail-value">{{ product.manufacturer || 'Не указан' }}</span>
-                      </div>
-                      <div class="detail-row">
-                        <span class="detail-label">Рейтинг:</span>
-                        <span class="detail-value rating">
-                          <i class="icon-star"></i>
-                          {{ product.rating || 'Нет' }}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -557,7 +540,7 @@
                   <input type="text" 
                          [(ngModel)]="categorySearchQuery" 
                          (ngModelChange)="onCategorySearchChange($event)"
-                         placeholder="Поиск категорий...">
+                         placeholder="Поиск категорий для добавления...">
                   <i class="icon-search"></i>
                   <div *ngIf="isSearchingCategories" class="search-loading">
                     <div class="spinner"></div>
@@ -569,7 +552,7 @@
                         (click)="addCategoriesToNiche()"
                         [disabled]="isLoading">
                   <i class="icon-plus"></i>
-                  Добавить ({{ selectedCategoryIds.size }})
+                  Добавить в нишу ({{ selectedCategoryIds.size }})
                 </button>
               </div>
             </div>
@@ -598,7 +581,7 @@
                     <div class="category-name">{{ category.name }}</div>
                     <div class="category-meta">
                       <span class="category-code">{{ category.code }}</span>
-                      <span class="category-products">{{ category.productCount }} товаров</span>
+                      <span class="category-products">{{ category.productCount || 0 }} товаров</span>
                     </div>
                     <p class="category-description">{{ category.description | truncate:100 }}</p>
                   </div>
@@ -647,12 +630,12 @@
                       <div class="category-name">{{ category.name }}</div>
                       <div class="category-actions">
                         <button class="btn-icon-sm" 
-                                (click)="showQuickViewMethod('category', {category})"
+                                (click)="showQuickView('category', {category}); $event.stopPropagation()"
                                 title="Быстрый просмотр">
                           <i class="icon-eye"></i>
                         </button>
                         <button class="btn-icon-sm btn-danger" 
-                                (click)="removeCategoryFromNiche(category.id)"
+                                (click)="removeCategoryFromNiche(category.id); $event.stopPropagation()"
                                 title="Удалить из ниши">
                           <i class="icon-trash"></i>
                         </button>
@@ -685,13 +668,6 @@
               <div class="analytics-card full-width">
                 <div class="card-header">
                   <h3>Рост количества товаров</h3>
-                  <div class="card-actions">
-                    <select>
-                      <option>За 6 месяцев</option>
-                      <option>За год</option>
-                      <option>За все время</option>
-                    </select>
-                  </div>
                 </div>
                 <div class="card-content">
                   <div class="chart-container">
@@ -724,7 +700,7 @@
                         <div class="product-name">{{ product.fullName | truncate:30 }}</div>
                         <div class="product-price">{{ getProductPrice(product) }} ₽</div>
                       </div>
-                      <button class="btn-icon-sm" (click)="showQuickViewMethod('product', {product})">
+                      <button class="btn-icon-sm" (click)="showQuickView('product', {product})">
                         <i class="icon-eye"></i>
                       </button>
                     </div>
@@ -824,11 +800,11 @@
                     <img [src]="image.preview" [alt]="'Изображение ' + (i + 1)">
                     <button type="button" 
                             class="btn-icon-sm btn-danger"
-                            (click)="removeUploadedImage(i, false)">
+                            (click)="removeUploadedImage(i, false); $event.stopPropagation()">
                       <i class="icon-trash"></i>
                     </button>
                   </div>
-                  <div class="add-more" (click)="fileInput.click()">
+                  <div class="add-more" (click)="fileInput.click(); $event.stopPropagation()">
                     <i class="icon-plus"></i>
                     Добавить ещё
                   </div>
@@ -950,22 +926,22 @@
                     <img [src]="image.preview" [alt]="'Изображение ' + (i + 1)">
                     <button type="button" 
                             class="btn-icon-sm btn-danger"
-                            (click)="removeUploadedImage(i, true)">
+                            (click)="removeUploadedImage(i, true); $event.stopPropagation()">
                       <i class="icon-trash"></i>
                     </button>
                   </div>
-                  <div class="add-more" (click)="editFileInput.click()">
+                  <div class="add-more" (click)="editFileInput.click(); $event.stopPropagation()">
                     <i class="icon-plus"></i>
                     Добавить ещё
                   </div>
                 </div>
               </div>
               
-              <div *ngIf="selectedNiche?.imageInstances && selectedNiche.imageInstances.length > 0" class="existing-images">
+              <div *ngIf="selectedNiche?.imageInstances" class="existing-images">
                 <h4>Текущие изображения</h4>
                 <div class="images-list">
-                  <div *ngFor="let image of selectedNiche.imageInstances" class="existing-image">
-                    <img [src]="getImageUrl(image.fileInfoId)" [alt]="selectedNiche.name">
+                  <div *ngFor="let image of selectedNiche?.imageInstances" class="existing-image">
+                    <img [src]="getImageUrl(image.fileInfoId)" [alt]="selectedNiche?.name">
                     <div class="image-info">
                       {{ getImageTypeName(image.imageType) }}
                       <small>{{ image.resolutionWidth }}×{{ image.resolutionHeight }}</small>
@@ -1051,7 +1027,7 @@
   </div>
 
   <!-- Модальное окно быстрого просмотра -->
-  <div *ngIf="showQuickView" class="modal-overlay">
+  <div *ngIf="isShowQuickView" class="modal-overlay">
     <div class="modal-container quickview">
       <div class="modal-header">
         <h3>
@@ -1060,7 +1036,7 @@
           <i *ngIf="quickViewData.type === 'category'" class="icon-category"></i>
           Быстрый просмотр
         </h3>
-        <button class="btn-icon" (click)="showQuickView = false">
+        <button class="btn-icon" (click)="isShowQuickView = false">
           <i class="icon-close"></i>
         </button>
       </div>
@@ -1146,7 +1122,7 @@
               <div class="header-tags">
                 <span class="tag">{{ quickViewData.category.code }}</span>
                 <span class="tag">
-                  {{ quickViewData.category.productCount }} товаров
+                  {{ quickViewData.category.productCount || 0 }} товаров
                 </span>
               </div>
             </div>
@@ -1164,11 +1140,11 @@
       <div class="modal-actions">
         <button *ngIf="quickViewData.type === 'niche' && quickViewData.niche" 
                 class="btn-primary"
-                (click)="selectNiche(quickViewData.niche!); showQuickView = false">
+                (click)="selectNiche(quickViewData.niche!); isShowQuickView = false">
           <i class="icon-folder"></i>
           Открыть нишу
         </button>
-        <button class="btn-secondary" (click)="showQuickView = false">
+        <button class="btn-secondary" (click)="isShowQuickView = false">
           Закрыть
         </button>
       </div>
