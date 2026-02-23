@@ -170,7 +170,7 @@ export class NewsBannerPromoComponent implements OnInit {
         {
           field: 'newsBannerType',
           values: [type],
-          type: 2
+ю          type: 1
         }
       ],
       sorts: [
