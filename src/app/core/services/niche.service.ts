@@ -43,10 +43,13 @@ export class NicheService {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
-  // Обновить изображения ниши
-  updateNicheImages(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/UpdateImages/${id}`, data);
-  }
+ // Обновить изображения ниши
+updateNicheImages(id: string, file: File): Observable<any> {
+  const formData = new FormData();
+  formData.append('image', file); 
+  
+  return this.http.put(`${this.apiUrl}/UpdateImages/${id}`, formData);
+}
 
   // Добавить товары в нишу
   addProductsToNiche(nicheId: string, productIds: string[]): Observable<any> {
