@@ -1,126 +1,143 @@
-<div class="dashboard-container">
-  <!-- Заголовок и управление -->
-  <div class="dashboard-header">
+<!-- news-banner-promo-management.component.html -->
+<div class="content-manager">
+  <!-- Уведомления -->
+  <div class="notification-stack" id="notification-stack"></div>
+
+  <!-- Хедер -->
+  <div class="manager-header">
     <div class="header-content">
-      <h1 class="dashboard-title">
-        <svg class="title-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-        </svg>
-        Управление контентом
-      </h1>
-      <p class="dashboard-subtitle">Новости, баннеры и промокоды</p>
-    </div>
-
-    <div class="header-actions">
-      <button class="btn-export" (click)="exportData()" [disabled]="!currentList.length">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z" />
-        </svg>
-        Экспорт
-      </button>
-
-      <button class="btn-create" (click)="openCreateModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-        </svg>
-        Создать
-      </button>
-    </div>
-  </div>
-
-  <!-- Табы -->
-  <div class="tabs-container">
-    <div class="tabs">
-      <button class="tab-btn" [class.active]="activeTab === 'news'" (click)="setActiveTab('news')">
-        <span class="tab-icon">📰</span>
-        Новости
-        <span class="tab-badge" *ngIf="newsList.length">{{ newsList.length }}</span>
-      </button>
-
-      <button class="tab-btn" [class.active]="activeTab === 'banners'" (click)="setActiveTab('banners')">
-        <span class="tab-icon">🎯</span>
-        Баннеры
-        <span class="tab-badge" *ngIf="bannersList.length">{{ bannersList.length }}</span>
-      </button>
-
-      <button class="tab-btn" [class.active]="activeTab === 'promocodes'" (click)="setActiveTab('promocodes')">
-        <span class="tab-icon">🎫</span>
-        Промокоды
-        <span class="tab-badge" *ngIf="promocodesList.length">{{ promocodesList.length }}</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Панель поиска и фильтров -->
-  <div class="filters-panel">
-    <div class="search-box">
-      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path
-          d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-      </svg>
-      <input type="text" [(ngModel)]="searchQuery" placeholder="Поиск..." class="search-input">
-    </div>
-
-    <div class="filter-controls">
-      <div class="filter-group">
-        <label class="filter-label">Период:</label>
-        <input type="date" [(ngModel)]="dateFilter.start" class="date-input">
-        <span class="date-separator">—</span>
-        <input type="date" [(ngModel)]="dateFilter.end" class="date-input">
+      <div class="title-section">
+        <h1 class="page-title">
+          <span class="title-icon">📋</span>
+          Управление контентом
+        </h1>
+        <p class="page-description">Новости, баннеры и промокоды</p>
       </div>
 
-      <label class="checkbox-label" *ngIf="activeTab !== 'promocodes'">
-        <input type="checkbox" [(ngModel)]="activeOnly" class="checkbox-input">
+      <div class="header-actions">
+        <button class="icon-button" (click)="exportData()" [disabled]="!currentList.length" title="Экспорт">
+          <span class="icon">📥</span>
+        </button>
+
+        <button class="primary-button" (click)="openCreateModal()">
+          <span class="icon">➕</span>
+          Создать
+        </button>
+      </div>
+    </div>
+
+    <!-- Статистика -->
+    <!-- <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ newsList.length }}</div>
+        <div class="stat-label">Новости</div>
+        <div class="stat-trend positive">+12%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ bannersList.length }}</div>
+        <div class="stat-label">Баннеры</div>
+        <div class="stat-trend positive">+8%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ promocodesList.length }}</div>
+        <div class="stat-label">Промокоды</div>
+        <div class="stat-trend positive">+15%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ getActiveCount() }}</div>
+        <div class="stat-label">Активные</div>
+        <div class="stat-trend neutral">сегодня</div>
+      </div>
+    </div> -->
+  </div>
+
+  <!-- Навигация -->
+  <div class="navigation-bar">
+    <div class="tabs">
+      <button class="tab-button" [class.active]="activeTab === 'news'" (click)="setActiveTab('news')">
+        <span class="tab-icon">📰</span>
+        <span class="tab-label">Новости</span>
+        <span class="tab-badge">{{ newsList.length }}</span>
+      </button>
+
+      <button class="tab-button" [class.active]="activeTab === 'banners'" (click)="setActiveTab('banners')">
+        <span class="tab-icon">🎯</span>
+        <span class="tab-label">Баннеры</span>
+        <span class="tab-badge">{{ bannersList.length }}</span>
+      </button>
+
+      <button class="tab-button" [class.active]="activeTab === 'promocodes'" (click)="setActiveTab('promocodes')">
+        <span class="tab-icon">🎫</span>
+        <span class="tab-label">Промокоды</span>
+        <span class="tab-badge">{{ promocodesList.length }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="filters-bar">
+    <div class="search-wrapper">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" [(ngModel)]="searchQuery" placeholder="Поиск...">
+      <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+    </div>
+
+    <div class="filter-group">
+      <div class="date-range">
+        <input type="date" class="date-input" [(ngModel)]="dateFilter.start" placeholder="Дата с">
+        <span class="date-separator">—</span>
+        <input type="date" class="date-input" [(ngModel)]="dateFilter.end" placeholder="Дата по">
+      </div>
+
+      <label class="checkbox-wrapper" *ngIf="activeTab !== 'promocodes'">
+        <input type="checkbox" class="checkbox-input" [(ngModel)]="activeOnly">
         <span class="checkbox-custom"></span>
-        Только активные
+        <span class="checkbox-label">Только активные</span>
       </label>
     </div>
   </div>
 
-  <!-- Контентная область -->
+  <!-- Контент -->
   <div class="content-area">
     <!-- Загрузка -->
-    <div class="loading-overlay" *ngIf="isLoading">
-      <div class="loading-spinner"></div>
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
       <p>Загрузка данных...</p>
     </div>
 
-    <!-- Пустой список -->
+    <!-- Пустое состояние -->
     <div class="empty-state" *ngIf="!isLoading && filteredList.length === 0">
       <div class="empty-icon">📭</div>
       <h3>Нет данных</h3>
       <p>Создайте первый элемент или измените параметры поиска</p>
+      <button class="primary-button" (click)="openCreateModal()">
+        <span class="icon">➕</span>
+        Создать
+      </button>
     </div>
 
-    <!-- Список новостей/баннеров -->
-    <div class="grid-view" *ngIf="!isLoading && activeTab !== 'promocodes' && filteredList.length">
-      <div class="card" *ngFor="let item of filteredList" [class.card-active]="isActive(item)">
+    <!-- Карточки для новостей/баннеров -->
+    <div class="cards-grid" *ngIf="!isLoading && activeTab !== 'promocodes' && filteredList.length">
+      <div class="content-card" *ngFor="let item of filteredList" [class.active]="isActive(item)">
 
         <div class="card-header">
           <div class="card-status">
-            <span class="status-dot" [class.active]="isActive(item)"></span>
-            {{ isActive(item) ? 'Активен' : 'Неактивен' }}
+            <span class="status-indicator" [class.active]="!item.isDeleted && isActive(item)"
+              [class.deleted]="item.isDeleted"></span>
+            <span class="status-text">
+              {{ item.isDeleted ? 'Удален' : (isActive(item) ? 'Активен' : 'Неактивен') }}
+            </span>
           </div>
 
           <div class="card-actions">
-            <button class="btn-action" (click)="openPreviewModal(item)" title="Предпросмотр">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-              </svg>
+            <button class="action-button" (click)="openPreviewModal(item)" title="Предпросмотр">
+              <span class="icon">👁️</span>
             </button>
-            <button class="btn-action" (click)="openEditModal(item)" title="Редактировать">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-              </svg>
+            <button class="action-button" (click)="openEditModal(item)" title="Редактировать">
+              <span class="icon">✏️</span>
             </button>
-            <button class="btn-action btn-danger" (click)="openDeleteModal(item)" title="Удалить">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-              </svg>
+            <button class="action-button delete" (click)="openDeleteModal(item)" title="Удалить">
+              <span class="icon">🗑️</span>
             </button>
           </div>
         </div>
@@ -132,17 +149,11 @@
 
           <div class="card-meta">
             <div class="meta-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-              </svg>
+              <span class="meta-icon">📅</span>
               <span>Начало: {{ formatDate(item.beginDateTime) }}</span>
             </div>
             <div class="meta-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-              </svg>
+              <span class="meta-icon">⏰</span>
               <span>Окончание: {{ formatDate(item.endDateTime) }}</span>
             </div>
           </div>
@@ -152,20 +163,17 @@
           </div>
         </div>
 
-        <div class="card-footer">
-          <a [href]="item.link" target="_blank" class="card-link" *ngIf="item.link">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
-            </svg>
-            Ссылка
+        <div class="card-footer" *ngIf="item.link">
+          <a [href]="item.link" target="_blank" class="card-link">
+            <span class="link-icon">🔗</span>
+            Перейти по ссылке
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Список промокодов -->
-    <div class="table-view" *ngIf="!isLoading && activeTab === 'promocodes' && filteredList.length">
+    <!-- Таблица для промокодов -->
+    <div class="table-container" *ngIf="!isLoading && activeTab === 'promocodes' && filteredList.length">
       <table class="data-table">
         <thead>
           <tr>
@@ -181,11 +189,8 @@
             <td>
               <div class="promo-code">
                 <span class="code-value">{{ promo.code }}</span>
-                <button class="btn-copy" (click)="copyPromoCode(promo.code)" title="Скопировать">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                      d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                  </svg>
+                <button class="copy-button" (click)="copyPromoCode(promo.code)" title="Скопировать">
+                  <span class="icon">📋</span>
                 </button>
               </div>
             </td>
@@ -196,100 +201,112 @@
               </div>
             </td>
             <td>
-              <span class="badge badge-type">{{ getPromoCodeTypeText(promo.promoCodeType) }}</span>
+              <span class="badge" [class]="'type-' + promo.promoCodeType">
+                {{ getPromoCodeTypeText(promo.promoCodeType) }}
+              </span>
             </td>
             <td>
               <span class="promo-value">{{ promo.value }}{{ promo.promoCodeType === 0 ? '%' : '₽' }}</span>
             </td>
             <td>
               <div class="table-actions">
-                <button class="btn-action" (click)="openEditModal(promo)" title="Редактировать">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                      d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                  </svg>
+                <button class="action-button small" (click)="openEditModal(promo)" title="Редактировать">
+                  <span class="icon">✏️</span>
                 </button>
-                <button class="btn-action btn-danger" (click)="openDeleteModal(promo)" title="Удалить">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                  </svg>
+                <button class="action-button small delete" (click)="openDeleteModal(promo)" title="Удалить">
+                  <span class="icon">🗑️</span>
                 </button>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- Пагинация -->
+      <div class="pagination" *ngIf="promocodesList.length > pageSize">
+        <div class="pagination-info">
+          Показано {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, promocodesList.length)
+          }} из {{ promocodesList.length }}
+        </div>
+        <div class="pagination-controls">
+          <button class="page-button" [disabled]="currentPage === 1" (click)="currentPage- 1">
+            <span class="icon">◀</span>
+          </button>
+          <span class="page-current">{{ currentPage }}</span>
+          <button class="page-button" [disabled]="currentPage * pageSize >= promocodesList.length"
+            (click)="currentPage+ 1">
+            <span class="icon">▶</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Модальное окно создания/редактирования -->
-  <div class="modal-overlay" *ngIf="showModal" [class.show]="showModal">
-    <div class="modal-container">
+  <div class="modal-overlay" *ngIf="showModal" [class.show]="showModal" (click)="showModal = false">
+    <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
+          <span class="title-icon">{{ isEditing ? '✏️' : '➕' }}</span>
           {{ isEditing ? 'Редактировать' : 'Создать' }}
           {{ activeTab === 'news' ? 'новость' : activeTab === 'banners' ? 'баннер' : 'промокод' }}
         </h2>
-        <button class="modal-close" (click)="showModal = false">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-          </svg>
+        <button class="close-button" (click)="showModal = false">
+          <span class="icon">✕</span>
         </button>
       </div>
 
       <div class="modal-body">
         <!-- Форма для новостей/баннеров -->
-        <form *ngIf="activeTab !== 'promocodes'" class="form-content" (ngSubmit)="save()">
+        <form *ngIf="activeTab !== 'promocodes'" class="modal-form" (ngSubmit)="save()">
           <div class="form-grid">
-            <div class="form-group">
+            <div class="form-group full-width">
               <label class="form-label required">Заголовок</label>
-              <input type="text" [(ngModel)]="formData.header" name="header" placeholder="Введите заголовок"
-                class="form-input" [class.error]="errors.header">
+              <input type="text" class="form-input" [(ngModel)]="formData.header" name="header"
+                [class.error]="errors.header" placeholder="Введите заголовок">
               <div class="error-message" *ngIf="errors.header">{{ errors.header }}</div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group full-width">
               <label class="form-label">Подзаголовок</label>
-              <input type="text" [(ngModel)]="formData.subheader" name="subheader" placeholder="Введите подзаголовок"
-                class="form-input">
+              <input type="text" class="form-input" [(ngModel)]="formData.subheader" name="subheader"
+                placeholder="Введите подзаголовок">
             </div>
 
             <div class="form-group full-width">
               <label class="form-label">Описание</label>
-              <textarea [(ngModel)]="formData.description" name="description" placeholder="Введите описание" rows="3"
-                class="form-textarea"></textarea>
+              <textarea class="form-textarea" [(ngModel)]="formData.description" name="description" rows="3"
+                placeholder="Введите описание"></textarea>
             </div>
 
             <div class="form-group">
               <label class="form-label required">Дата начала</label>
-              <input type="datetime-local" [(ngModel)]="formData.beginDateTime" name="beginDateTime" class="form-input"
+              <input type="datetime-local" class="form-input" [(ngModel)]="formData.beginDateTime" name="beginDateTime"
                 [class.error]="errors.beginDateTime">
               <div class="error-message" *ngIf="errors.beginDateTime">{{ errors.beginDateTime }}</div>
             </div>
 
             <div class="form-group">
               <label class="form-label required">Дата окончания</label>
-              <input type="datetime-local" [(ngModel)]="formData.endDateTime" name="endDateTime" class="form-input"
+              <input type="datetime-local" class="form-input" [(ngModel)]="formData.endDateTime" name="endDateTime"
                 [class.error]="errors.endDateTime">
               <div class="error-message" *ngIf="errors.endDateTime">{{ errors.endDateTime }}</div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group full-width">
               <label class="form-label">Ссылка</label>
-              <input type="url" [(ngModel)]="formData.link" name="link" placeholder="https://example.com"
-                class="form-input">
+              <input type="url" class="form-input" [(ngModel)]="formData.link" name="link"
+                placeholder="https://example.com">
             </div>
 
             <div class="form-group full-width">
               <label class="form-label">Содержание</label>
-              <textarea [(ngModel)]="formData.content" name="content" placeholder="Введите полное содержание" rows="5"
-                class="form-textarea"></textarea>
+              <textarea class="form-textarea" [(ngModel)]="formData.content" name="content" rows="5"
+                placeholder="Введите полное содержание"></textarea>
             </div>
 
-            <!-- Ключевые слова -->
             <div class="form-group full-width">
-              <label class="form-label">Ключевые слова (теги)</label>
+              <label class="form-label">Ключевые слова</label>
               <div class="tags-input">
                 <div class="tags-list">
                   <span class="tag" *ngFor="let tag of keyWords; let i = index">
@@ -298,71 +315,88 @@
                   </span>
                 </div>
                 <div class="tag-input-group">
-                  <input type="text" [(ngModel)]="newKeyWord" (keyup.enter)="addKeyWord()"
-                    placeholder="Введите ключевое слово" class="tag-input">
-                  <button type="button" class="btn-tag-add" (click)="addKeyWord()">Добавить</button>
+                  <input type="text" class="tag-input" [(ngModel)]="newKeyWord" name="newKeyWord"
+                    (keyup.enter)="addKeyWord()" placeholder="Введите ключевое слово">
+                  <button type="button" class="tag-add-button" (click)="addKeyWord()">
+                    Добавить
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Тип (только при создании) -->
+            <div class="form-group full-width">
+              <label class="form-label">Изображения</label>
+              <div class="upload-area" (click)="fileInput.click()">
+                <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" multiple hidden>
+                <div class="upload-content" *ngIf="!selectedFiles?.length">
+                  <span class="upload-icon">📁</span>
+                  <p>Перетащите изображения или кликните для выбора</p>
+                  <span class="upload-hint">JPG, PNG, GIF до 5MB</span>
+                </div>
+                <div class="upload-preview" *ngIf="selectedFiles?.length">
+                  <div *ngFor="let file of selectedFiles; let i = index" class="preview-item">
+                    <img [src]="file.preview" alt="Preview">
+                    <button type="button" class="remove-preview" (click)="removeFile(i); $event.stopPropagation()">
+                      <span class="icon">✕</span>
+                    </button>
+                  </div>
+                  <div class="add-more" (click)="fileInput.click(); $event.stopPropagation()">
+                    <span class="icon">➕</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="form-group" *ngIf="!isEditing">
               <label class="form-label required">Тип</label>
-              <select [(ngModel)]="formData.newsBannerType" name="newsBannerType" class="form-select">
+              <select class="form-select" [(ngModel)]="formData.newsBannerType" name="newsBannerType">
                 <option [value]="0">Новость</option>
                 <option [value]="1">Баннер</option>
               </select>
             </div>
           </div>
 
-          <input type="file" (change)="onFileSelected($event)" accept="image/*" multiple />
-
-
           <div class="form-actions">
-            <button type="button" class="btn-cancel" (click)="showModal = false">Отмена</button>
-            <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+            <button type="button" class="secondary-button" (click)="showModal = false">Отмена</button>
+            <button type="submit" class="primary-button" [disabled]="isSubmitting">
               <span *ngIf="!isSubmitting">{{ isEditing ? 'Обновить' : 'Создать' }}</span>
-              <span *ngIf="isSubmitting">
-                <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity="0.3" />
-                  <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-                </svg>
-                Сохранение...
-              </span>
+              <span *ngIf="isSubmitting" class="button-spinner"></span>
             </button>
           </div>
         </form>
 
         <!-- Форма для промокодов -->
-        <form *ngIf="activeTab === 'promocodes'" class="form-content" (ngSubmit)="save()">
+        <form *ngIf="activeTab === 'promocodes'" class="modal-form" (ngSubmit)="save()">
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label required">Код</label>
-              <input type="number" [(ngModel)]="formData.code" name="code" placeholder="Введите 6-значный код"
-                class="form-input" [class.error]="errors.code">
+              <div class="code-input-group">
+                <input type="number" class="form-input" [(ngModel)]="formData.code" name="code"
+                  [class.error]="errors.code" placeholder="6-значный код">
+                <button type="button" class="generate-button" (click)="formData.code = generatePromoCode()">
+                  Сгенерировать
+                </button>
+              </div>
               <div class="error-message" *ngIf="errors.code">{{ errors.code }}</div>
-              <button type="button" class="btn-generate" (click)="formData.code = generatePromoCode()">
-                Сгенерировать
-              </button>
             </div>
 
             <div class="form-group">
               <label class="form-label required">Полное название</label>
-              <input type="text" [(ngModel)]="formData.fullName" name="fullName"
-                placeholder="Например: Скидка 20% на все товары" class="form-input" [class.error]="errors.fullName">
+              <input type="text" class="form-input" [(ngModel)]="formData.fullName" name="fullName"
+                [class.error]="errors.fullName" placeholder="Например: Скидка 20% на все товары">
               <div class="error-message" *ngIf="errors.fullName">{{ errors.fullName }}</div>
             </div>
 
             <div class="form-group">
               <label class="form-label required">Короткое название</label>
-              <input type="text" [(ngModel)]="formData.shortName" name="shortName" placeholder="Например: SALE20"
-                class="form-input" [class.error]="errors.shortName">
+              <input type="text" class="form-input" [(ngModel)]="formData.shortName" name="shortName"
+                [class.error]="errors.shortName" placeholder="Например: SALE20">
               <div class="error-message" *ngIf="errors.shortName">{{ errors.shortName }}</div>
             </div>
 
             <div class="form-group">
               <label class="form-label required">Тип промокода</label>
-              <select [(ngModel)]="formData.promoCodeType" name="promoCodeType" class="form-select">
+              <select class="form-select" [(ngModel)]="formData.promoCodeType" name="promoCodeType">
                 <option [value]="0">Процентная скидка</option>
                 <option [value]="1">Фиксированная сумма</option>
                 <option [value]="2">Бесплатная доставка</option>
@@ -371,9 +405,9 @@
 
             <div class="form-group">
               <label class="form-label required">Значение</label>
-              <div class="value-input">
-                <input type="number" [(ngModel)]="formData.value" name="value" placeholder="0" class="form-input"
-                  [class.error]="errors.value">
+              <div class="value-input-group">
+                <input type="number" class="form-input" [(ngModel)]="formData.value" name="value"
+                  [class.error]="errors.value" placeholder="0">
                 <span class="value-suffix">{{ formData.promoCodeType === 0 ? '%' : '₽' }}</span>
               </div>
               <div class="error-message" *ngIf="errors.value">{{ errors.value }}</div>
@@ -381,16 +415,10 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-cancel" (click)="showModal = false">Отмена</button>
-            <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+            <button type="button" class="secondary-button" (click)="showModal = false">Отмена</button>
+            <button type="submit" class="primary-button" [disabled]="isSubmitting">
               <span *ngIf="!isSubmitting">{{ isEditing ? 'Обновить' : 'Создать' }}</span>
-              <span *ngIf="isSubmitting">
-                <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity="0.3" />
-                  <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-                </svg>
-                Сохранение...
-              </span>
+              <span *ngIf="isSubmitting" class="button-spinner"></span>
             </button>
           </div>
         </form>
@@ -399,34 +427,33 @@
   </div>
 
   <!-- Модальное окно подтверждения удаления -->
-  <div class="modal-overlay" *ngIf="showDeleteModal" [class.show]="showDeleteModal">
-    <div class="modal-container modal-sm">
+  <div class="modal-overlay" *ngIf="showDeleteModal" [class.show]="showDeleteModal" (click)="showDeleteModal = false">
+    <div class="modal-container small" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2 class="modal-title">Подтверждение удаления</h2>
+        <h2 class="modal-title">
+          <span class="title-icon warning">⚠️</span>
+          Подтверждение удаления
+        </h2>
+        <button class="close-button" (click)="showDeleteModal = false">
+          <span class="icon">✕</span>
+        </button>
       </div>
 
       <div class="modal-body">
         <div class="delete-content">
           <div class="delete-icon">🗑️</div>
           <h3>Вы уверены?</h3>
-          <p>Вы собираетесь удалить {{ activeTab === 'news' ? 'новость' : activeTab === 'banners' ? 'баннер' :
-            'промокод' }}.</p>
+          <p>Вы собираетесь удалить
+            {{ activeTab === 'news' ? 'новость' :
+            activeTab === 'banners' ? 'баннер' : 'промокод' }}.</p>
           <p class="delete-warning">Это действие нельзя отменить.</p>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn-cancel" (click)="showDeleteModal = false" [disabled]="isSubmitting">
-            Отмена
-          </button>
-          <button type="button" class="btn-delete" (click)="delete()" [disabled]="isSubmitting">
+          <button type="button" class="secondary-button" (click)="showDeleteModal = false">Отмена</button>
+          <button type="button" class="danger-button" (click)="delete()" [disabled]="isSubmitting">
             <span *ngIf="!isSubmitting">Удалить</span>
-            <span *ngIf="isSubmitting">
-              <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity="0.3" />
-                <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-              </svg>
-              Удаление...
-            </span>
+            <span *ngIf="isSubmitting" class="button-spinner"></span>
           </button>
         </div>
       </div>
@@ -434,15 +461,16 @@
   </div>
 
   <!-- Модальное окно предпросмотра -->
-  <div class="modal-overlay" *ngIf="showPreviewModal" [class.show]="showPreviewModal">
-    <div class="modal-container modal-lg">
+  <div class="modal-overlay" *ngIf="showPreviewModal" [class.show]="showPreviewModal"
+    (click)="showPreviewModal = false">
+    <div class="modal-container large" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2 class="modal-title">Предпросмотр</h2>
-        <button class="modal-close" (click)="showPreviewModal = false">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-          </svg>
+        <h2 class="modal-title">
+          <span class="title-icon">👁️</span>
+          Предпросмотр
+        </h2>
+        <button class="close-button" (click)="showPreviewModal = false">
+          <span class="icon">✕</span>
         </button>
       </div>
 
@@ -450,38 +478,41 @@
         <div class="preview-content" *ngIf="previewData">
           <div class="preview-header">
             <div class="preview-status" [class.active]="isActive(previewData)">
-              <span class="status-dot" [class.active]="isActive(previewData)"></span>
+              <span class="status-indicator" [class.active]="isActive(previewData)"></span>
               {{ isActive(previewData) ? 'Активен' : 'Неактивен' }}
             </div>
-            <h1>{{ previewData.header }}</h1>
-            <h2>{{ previewData.subheader }}</h2>
+            <h1 class="preview-title">{{ previewData.header }}</h1>
+            <h2 class="preview-subtitle">{{ previewData.subheader }}</h2>
           </div>
 
           <div class="preview-body">
             <div class="preview-meta">
               <div class="meta-item">
-                <strong>Дата начала:</strong> {{ formatDate(previewData.beginDateTime) }}
+                <span class="meta-icon">📅</span>
+                <strong>Начало:</strong> {{ formatDate(previewData.beginDateTime) }}
               </div>
               <div class="meta-item">
-                <strong>Дата окончания:</strong> {{ formatDate(previewData.endDateTime) }}
+                <span class="meta-icon">⏰</span>
+                <strong>Окончание:</strong> {{ formatDate(previewData.endDateTime) }}
               </div>
               <div class="meta-item" *ngIf="previewData.link">
+                <span class="meta-icon">🔗</span>
                 <strong>Ссылка:</strong>
                 <a [href]="previewData.link" target="_blank">{{ previewData.link }}</a>
               </div>
             </div>
 
-            <div class="preview-description">
+            <div class="preview-section" *ngIf="previewData.description">
               <h3>Описание</h3>
-              <p>{{ previewData.description || 'Нет описания' }}</p>
+              <p>{{ previewData.description }}</p>
             </div>
 
-            <div class="preview-content-full">
+            <div class="preview-section" *ngIf="previewData.content">
               <h3>Содержание</h3>
-              <p>{{ previewData.content || 'Нет содержания' }}</p>
+              <p>{{ previewData.content }}</p>
             </div>
 
-            <div class="preview-tags" *ngIf="previewData.keyNames?.length">
+            <div class="preview-section" *ngIf="previewData.keyNames?.length">
               <h3>Ключевые слова</h3>
               <div class="tags-list">
                 <span class="tag" *ngFor="let tag of previewData.keyNames">{{ tag }}</span>

@@ -9,7 +9,7 @@ import { environment } from '../../../environment';
 export class NicheService {
   private apiUrl = `${environment.production}/api/Entities/ProductNiche`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // Получить все ниши
   getAllNiches(): Observable<any> {
@@ -19,7 +19,7 @@ export class NicheService {
       page: 0,
       pageSize: 1000
     };
-    
+
     return this.http.post(`${this.apiUrl}/Filter`, filters);
   }
 
@@ -43,13 +43,13 @@ export class NicheService {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
- // Обновить изображения ниши
-updateNicheImages(id: string, file: File): Observable<any> {
-  const formData = new FormData();
-  formData.append('image', file); 
-  
-  return this.http.put(`${this.apiUrl}/UpdateImages/${id}`, formData);
-}
+  // Обновить изображения ниши
+  updateNicheImages(id: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('id', id);
+    return this.http.put(`${this.apiUrl}/UpdateImages/${id}`, formData);
+  }
 
   // Добавить товары в нишу
   addProductsToNiche(nicheId: string, productIds: string[]): Observable<any> {

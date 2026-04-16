@@ -213,6 +213,22 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
   itemsPerPage = 10;
   totalPages = 1;
   
+    Math = Math;
+
+  // Добавьте метод для проверки активных фильтров
+  hasActiveFilters(): boolean {
+    return this.filters.status !== 'all' || 
+           this.filters.minProducts > 0 || 
+           this.filters.maxProducts < 1000 ||
+           this.searchQuery.trim() !== '';
+  }
+
+  // Добавьте метод для переключения направления сортировки
+  toggleSortDirection(): void {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    this.sortNiches();
+  }
+  
   // Быстрый просмотр
   quickViewData: {
     niche?: Niche;
@@ -457,7 +473,7 @@ export class NicheManagementComponent implements OnInit, OnDestroy {
     this.isEditing = true;
     this.editNiche = {
       id: niche.id,
-      updaterId: 'current-user-id',
+      updaterId: niche.id,
       removeOldImages: false,
       code: niche.code,
       sortIndex: niche.sortIndex,
@@ -1087,12 +1103,11 @@ private async uploadImages(id:string, images: { file: File; preview: string }[])
     // Обновляем нишу с удаленным изображением
     const updateData = {
       id: this.selectedNiche.id,
-      updaterId: 'current-user-id',
+      updaterId: this.selectedNiche.id,
       removeOldImages: true,
       code: this.selectedNiche.code,
       sortIndex: this.selectedNiche.sortIndex,
       productCount: this.selectedNiche.productCount,
-      lastProductCountUpdateDateTime: this.selectedNiche.lastProductCountUpdateDateTime,
       name: this.selectedNiche.name,
       description: this.selectedNiche.description,
       imageInstances: [],

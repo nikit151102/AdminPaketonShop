@@ -139,6 +139,141 @@ export class NewsBannerPromoComponent implements OnInit {
   // Ключевые слова (теги)
   keyWords: string[] = [];
   newKeyWord = '';
+  Math = Math;
+  selectedFiles: { file: File; preview: string }[] = [];
+
+  // Добавьте метод для получения количества активных элементов
+  getActiveCount(): number {
+    const now = new Date();
+    const activeNews = this.newsList.filter(item => 
+      new Date(item.beginDateTime) <= now && new Date(item.endDateTime) >= now
+    ).length;
+    const activeBanners = this.bannersList.filter(item => 
+      new Date(item.beginDateTime) <= now && new Date(item.endDateTime) >= now
+    ).length;
+    return activeNews + activeBanners;
+  }
+
+  // Обновите метод onFileSelected для работы с массивом файлов
+  onFileSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+    
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.selectedFiles.push({
+          file,
+          preview: e.target.result
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    event.target.value = '';
+  }
+
+  // Добавьте метод для удаления файла из превью
+  removeFile(index: number): void {
+    this.selectedFiles.splice(index, 1);
+  }
+
+  // Обновите метод save для работы с файлами
+  save(): void {
+    if (!this.validateForm()) return;
+    this.isSubmitting = true;
+
+    if (this.activeTab !== 'promocodes') {
+      this.formData.keyNames = this.keyWords.filter(word => word.trim());
+
+      if (this.isEditing && this.selectedItem) {
+        this.updateNewsBanner();
+      } else {
+        this.createNewsBanner();
+      }
+    } else {
+      if (this.isEditing && this.selectedItem) {
+        this.updatePromoCode();
+      } else {
+        this.createPromoCode();
+      }
+    }
+  }
+
+  // Обновите метод createNewsBanner
+  createNewsBanner(): void {
+    const payload = { ...this.formData };
+    delete payload.promoCodeType;
+    delete payload.promoOrderGroupId;
+    delete payload.promoOrderId;
+
+    this.http.post<ApiResponse<NewsBanner>>(`${environment.production}/api/Entities/NewsBanner`, payload)
+      .pipe(finalize(() => this.isSubmitting = false))
+      .subscribe({
+        next: (response) => {
+          if (this.selectedFiles.length > 0) {
+            this.uploadImages(response.data.id);
+          } else {
+            this.showModal = false;
+            this.loadData();
+            this.showNotification('Создано успешно', 'success');
+          }
+        },
+        error: (error) => {
+          console.error('Ошибка создания:', error);
+          this.showNotification('Ошибка создания', 'error');
+        }
+      });
+  }
+
+  // Обновите метод updateNewsBanner
+  updateNewsBanner(): void {
+    const payload = { ...this.formData };
+
+    this.http.put<ApiResponse<NewsBanner>>(`${environment.production}/api/Entities/NewsBanner/${this.selectedItem?.id}`, payload)
+      .pipe(finalize(() => this.isSubmitting = false))
+      .subscribe({
+        next: (response) => {
+          if (this.selectedFiles.length > 0) {
+            this.uploadImages(response.data.id);
+          } else {
+            this.showModal = false;
+            this.loadData();
+            this.showNotification('Обновлено успешно', 'success');
+          }
+        },
+        error: (error) => {
+          console.error('Ошибка обновления:', error);
+          this.showNotification('Ошибка обновления', 'error');
+        }
+      });
+  }
+
+  // Добавьте метод для загрузки изображений
+  uploadImages(id: string): void {
+    const formData = new FormData();
+    
+    this.selectedFiles.forEach(file => {
+      formData.append('ImageInstances', file.file);
+    });
+    formData.append('Id', id);
+
+    this.http.put<any>(`${environment.production}/api/Entities/NewsBanner/UpdateImages/${id}`, formData)
+      .subscribe({
+        next: () => {
+          this.showModal = false;
+          this.loadData();
+          this.selectedFiles = [];
+          this.showNotification('Изображения загружены', 'success');
+        },
+        error: (error) => {
+          console.error('Ошибка загрузки изображений:', error);
+          this.showNotification('Ошибка загрузки изображений', 'error');
+        }
+      });
+  }
+
 
   constructor(private http: HttpClient) { }
 
@@ -170,7 +305,7 @@ export class NewsBannerPromoComponent implements OnInit {
         {
           field: 'newsBannerType',
           values: [type],
-ю          type: 1
+          type: 1
         }
       ],
       sorts: [
@@ -367,117 +502,9 @@ export class NewsBannerPromoComponent implements OnInit {
     return Object.keys(this.errors).length === 0;
   }
 
-  // Сохранение (создание/редактирование)
-  save(): void {
-    if (!this.validateForm()) {
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    if (this.activeTab !== 'promocodes') {
-      // Обновляем ключевые слова
-      this.formData.keyNames = this.keyWords.filter(word => word.trim());
-
-      if (this.isEditing && this.selectedItem) {
-        this.updateNewsBanner();
-      } else {
-        this.createNewsBanner();
-      }
-    } else {
-      if (this.isEditing && this.selectedItem) {
-        this.updatePromoCode();
-      } else {
-        this.createPromoCode();
-      }
-    }
-  }
 
   selectedFile: any;
 
-  onFileSelected(event: any) {
-    const file: File = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-    }
-  }
-  // Создание новости/баннера
-  createNewsBanner(): void {
-    const payload = { ...this.formData };
-
-    delete payload.promoCodeType
-    delete payload.promoOrderGroupId
-    delete payload.promoOrderId
-
-
-    this.http.post<ApiResponse<NewsBanner>>(`${environment.production}/api/Entities/NewsBanner`, payload)
-      .pipe(
-        finalize(() => this.isSubmitting = false)
-      )
-      .subscribe({
-        next: (response) => {
-
-          // Создаем FormData
-          const formData = new FormData();
-
-          // Добавляем файл (первый параметр - имя поля, которое ожидает сервер)
-          formData.append('ImageInstances', this.selectedFile, this.selectedFile.name);
-          formData.append('Id', response.data.id);
-          // Отправляем запрос
-          this.http.put<any>(
-            `${environment.production}/api/Entities/NewsBanner/UpdateImages/${response.data.id}`,
-            formData
-          ).subscribe((data: any) => {
-            this.showModal = false;
-            this.loadData();
-            this.showNotification('Создано успешно', 'success');
-          });
-
-
-
-
-        },
-        error: (error) => {
-          console.error('Ошибка создания:', error);
-          this.showNotification('Ошибка создания', 'error');
-        }
-      });
-  }
-
-  // Обновление новости/баннера
-  updateNewsBanner(): void {
-    const payload = { ...this.formData };
-
-    this.http.put<ApiResponse<NewsBanner>>(`${environment.production}/api/Entities/NewsBanner/${this.selectedItem?.id}`, payload)
-      .pipe(
-        finalize(() => this.isSubmitting = false)
-      )
-      .subscribe({
-        next: (response) => {
-          // Создаем FormData
-          const formData = new FormData();
-
-          // Добавляем файл (первый параметр - имя поля, которое ожидает сервер)
-          formData.append('ImageInstances', this.selectedFile, this.selectedFile.name);
-          formData.append('Id', response.data.id);
-          // Отправляем запрос
-          this.http.put<any>(
-            `${environment.production}/api/Entities/NewsBanner/UpdateImages/${response.data.id}`,
-            formData
-          ).subscribe((data: any) => {
-            this.showModal = false;
-            this.loadData();
-            this.showNotification('Обновлено успешно', 'success');
-          });
-
-
-        },
-        error: (error) => {
-          console.error('Ошибка обновления:', error);
-          this.showNotification('Ошибка обновления', 'error');
-        }
-      });
-  }
 
   // Создание промокода
   createPromoCode(): void {
