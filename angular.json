@@ -62,6 +62,10 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "allowedHosts": ["xn--80aksgi6f.xn--80akonecy.xn--p1ai"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "AdminPaketonShop:build:production"
