@@ -8,7 +8,10 @@
     <div class="header-content">
       <div class="title-section">
         <h1 class="page-title">
-          <span class="title-icon">📋</span>
+          <svg class="title-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16v16H4z"/>
+            <path d="M4 9h16M9 4v16"/>
+          </svg>
           Управление контентом
         </h1>
         <p class="page-description">Новости, баннеры и промокоды</p>
@@ -16,58 +19,51 @@
 
       <div class="header-actions">
         <button class="icon-button" (click)="exportData()" [disabled]="!currentList.length" title="Экспорт">
-          <span class="icon">📥</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
         </button>
 
         <button class="primary-button" (click)="openCreateModal()">
-          <span class="icon">➕</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
           Создать
         </button>
       </div>
     </div>
-
-    <!-- Статистика -->
-    <!-- <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value">{{ newsList.length }}</div>
-        <div class="stat-label">Новости</div>
-        <div class="stat-trend positive">+12%</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ bannersList.length }}</div>
-        <div class="stat-label">Баннеры</div>
-        <div class="stat-trend positive">+8%</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ promocodesList.length }}</div>
-        <div class="stat-label">Промокоды</div>
-        <div class="stat-trend positive">+15%</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{ getActiveCount() }}</div>
-        <div class="stat-label">Активные</div>
-        <div class="stat-trend neutral">сегодня</div>
-      </div>
-    </div> -->
   </div>
 
   <!-- Навигация -->
   <div class="navigation-bar">
     <div class="tabs">
       <button class="tab-button" [class.active]="activeTab === 'news'" (click)="setActiveTab('news')">
-        <span class="tab-icon">📰</span>
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+          <path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/>
+        </svg>
         <span class="tab-label">Новости</span>
         <span class="tab-badge">{{ newsList.length }}</span>
       </button>
 
       <button class="tab-button" [class.active]="activeTab === 'banners'" (click)="setActiveTab('banners')">
-        <span class="tab-icon">🎯</span>
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2"/>
+        </svg>
         <span class="tab-label">Баннеры</span>
         <span class="tab-badge">{{ bannersList.length }}</span>
       </button>
 
       <button class="tab-button" [class.active]="activeTab === 'promocodes'" (click)="setActiveTab('promocodes')">
-        <span class="tab-icon">🎫</span>
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+          <path d="M13 5v2M13 17v2M13 11v2"/>
+        </svg>
         <span class="tab-label">Промокоды</span>
         <span class="tab-badge">{{ promocodesList.length }}</span>
       </button>
@@ -77,9 +73,17 @@
   <!-- Фильтры -->
   <div class="filters-bar">
     <div class="search-wrapper">
-      <span class="search-icon">🔍</span>
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.3-4.3"/>
+      </svg>
       <input type="text" class="search-input" [(ngModel)]="searchQuery" placeholder="Поиск...">
-      <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+      <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
     <div class="filter-group">
@@ -107,11 +111,17 @@
 
     <!-- Пустое состояние -->
     <div class="empty-state" *ngIf="!isLoading && filteredList.length === 0">
-      <div class="empty-icon">📭</div>
+      <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="M2 8h20M6 4v4"/>
+      </svg>
       <h3>Нет данных</h3>
       <p>Создайте первый элемент или измените параметры поиска</p>
       <button class="primary-button" (click)="openCreateModal()">
-        <span class="icon">➕</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
         Создать
       </button>
     </div>
@@ -131,13 +141,20 @@
 
           <div class="card-actions">
             <button class="action-button" (click)="openPreviewModal(item)" title="Предпросмотр">
-              <span class="icon">👁️</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
             </button>
             <button class="action-button" (click)="openEditModal(item)" title="Редактировать">
-              <span class="icon">✏️</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+              </svg>
             </button>
             <button class="action-button delete" (click)="openDeleteModal(item)" title="Удалить">
-              <span class="icon">🗑️</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -149,11 +166,19 @@
 
           <div class="card-meta">
             <div class="meta-item">
-              <span class="meta-icon">📅</span>
+              <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
               <span>Начало: {{ formatDate(item.beginDateTime) }}</span>
             </div>
             <div class="meta-item">
-              <span class="meta-icon">⏰</span>
+              <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
               <span>Окончание: {{ formatDate(item.endDateTime) }}</span>
             </div>
           </div>
@@ -165,7 +190,10 @@
 
         <div class="card-footer" *ngIf="item.link">
           <a [href]="item.link" target="_blank" class="card-link">
-            <span class="link-icon">🔗</span>
+            <svg class="link-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
             Перейти по ссылке
           </a>
         </div>
@@ -190,7 +218,10 @@
               <div class="promo-code">
                 <span class="code-value">{{ promo.code }}</span>
                 <button class="copy-button" (click)="copyPromoCode(promo.code)" title="Скопировать">
-                  <span class="icon">📋</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
                 </button>
               </div>
             </td>
@@ -211,10 +242,14 @@
             <td>
               <div class="table-actions">
                 <button class="action-button small" (click)="openEditModal(promo)" title="Редактировать">
-                  <span class="icon">✏️</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                  </svg>
                 </button>
                 <button class="action-button small delete" (click)="openDeleteModal(promo)" title="Удалить">
-                  <span class="icon">🗑️</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
                 </button>
               </div>
             </td>
@@ -225,17 +260,19 @@
       <!-- Пагинация -->
       <div class="pagination" *ngIf="promocodesList.length > pageSize">
         <div class="pagination-info">
-          Показано {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, promocodesList.length)
-          }} из {{ promocodesList.length }}
+          Показано {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, promocodesList.length) }} из {{ promocodesList.length }}
         </div>
         <div class="pagination-controls">
-          <button class="page-button" [disabled]="currentPage === 1" (click)="currentPage- 1">
-            <span class="icon">◀</span>
+          <button class="page-button" [disabled]="currentPage === 1" (click)="currentPage - 1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
           </button>
           <span class="page-current">{{ currentPage }}</span>
-          <button class="page-button" [disabled]="currentPage * pageSize >= promocodesList.length"
-            (click)="currentPage+ 1">
-            <span class="icon">▶</span>
+          <button class="page-button" [disabled]="currentPage * pageSize >= promocodesList.length" (click)="currentPage + 1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -247,12 +284,21 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="title-icon">{{ isEditing ? '✏️' : '➕' }}</span>
+          <svg class="title-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path *ngIf="isEditing" d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+            <g *ngIf="!isEditing">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </g>
+          </svg>
           {{ isEditing ? 'Редактировать' : 'Создать' }}
           {{ activeTab === 'news' ? 'новость' : activeTab === 'banners' ? 'баннер' : 'промокод' }}
         </h2>
         <button class="close-button" (click)="showModal = false">
-          <span class="icon">✕</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
       </div>
 
@@ -311,7 +357,12 @@
                 <div class="tags-list">
                   <span class="tag" *ngFor="let tag of keyWords; let i = index">
                     {{ tag }}
-                    <button type="button" class="tag-remove" (click)="removeKeyWord(i)">×</button>
+                    <button type="button" class="tag-remove" (click)="removeKeyWord(i)">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
                   </span>
                 </div>
                 <div class="tag-input-group">
@@ -329,7 +380,11 @@
               <div class="upload-area" (click)="fileInput.click()">
                 <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" multiple hidden>
                 <div class="upload-content" *ngIf="!selectedFiles?.length">
-                  <span class="upload-icon">📁</span>
+                  <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
                   <p>Перетащите изображения или кликните для выбора</p>
                   <span class="upload-hint">JPG, PNG, GIF до 5MB</span>
                 </div>
@@ -337,11 +392,17 @@
                   <div *ngFor="let file of selectedFiles; let i = index" class="preview-item">
                     <img [src]="file.preview" alt="Preview">
                     <button type="button" class="remove-preview" (click)="removeFile(i); $event.stopPropagation()">
-                      <span class="icon">✕</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
                     </button>
                   </div>
                   <div class="add-more" (click)="fileInput.click(); $event.stopPropagation()">
-                    <span class="icon">➕</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -374,6 +435,10 @@
                 <input type="number" class="form-input" [(ngModel)]="formData.code" name="code"
                   [class.error]="errors.code" placeholder="6-значный код">
                 <button type="button" class="generate-button" (click)="formData.code = generatePromoCode()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
                   Сгенерировать
                 </button>
               </div>
@@ -431,17 +496,26 @@
     <div class="modal-container small" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="title-icon warning">⚠️</span>
+          <svg class="title-icon warning" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
           Подтверждение удаления
         </h2>
         <button class="close-button" (click)="showDeleteModal = false">
-          <span class="icon">✕</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
       </div>
 
       <div class="modal-body">
         <div class="delete-content">
-          <div class="delete-icon">🗑️</div>
+          <svg class="delete-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
           <h3>Вы уверены?</h3>
           <p>Вы собираетесь удалить
             {{ activeTab === 'news' ? 'новость' :
@@ -466,11 +540,17 @@
     <div class="modal-container large" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="title-icon">👁️</span>
+          <svg class="title-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
           Предпросмотр
         </h2>
         <button class="close-button" (click)="showPreviewModal = false">
-          <span class="icon">✕</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
       </div>
 
@@ -488,15 +568,26 @@
           <div class="preview-body">
             <div class="preview-meta">
               <div class="meta-item">
-                <span class="meta-icon">📅</span>
+                <svg class="meta-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
                 <strong>Начало:</strong> {{ formatDate(previewData.beginDateTime) }}
               </div>
               <div class="meta-item">
-                <span class="meta-icon">⏰</span>
+                <svg class="meta-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
                 <strong>Окончание:</strong> {{ formatDate(previewData.endDateTime) }}
               </div>
               <div class="meta-item" *ngIf="previewData.link">
-                <span class="meta-icon">🔗</span>
+                <svg class="meta-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
                 <strong>Ссылка:</strong>
                 <a [href]="previewData.link" target="_blank">{{ previewData.link }}</a>
               </div>

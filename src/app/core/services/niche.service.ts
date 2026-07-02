@@ -53,21 +53,21 @@ export class NicheService {
 
   // Добавить товары в нишу
   addProductsToNiche(nicheId: string, productIds: string[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/AddProductsToNiche/${nicheId}`, { guids: productIds });
+    return this.http.put(`${this.apiUrl}/AddProductsToNiche/${nicheId}`, productIds );
   }
 
   // Удалить товары из ниши
   removeProductsFromNiche(nicheId: string, productIds: string[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/RemoveProductsFromNiche/${nicheId}`, { guids: productIds });
+    return this.http.put(`${this.apiUrl}/RemoveProductsFromNiche/${nicheId}`, productIds );
   }
 
   // Добавить категории в нишу
   addCategoriesToNiche(nicheId: string, categoryIds: string[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/AddCategoryToNiche/${nicheId}`, { guids: categoryIds });
+    return this.http.put(`${this.apiUrl}/AddCategoryToNiche/${nicheId}`, categoryIds );
   }
 
   // Удалить категории из ниши
   removeCategoriesFromNiche(nicheId: string, categoryIds: string[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/RemoveCategoryFromNiche/${nicheId}`, { guids: categoryIds });
+    return this.http.put(`${this.apiUrl}/RemoveCategoryFromNiche/${nicheId}`, categoryIds );
   }
 }

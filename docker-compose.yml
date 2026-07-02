@@ -1,0 +1,10 @@
+services:
+  frontend_admin:
+    build:
+      context: ./
+      dockerfile: Dockerfile-frontend
+    ports:
+      - 8025:8025
+    volumes:
+      - /app
+      - /app/node_modules

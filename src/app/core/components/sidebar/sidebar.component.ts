@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { SafeHtml } from '@angular/platform-browser';
-import { AuthRoutingModule } from "../../../modules/auth/auth-routing.module";
 
 interface MenuItem {
   label: string;
@@ -13,7 +13,8 @@ interface MenuItem {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [CommonModule, AuthRoutingModule],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
@@ -22,9 +23,8 @@ export class SidebarComponent {
   @Input() isCollapsed: boolean = false;
   @Output() collapsedChange = new EventEmitter<boolean>();
 
-  toggleCollapse() {
+  toggleCollapse(): void {
     this.isCollapsed = !this.isCollapsed;
     this.collapsedChange.emit(this.isCollapsed);
   }
-
 }

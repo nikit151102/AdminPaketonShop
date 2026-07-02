@@ -8,7 +8,9 @@
     <div class="header-top">
       <div class="title-section">
         <h1 class="page-title">
-          <span class="title-icon">📁</span>
+          <svg class="title-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
           Управление нишами
         </h1>
         <p class="page-description">Организация и управление товарными категориями</p>
@@ -17,57 +19,101 @@
       <div class="header-actions">
         <div class="action-group">
           <button class="icon-button" (click)="refreshData()" [disabled]="isLoading" title="Обновить">
-            <span class="icon">🔄</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
           </button>
           <button class="icon-button" (click)="exportData('csv')" title="Экспорт">
-            <span class="icon">📥</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
           </button>
           <button class="icon-button" (click)="generateReport()" [disabled]="isLoading" title="Отчет">
-            <span class="icon">📊</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
           </button>
         </div>
         
         <button class="primary-button" (click)="startCreate()" [disabled]="isLoading">
-          <span class="icon">➕</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
           Новая ниша
         </button>
       </div>
     </div>
 
     <!-- Статистика -->
-    <div class="stats-grid">
+    <!-- <div class="stats-grid">
       <div class="stat-card">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
         <div class="stat-value">{{ stats.totalNiches }}</div>
         <div class="stat-label">Всего ниш</div>
         <div class="stat-trend positive">+12%</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
         <div class="stat-value">{{ stats.activeNiches }}</div>
         <div class="stat-label">Активных</div>
         <div class="stat-trend positive">+8%</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+        </div>
         <div class="stat-value">{{ stats.totalProducts }}</div>
         <div class="stat-label">Товаров</div>
         <div class="stat-trend positive">+15%</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
         <div class="stat-value">{{ stats.avgProductsPerNiche }}</div>
         <div class="stat-label">Среднее/ниша</div>
         <div class="stat-trend neutral">0%</div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Фильтры -->
     <div class="filters-section">
       <div class="search-wrapper">
-        <span class="search-icon">🔍</span>
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
         <input type="text" 
                class="search-input"
                [(ngModel)]="searchQuery" 
                (ngModelChange)="onSearchChange()"
                placeholder="Поиск по названию или коду...">
-        <button *ngIf="searchQuery" class="clear-search" (click)="clearSearch()">✕</button>
+        <button *ngIf="searchQuery" class="clear-search" (click)="clearSearch()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       <div class="filter-group">
@@ -78,7 +124,9 @@
         </select>
 
         <div class="filter-badge" *ngIf="filters.status !== 'all'">
-          {{ filters.status === 'active' ? '✓' : '✕' }}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
         </div>
       </div>
 
@@ -101,6 +149,10 @@
       </div>
 
       <button class="clear-filters" (click)="clearSearch()" *ngIf="hasActiveFilters()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
         Сбросить все
       </button>
     </div>
@@ -127,7 +179,10 @@
           </div>
           
           <button class="sort-direction" (click)="toggleSortDirection()" [class.desc]="sortDirection === 'desc'">
-            <span class="icon">⬆️</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="19" x2="12" y2="5"/>
+              <polyline points="5 12 12 5 19 12"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -139,15 +194,23 @@
         </div>
         <div class="bulk-buttons">
           <button class="bulk-button activate" (click)="activateSelectedNiches()">
-            <span class="icon">✅</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
             Активировать
           </button>
           <button class="bulk-button delete" (click)="deleteSelectedNiches()">
-            <span class="icon">🗑️</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
             Удалить
           </button>
           <button class="bulk-button clear" (click)="selectedNiches.clear()">
-            <span class="icon">✕</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -189,7 +252,9 @@
 
             <div class="cell-name">
               <div class="item-icon">
-                <span class="icon">📁</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
               </div>
               <div class="item-info">
                 <div class="item-title">{{ niche.name }}</div>
@@ -211,19 +276,28 @@
               <button class="item-action" 
                       (click)="showQuickView('niche', niche); $event.stopPropagation()"
                       title="Быстрый просмотр">
-                <span class="icon">👁️</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
               </button>
               <button class="item-action" 
                       (click)="startEdit(niche); $event.stopPropagation()"
                       title="Редактировать">
-                <span class="icon">✏️</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
               </button>
             </div>
           </div>
 
           <!-- Пустое состояние -->
           <div *ngIf="filteredNiches.length === 0" class="empty-state">
-            <div class="empty-icon">🔍</div>
+            <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
             <h3>Ниши не найдены</h3>
             <p>Попробуйте изменить параметры поиска</p>
             <button class="secondary-button" (click)="clearSearch()">
@@ -242,7 +316,9 @@
             <button class="page-button" 
                     [disabled]="currentPage === 1"
                     (click)="goToPage(currentPage - 1)">
-              <span class="icon">◀</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
             </button>
             
             <div class="page-numbers">
@@ -258,7 +334,9 @@
             <button class="page-button" 
                     [disabled]="currentPage === totalPages"
                     (click)="goToPage(currentPage + 1)">
-              <span class="icon">▶</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -279,7 +357,9 @@
                 {{ selectedNiche.isDeleted ? 'Неактивна' : 'Активна' }}
               </span>
               <span class="tag products">
-                <span class="icon">📦</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
                 {{ selectedNiche.productCount }} товаров
               </span>
             </div>
@@ -287,10 +367,16 @@
 
           <div class="header-actions">
             <button class="icon-button" (click)="startEdit(selectedNiche)" title="Редактировать">
-              <span class="icon">✏️</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
             </button>
             <button class="icon-button delete" (click)="showDeleteConfirm = true" title="Удалить">
-              <span class="icon">🗑️</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -300,27 +386,39 @@
           <button class="tab-button" 
                   [class.active]="viewMode === 'details'"
                   (click)="switchView('details')">
-            <span class="icon">ℹ️</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
             Информация
           </button>
           <button class="tab-button" 
                   [class.active]="viewMode === 'products'"
                   (click)="switchView('products')">
-            <span class="icon">📦</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
             Товары
             <span class="tab-badge">{{ selectedNiche.productCount }}</span>
           </button>
           <button class="tab-button" 
                   [class.active]="viewMode === 'categories'"
                   (click)="switchView('categories')">
-            <span class="icon">📂</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
             Категории
             <span class="tab-badge">{{ selectedNiche.subCategories?.length || 0 }}</span>
           </button>
           <button class="tab-button" 
                   [class.active]="viewMode === 'analytics'"
                   (click)="switchView('analytics')">
-            <span class="icon">📊</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
             Аналитика
           </button>
         </div>
@@ -332,7 +430,13 @@
             <div class="info-grid">
               <div class="info-card">
                 <div class="card-header">
-                  <span class="icon">📋</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                  </svg>
                   <h3>Основная информация</h3>
                 </div>
                 <div class="card-content">
@@ -359,7 +463,10 @@
 
               <div class="info-card">
                 <div class="card-header">
-                  <span class="icon">📝</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
                   <h3>Описание</h3>
                 </div>
                 <div class="card-content">
@@ -369,7 +476,11 @@
 
               <div class="info-card">
                 <div class="card-header">
-                  <span class="icon">📊</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
                   <h3>Статистика</h3>
                 </div>
                 <div class="card-content stats">
@@ -386,7 +497,11 @@
 
               <div class="info-card full-width" *ngIf="selectedNiche.imageInstances?.length">
                 <div class="card-header">
-                  <span class="icon">🖼️</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
                   <h3>Изображения</h3>
                 </div>
                 <div class="card-content">
@@ -396,7 +511,10 @@
                         <img [src]="getImageUrl(image.fileInfoId)" [alt]="selectedNiche.name">
                         <div class="image-overlay">
                           <button class="delete-image" (click)="removeImage(image.id)">
-                            <span class="icon">🗑️</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -412,7 +530,10 @@
             <!-- Поиск товаров -->
             <div class="search-section">
               <div class="search-wrapper large">
-                <span class="search-icon">🔍</span>
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
                 <input type="text" 
                        class="search-input"
                        [(ngModel)]="productSearchQuery" 
@@ -425,7 +546,10 @@
                       class="primary-button"
                       (click)="addProductsToNiche()"
                       [disabled]="isLoading">
-                <span class="icon">➕</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
                 Добавить ({{ selectedProductIds.size }})
               </button>
             </div>
@@ -441,7 +565,9 @@
                   
                   <div class="product-checkbox">
                     <div class="checkbox-circle" [class.checked]="selectedProductIds.has(product.id)">
-                      <span *ngIf="selectedProductIds.has(product.id)" class="check">✓</span>
+                      <svg *ngIf="selectedProductIds.has(product.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
                     </div>
                   </div>
                   
@@ -468,7 +594,10 @@
                 
                 <div class="section-actions" *ngIf="selectedNicheProducts.size > 0">
                   <button class="danger-button small" (click)="removeSelectedProducts()">
-                    <span class="icon">🗑️</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
                     Удалить выбранные ({{ selectedNicheProducts.size }})
                   </button>
                   <button class="secondary-button small" (click)="clearNicheProductSelection()">
@@ -486,7 +615,9 @@
                 <div *ngFor="let product of nicheProducts" class="product-card full">
                   <div class="product-checkbox" (click)="toggleNicheProductSelection(product.id)">
                     <div class="checkbox-circle" [class.checked]="selectedNicheProducts.has(product.id)">
-                      <span *ngIf="selectedNicheProducts.has(product.id)" class="check">✓</span>
+                      <svg *ngIf="selectedNicheProducts.has(product.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
                     </div>
                   </div>
                   
@@ -500,11 +631,17 @@
                       <div class="product-actions">
                         <button class="icon-button small" 
                                 (click)="showQuickView('product', {product}); $event.stopPropagation()">
-                          <span class="icon">👁️</span>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
                         </button>
                         <button class="icon-button small delete" 
                                 (click)="removeProductFromNiche(product.id); $event.stopPropagation()">
-                          <span class="icon">🗑️</span>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -528,7 +665,9 @@
               </div>
 
               <div *ngIf="!isLoadingProducts && nicheProducts.length === 0" class="empty-state small">
-                <div class="empty-icon">📦</div>
+                <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
                 <h4>Товаров пока нет</h4>
                 <p>Добавьте товары с помощью поиска выше</p>
               </div>
@@ -540,7 +679,10 @@
             <!-- Поиск категорий -->
             <div class="search-section">
               <div class="search-wrapper large">
-                <span class="search-icon">🔍</span>
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
                 <input type="text" 
                        class="search-input"
                        [(ngModel)]="categorySearchQuery" 
@@ -553,7 +695,10 @@
                       class="primary-button"
                       (click)="addCategoriesToNiche()"
                       [disabled]="isLoading">
-                <span class="icon">➕</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
                 Добавить ({{ selectedCategoryIds.size }})
               </button>
             </div>
@@ -569,12 +714,16 @@
                   
                   <div class="category-checkbox">
                     <div class="checkbox-circle" [class.checked]="selectedCategoryIds.has(category.id)">
-                      <span *ngIf="selectedCategoryIds.has(category.id)" class="check">✓</span>
+                      <svg *ngIf="selectedCategoryIds.has(category.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
                     </div>
                   </div>
                   
                   <div class="category-icon">
-                    <span class="icon">📂</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
                   </div>
                   
                   <div class="category-info">
@@ -596,7 +745,10 @@
                 
                 <div class="section-actions" *ngIf="selectedNicheCategories.size > 0">
                   <button class="danger-button small" (click)="removeSelectedCategories()">
-                    <span class="icon">🗑️</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
                     Удалить выбранные ({{ selectedNicheCategories.size }})
                   </button>
                   <button class="secondary-button small" (click)="clearNicheCategorySelection()">
@@ -614,12 +766,16 @@
                 <div *ngFor="let category of selectedNiche.subCategories" class="category-card">
                   <div class="category-checkbox" (click)="toggleNicheCategorySelection(category.id)">
                     <div class="checkbox-circle" [class.checked]="selectedNicheCategories.has(category.id)">
-                      <span *ngIf="selectedNicheCategories.has(category.id)" class="check">✓</span>
+                      <svg *ngIf="selectedNicheCategories.has(category.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
                     </div>
                   </div>
                   
                   <div class="category-icon">
-                    <span class="icon">📂</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
                   </div>
                   
                   <div class="category-info">
@@ -628,11 +784,17 @@
                       <div class="category-actions">
                         <button class="icon-button small" 
                                 (click)="showQuickView('category', {category}); $event.stopPropagation()">
-                          <span class="icon">👁️</span>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
                         </button>
                         <button class="icon-button small delete" 
                                 (click)="removeCategoryFromNiche(category.id); $event.stopPropagation()">
-                          <span class="icon">🗑️</span>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -648,7 +810,9 @@
               </div>
 
               <div *ngIf="!isLoadingCategories && !selectedNiche.subCategories?.length" class="empty-state small">
-                <div class="empty-icon">📂</div>
+                <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
                 <h4>Категорий пока нет</h4>
                 <p>Добавьте категории с помощью поиска выше</p>
               </div>
@@ -724,9 +888,18 @@
       <!-- Форма создания -->
       <div *ngIf="isCreating" class="form-content">
         <div class="form-header">
-          <h2><span class="icon">➕</span> Создание новой ниши</h2>
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Создание новой ниши
+          </h2>
           <button class="close-button" (click)="cancelCreate()">
-            <span class="icon">✕</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
 
@@ -783,7 +956,11 @@
                        hidden>
                 
                 <div class="upload-content" *ngIf="uploadedImages.length === 0">
-                  <span class="upload-icon">📁</span>
+                  <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
                   <p>Перетащите изображения или кликните для выбора</p>
                   <span class="upload-hint">JPG, PNG, GIF до 5MB</span>
                 </div>
@@ -794,11 +971,17 @@
                     <button type="button" 
                             class="remove-preview"
                             (click)="removeUploadedImage(i, false); $event.stopPropagation()">
-                      <span class="icon">✕</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
                     </button>
                   </div>
                   <div class="add-more" (click)="fileInput.click(); $event.stopPropagation()">
-                    <span class="icon">➕</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -831,9 +1014,18 @@
       <!-- Форма редактирования -->
       <div *ngIf="isEditing" class="form-content">
         <div class="form-header">
-          <h2><span class="icon">✏️</span> Редактирование ниши</h2>
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Редактирование ниши
+          </h2>
           <button class="close-button" (click)="cancelEdit()">
-            <span class="icon">✕</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
 
@@ -911,7 +1103,11 @@
                        hidden>
                 
                 <div class="upload-content" *ngIf="editUploadedImages.length === 0">
-                  <span class="upload-icon">📁</span>
+                  <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
                   <p>Добавить новые изображения</p>
                 </div>
                 
@@ -921,11 +1117,17 @@
                     <button type="button" 
                             class="remove-preview"
                             (click)="removeUploadedImage(i, true); $event.stopPropagation()">
-                      <span class="icon">✕</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
                     </button>
                   </div>
                   <div class="add-more" (click)="editFileInput.click(); $event.stopPropagation()">
-                    <span class="icon">➕</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -956,11 +1158,16 @@
       <!-- Пустое состояние правой панели -->
       <div *ngIf="!selectedNiche && !isCreating && !isEditing" class="empty-panel">
         <div class="empty-content">
-          <div class="empty-icon">📁</div>
+          <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
           <h3>Выберите нишу</h3>
           <p>Выберите нишу из списка слева для просмотра и редактирования</p>
           <button class="primary-button" (click)="startCreate()">
-            <span class="icon">➕</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
             Создать новую нишу
           </button>
         </div>
@@ -972,9 +1179,19 @@
   <div *ngIf="showDeleteConfirm" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
-        <h3><span class="icon warning">⚠️</span> Подтверждение удаления</h3>
+        <h3>
+          <svg class="icon warning" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Подтверждение удаления
+        </h3>
         <button class="close-button" (click)="showDeleteConfirm = false">
-          <span class="icon">✕</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
       </div>
       
@@ -1010,20 +1227,28 @@
     <div class="modal quickview">
       <div class="modal-header">
         <h3>
-          <span class="icon" [class]="quickViewData.type">
-            {{ quickViewData.type === 'niche' ? '📁' : quickViewData.type === 'product' ? '📦' : '📂' }}
-          </span>
+          <svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
           Быстрый просмотр
         </h3>
         <button class="close-button" (click)="isShowQuickView = false">
-          <span class="icon">✕</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
       </div>
       
       <div class="modal-content">
         <div *ngIf="quickViewData.type === 'niche' && quickViewData.niche" class="quickview-content">
           <div class="quickview-header">
-            <div class="quickview-icon large">📁</div>
+            <div class="quickview-icon large">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
             <div class="quickview-info">
               <h4>{{ quickViewData.niche.name }}</h4>
               <div class="quickview-tags">
@@ -1081,7 +1306,11 @@
         
         <div *ngIf="quickViewData.type === 'category' && quickViewData.category" class="quickview-content">
           <div class="quickview-header">
-            <div class="quickview-icon large">📂</div>
+            <div class="quickview-icon large">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
             <div class="quickview-info">
               <h4>{{ quickViewData.category.name }}</h4>
               <div class="quickview-tags">

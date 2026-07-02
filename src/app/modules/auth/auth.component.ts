@@ -17,7 +17,6 @@ export class AuthComponent implements OnInit {
   visible: boolean = false;
   authForm: FormGroup;
   isError: any;
-  authMode: 'login' | 'register' = 'login';
   constructor(private authService: AuthService, private fb: FormBuilder,
     private router: Router
   ) {
@@ -34,34 +33,22 @@ export class AuthComponent implements OnInit {
     })
   }
 
-  closePopUp() {
-    this.authService.changeVisible(false);
-  }
-
   onSubmit(): void {
-    if (this.authMode === 'login') {
-      const data = {
-        ...this.authForm.value,
-        userName: this.authForm.value.email
-      };
-      this.authService.login(data.userName, data.email, data.password).subscribe({
-        next: (response) => {
-          console.log('Login successful', response);
-          this.closePopUp();
-          // this.userService.setUser(response.data, 'session', true)
-          StorageUtils.setLocalStorageCache(localStorageEnvironment.auth.key, response.data.token, localStorageEnvironment.auth.ttl)
-          this.router.navigate(['/user']);
-        },
-        error: (error) => {
-          console.error('Login failed', error);
-        }
-      })
-    } else {
-      // this.authService.register(data).subscribe({
-      //   next: res => console.log('Register success', res),
-      //   error: err => this.isError = err
-      // });
-    }
+    const data = {
+      ...this.authForm.value,
+      userName: this.authForm.value.email
+    };
+    this.authService.login(data.userName, data.email, data.password).subscribe({
+      next: (response) => {
+        console.log('Login successful', response);
+        // this.userService.setUser(response.data, 'session', true)
+        StorageUtils.setLocalStorageCache(localStorageEnvironment.auth.key, response.data.token, localStorageEnvironment.auth.ttl)
+        this.router.navigate(['/user']);
+      },
+      error: (error) => {
+        console.error('Login failed', error);
+      }
+    })
   }
 
 }

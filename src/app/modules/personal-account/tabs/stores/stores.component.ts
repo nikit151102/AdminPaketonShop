@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil, catchError, finalize } from 'rxjs';
 import { environment } from '../../../../../environment';
 
-// Интерфейсы
 interface ProductPlace {
   id: string;
   isDeleted: boolean;
@@ -14,6 +13,7 @@ interface ProductPlace {
   email: string;
   phoneNumber: string;
   productPlaceType: number;
+  isDeliveryIncluded: boolean;
   getInstructions: string[];
   advantageList: string[];
   address?: Address;
@@ -49,6 +49,8 @@ interface Partner {
   inn: string;
   ogrn: string;
   email: string;
+  registerDateTime: string;
+  typeOfActivity: string;
 }
 
 interface StoreSchedule {
@@ -83,7 +85,6 @@ interface ImageInstance {
   fileInfoId: string;
   resolutionWidth: number;
   resolutionHeight: number;
-  url?: string;
 }
 
 interface CreateProductPlaceDto {
@@ -92,6 +93,7 @@ interface CreateProductPlaceDto {
   email: string;
   phoneNumber: string;
   productPlaceType: number;
+  isDeliveryIncluded: boolean;
   addressId?: string;
   partnerId?: string;
   getInstructions: string[];
@@ -100,6 +102,7 @@ interface CreateProductPlaceDto {
 
 interface UpdateProductPlaceDto {
   id: string;
+  idFrom1C?: string;
   updaterId: string;
   removeOldImages: boolean;
   shortName: string;
@@ -107,6 +110,7 @@ interface UpdateProductPlaceDto {
   email: string;
   phoneNumber: string;
   productPlaceType: number;
+  isDeliveryIncluded: boolean;
   addressId?: string;
   partnerId?: string;
   getInstructions: string[];
@@ -130,11 +134,23 @@ interface AddressDto {
   transportCompanyType: number;
 }
 
+interface PartnerDto {
+  shortName: string;
+  fullName: string;
+  inn: string;
+  ogrn: string;
+  email: string;
+  typeOfActivity: string;
+}
+
 interface ApiResponse<T> {
   message: string;
   status: number;
   data: T;
-  breadCrumbs?: any[];
+  pageCount?: number;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 @Component({
@@ -145,14 +161,11 @@ interface ApiResponse<T> {
 })
 export class StoresComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
-  @ViewChild('addressFileInput') addressFileInput!: ElementRef;
 
-  // Основные данные
   stores: ProductPlace[] = [];
   filteredStores: ProductPlace[] = [];
   selectedStore: ProductPlace | null = null;
 
-  // Статистика
   stats = {
     total: 0,
     active: 0,
@@ -161,16 +174,21 @@ export class StoresComponent implements OnInit {
     withPartner: 0
   };
 
-  // Типы магазинов
   storeTypes = [
     { value: 0, label: 'Розничный магазин', icon: '🏪' },
-    { value: 1, label: 'Пункт выдачи', icon: '📦' },
-    { value: 2, label: 'Склад', icon: '🏭' },
-    { value: 3, label: 'Аптека', icon: '💊' },
-    { value: 4, label: 'Магазин партнера', icon: '🤝' }
+    { value: 1, label: 'Склад', icon: '📦' }
   ];
 
-  // Состояния
+  daysOfWeek = [
+    { value: 0, label: 'Понедельник' },
+    { value: 1, label: 'Вторник' },
+    { value: 2, label: 'Среда' },
+    { value: 3, label: 'Четверг' },
+    { value: 4, label: 'Пятница' },
+    { value: 5, label: 'Суббота' },
+    { value: 6, label: 'Воскресенье' }
+  ];
+
   isLoading = false;
   isCreating = false;
   isEditing = false;
@@ -178,11 +196,8 @@ export class StoresComponent implements OnInit {
   showAddressModal = false;
   showPartnerModal = false;
   showScheduleModal = false;
-  showImagePreview = false;
   isShowQuickView = false;
-  showModal = false;
 
-  // Поиск и фильтрация
   searchQuery = '';
   sortField = 'shortName';
   sortDirection: 'asc' | 'desc' = 'asc';
@@ -193,13 +208,11 @@ export class StoresComponent implements OnInit {
     hasPartner: false
   };
 
-  // Пагинация
   currentPage = 1;
   itemsPerPage = 12;
   totalPages = 1;
   Math = Math;
 
-  // Форма создания/редактирования
   formData: CreateProductPlaceDto & UpdateProductPlaceDto & { id?: string } = {
     id: '',
     updaterId: '',
@@ -209,6 +222,7 @@ export class StoresComponent implements OnInit {
     email: '',
     phoneNumber: '',
     productPlaceType: 0,
+    isDeliveryIncluded: false,
     addressId: undefined,
     partnerId: undefined,
     getInstructions: [],
@@ -216,7 +230,6 @@ export class StoresComponent implements OnInit {
     imageInstances: []
   };
 
-  // Форма адреса
   addressForm: AddressDto = {
     region: '',
     area: '',
@@ -233,23 +246,37 @@ export class StoresComponent implements OnInit {
     transportCompanyType: 0
   };
 
-  // Списки
+  partnerForm: PartnerDto = {
+    shortName: '',
+    fullName: '',
+    inn: '',
+    ogrn: '',
+    email: '',
+    typeOfActivity: ''
+  };
+
+  scheduleForm: StoreSchedule = {
+    id: '',
+    isDeleted: false,
+    storeId: '',
+    workingHours: [],
+    exceptionDays: []
+  };
+
   getInstructions: string[] = [];
   advantageList: string[] = [];
   newGetInstruction = '';
   newAdvantage = '';
 
-  // Изображения
   selectedFiles: { file: File; preview: string }[] = [];
   imagesToDelete: string[] = [];
 
-  // Ошибки
   errors: any = {};
+  addressErrors: any = {};
+  partnerErrors: any = {};
 
-  // Быстрый просмотр
   quickViewData: { store?: ProductPlace } = {};
 
-  // Поиск
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -258,7 +285,6 @@ export class StoresComponent implements OnInit {
   ngOnInit(): void {
     this.loadStores();
 
-    // Поиск с debounce
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -273,58 +299,54 @@ export class StoresComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  // Загрузка магазинов
   loadStores(): void {
     this.isLoading = true;
 
-    this.http.post<ApiResponse<ProductPlace[]>>(`${environment.production}/api/Entities/ProductPlace/Filter`,
-      {
-        'filters': [],
-        'sorts': [],
-        'page': 0,
-        'pageSize': 50
-      })
+    this.http.post<ApiResponse<ProductPlace[]>>(`${environment.production}/api/Entities/ProductPlace/Filter`, {
+      filters: [],
+      sorts: [],
+      page: 0,
+      pageSize: 100
+    }).pipe(
+      catchError(error => {
+        console.error('Ошибка загрузки магазинов:', error);
+        this.showNotification('Ошибка загрузки магазинов', 'error');
+        return [];
+      }),
+      finalize(() => this.isLoading = false)
+    ).subscribe((response: any) => {
+      if (response && response.data) {
+        this.stores = response.data;
+        this.filteredStores = [...this.stores];
+        this.calculateStats();
+        this.sortStores();
+        this.updatePagination();
+      }
+    });
+  }
+
+  loadStoreDetails(id: string): void {
+    this.http.get<ApiResponse<ProductPlace>>(`${environment.production}/api/Entities/ProductPlace/${id}`)
       .pipe(
         catchError(error => {
-          console.error('Ошибка загрузки магазинов:', error);
-          this.showNotification('Ошибка загрузки магазинов', 'error');
+          console.error('Ошибка загрузки деталей:', error);
           return [];
-        }),
-        finalize(() => this.isLoading = false)
+        })
       )
       .subscribe((response: any) => {
         if (response && response.data) {
-          this.stores = response.data;
-          this.filteredStores = [...this.stores];
-          this.calculateStats();
-          this.sortStores();
-          this.updatePagination();
-        }
-      });
-  }
-
-  // Загрузка деталей магазина
-  loadStoreDetails(id: string): void {
-    this.http.get<ApiResponse<ProductPlace>>(`${environment.production}/api/Entities/ProductPlace/${id}`)
-      .subscribe({
-        next: (response) => {
-          if (response.data) {
-            const index = this.stores.findIndex(s => s.id === id);
-            if (index !== -1) {
-              this.stores[index] = response.data;
-            }
-            if (this.selectedStore?.id === id) {
-              this.selectedStore = response.data;
-            }
+          const index = this.stores.findIndex(s => s.id === id);
+          if (index !== -1) {
+            this.stores[index] = response.data;
           }
-        },
-        error: (error) => {
-          console.error('Ошибка загрузки деталей:', error);
+          if (this.selectedStore?.id === id) {
+            this.selectedStore = response.data;
+          }
+          this.calculateStats();
         }
       });
   }
 
-  // Расчет статистики
   calculateStats(): void {
     this.stats.total = this.stores.length;
     this.stats.active = this.stores.filter(s => !s.isDeleted).length;
@@ -333,20 +355,17 @@ export class StoresComponent implements OnInit {
     this.stats.withPartner = this.stores.filter(s => s.partner).length;
   }
 
-  // Выбор магазина
   selectStore(store: ProductPlace): void {
     this.selectedStore = store;
     this.loadStoreDetails(store.id);
   }
 
-  // Создание магазина
   startCreate(): void {
     this.resetForm();
     this.isCreating = true;
     this.isEditing = false;
   }
 
-  // Редактирование магазина
   startEdit(store: ProductPlace): void {
     this.formData = {
       id: store.id,
@@ -357,6 +376,7 @@ export class StoresComponent implements OnInit {
       email: store.email || '',
       phoneNumber: store.phoneNumber || '',
       productPlaceType: store.productPlaceType,
+      isDeliveryIncluded: store.isDeliveryIncluded || false,
       addressId: store.address?.id,
       partnerId: store.partner?.id,
       getInstructions: store.getInstructions || [],
@@ -369,7 +389,6 @@ export class StoresComponent implements OnInit {
     this.isCreating = false;
   }
 
-  // Отмена
   cancelEdit(): void {
     this.isCreating = false;
     this.isEditing = false;
@@ -377,7 +396,6 @@ export class StoresComponent implements OnInit {
     this.imagesToDelete = [];
   }
 
-  // Валидация формы
   validateForm(): boolean {
     this.errors = {};
 
@@ -400,19 +418,56 @@ export class StoresComponent implements OnInit {
     return Object.keys(this.errors).length === 0;
   }
 
-  // Валидация email
+  validateAddressForm(): boolean {
+    this.addressErrors = {};
+
+    if (!this.addressForm.city?.trim()) {
+      this.addressErrors.city = 'Город обязателен';
+    }
+
+    if (!this.addressForm.street?.trim()) {
+      this.addressErrors.street = 'Улица обязательна';
+    }
+
+    if (!this.addressForm.house?.trim()) {
+      this.addressErrors.house = 'Дом обязателен';
+    }
+
+    return Object.keys(this.addressErrors).length === 0;
+  }
+
+  validatePartnerForm(): boolean {
+    this.partnerErrors = {};
+
+    if (!this.partnerForm.shortName?.trim()) {
+      this.partnerErrors.shortName = 'Короткое название обязательно';
+    }
+
+    if (!this.partnerForm.fullName?.trim()) {
+      this.partnerErrors.fullName = 'Полное название обязательно';
+    }
+
+    if (!this.partnerForm.inn?.trim()) {
+      this.partnerErrors.inn = 'ИНН обязателен';
+    }
+
+    if (this.partnerForm.email && !this.isValidEmail(this.partnerForm.email)) {
+      this.partnerErrors.email = 'Некорректный email';
+    }
+
+    return Object.keys(this.partnerErrors).length === 0;
+  }
+
   isValidEmail(email: string): boolean {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   }
 
-  // Валидация телефона
   isValidPhone(phone: string): boolean {
     const re = /^[\d\s\-+()]+$/;
     return re.test(phone);
   }
 
-  // Создание магазина
   createStore(): void {
     if (!this.validateForm()) return;
 
@@ -423,6 +478,7 @@ export class StoresComponent implements OnInit {
       email: this.formData.email,
       phoneNumber: this.formData.phoneNumber,
       productPlaceType: this.formData.productPlaceType,
+      isDeliveryIncluded: this.formData.isDeliveryIncluded,
       addressId: this.formData.addressId,
       partnerId: this.formData.partnerId,
       getInstructions: this.getInstructions.filter(i => i.trim()),
@@ -430,26 +486,27 @@ export class StoresComponent implements OnInit {
     };
 
     this.http.post<ApiResponse<ProductPlace>>(`${environment.production}/api/Entities/ProductPlace`, payload)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (response) => {
+      .pipe(
+        catchError(error => {
+          console.error('Ошибка создания:', error);
+          this.showNotification('Ошибка создания магазина', 'error');
+          return [];
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe((response: any) => {
+        if (response && response.data) {
           if (this.selectedFiles.length > 0) {
             this.uploadImages(response.data.id);
           } else {
-            this.showModal = false;
             this.loadStores();
             this.showNotification('Магазин создан', 'success');
             this.cancelEdit();
           }
-        },
-        error: (error) => {
-          console.error('Ошибка создания:', error);
-          this.showNotification('Ошибка создания магазина', 'error');
         }
       });
   }
 
-  // Обновление магазина
   updateStore(): void {
     if (!this.validateForm()) return;
 
@@ -463,6 +520,7 @@ export class StoresComponent implements OnInit {
       email: this.formData.email,
       phoneNumber: this.formData.phoneNumber,
       productPlaceType: this.formData.productPlaceType,
+      isDeliveryIncluded: this.formData.isDeliveryIncluded,
       addressId: this.formData.addressId,
       partnerId: this.formData.partnerId,
       getInstructions: this.getInstructions.filter(i => i.trim()),
@@ -471,9 +529,16 @@ export class StoresComponent implements OnInit {
     };
 
     this.http.put<ApiResponse<ProductPlace>>(`${environment.production}/api/Entities/ProductPlace/${this.formData.id}`, payload)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (response) => {
+      .pipe(
+        catchError(error => {
+          console.error('Ошибка обновления:', error);
+          this.showNotification('Ошибка обновления магазина', 'error');
+          return [];
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe((response: any) => {
+        if (response && response.data) {
           if (this.selectedFiles.length > 0) {
             this.uploadImages(response.data.id);
           } else {
@@ -484,15 +549,10 @@ export class StoresComponent implements OnInit {
             this.showNotification('Магазин обновлен', 'success');
             this.cancelEdit();
           }
-        },
-        error: (error) => {
-          console.error('Ошибка обновления:', error);
-          this.showNotification('Ошибка обновления магазина', 'error');
         }
       });
   }
 
-  // Загрузка изображений
   uploadImages(id: string): void {
     const formData = new FormData();
 
@@ -500,48 +560,49 @@ export class StoresComponent implements OnInit {
       formData.append('ImageInstances', file.file);
     });
     formData.append('Id', id);
+
     this.http.put<any>(`${environment.production}/api/Entities/ProductPlace/UpdateImages/${id}`, formData)
-      .subscribe({
-        next: () => {
-          this.loadStores();
-          if (this.selectedStore?.id === id) {
-            this.loadStoreDetails(id);
-          }
-          this.selectedFiles = [];
-          this.showNotification('Изображения загружены', 'success');
-          this.cancelEdit();
-        },
-        error: (error) => {
+      .pipe(
+        catchError(error => {
           console.error('Ошибка загрузки изображений:', error);
           this.showNotification('Ошибка загрузки изображений', 'error');
+          return [];
+        })
+      )
+      .subscribe(() => {
+        this.loadStores();
+        if (this.selectedStore?.id === id) {
+          this.loadStoreDetails(id);
         }
+        this.selectedFiles = [];
+        this.showNotification('Изображения загружены', 'success');
+        this.cancelEdit();
       });
   }
 
-  // Удаление магазина
   deleteStore(): void {
     if (!this.selectedStore) return;
 
     this.isLoading = true;
     this.http.delete(`${environment.production}/api/Entities/ProductPlace/${this.selectedStore.id}`)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.showDeleteConfirm = false;
-      }))
-      .subscribe({
-        next: () => {
-          this.loadStores();
-          this.selectedStore = null;
-          this.showNotification('Магазин удален', 'success');
-        },
-        error: (error) => {
+      .pipe(
+        catchError(error => {
           console.error('Ошибка удаления:', error);
           this.showNotification('Ошибка удаления магазина', 'error');
-        }
+          return [];
+        }),
+        finalize(() => {
+          this.isLoading = false;
+          this.showDeleteConfirm = false;
+        })
+      )
+      .subscribe(() => {
+        this.loadStores();
+        this.selectedStore = null;
+        this.showNotification('Магазин удален', 'success');
       });
   }
 
-  // Удаление изображения
   deleteImage(imageId: string): void {
     if (!this.selectedStore) return;
 
@@ -549,19 +610,18 @@ export class StoresComponent implements OnInit {
 
     this.http.delete(`${environment.production}/api/Entities/ProductPlace/DeleteImages/${this.selectedStore.id}`, {
       body: [imageId]
-    }).subscribe({
-      next: () => {
-        this.loadStoreDetails(this.selectedStore!.id);
-        this.showNotification('Изображение удалено', 'success');
-      },
-      error: (error) => {
+    }).pipe(
+      catchError(error => {
         console.error('Ошибка удаления изображения:', error);
         this.showNotification('Ошибка удаления изображения', 'error');
-      }
+        return [];
+      })
+    ).subscribe(() => {
+      this.loadStoreDetails(this.selectedStore!.id);
+      this.showNotification('Изображение удалено', 'success');
     });
   }
 
-  // Добавление инструкции
   addGetInstruction(): void {
     if (this.newGetInstruction.trim()) {
       this.getInstructions.push(this.newGetInstruction.trim());
@@ -569,12 +629,10 @@ export class StoresComponent implements OnInit {
     }
   }
 
-  // Удаление инструкции
   removeGetInstruction(index: number): void {
     this.getInstructions.splice(index, 1);
   }
 
-  // Добавление преимущества
   addAdvantage(): void {
     if (this.newAdvantage.trim()) {
       this.advantageList.push(this.newAdvantage.trim());
@@ -582,12 +640,10 @@ export class StoresComponent implements OnInit {
     }
   }
 
-  // Удаление преимущества
   removeAdvantage(index: number): void {
     this.advantageList.splice(index, 1);
   }
 
-  // Выбор файлов
   onFileSelected(event: any): void {
     const files = Array.from(event.target.files) as File[];
 
@@ -607,12 +663,10 @@ export class StoresComponent implements OnInit {
     event.target.value = '';
   }
 
-  // Удаление файла из превью
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
   }
 
-  // Сброс формы
   resetForm(): void {
     this.formData = {
       id: '',
@@ -623,6 +677,7 @@ export class StoresComponent implements OnInit {
       email: '',
       phoneNumber: '',
       productPlaceType: 0,
+      isDeliveryIncluded: false,
       addressId: undefined,
       partnerId: undefined,
       getInstructions: [],
@@ -636,7 +691,6 @@ export class StoresComponent implements OnInit {
     this.errors = {};
   }
 
-  // Поиск
   onSearchChange(): void {
     this.searchSubject.next(this.searchQuery);
   }
@@ -658,28 +712,23 @@ export class StoresComponent implements OnInit {
     this.applyFilters();
   }
 
-  // Применение фильтров
   applyFilters(): void {
     let filtered = this.filteredStores;
 
-    // Фильтр по типу
     if (this.filters.type !== 'all') {
       filtered = filtered.filter(s => s.productPlaceType === Number(this.filters.type));
     }
 
-    // Фильтр по статусу
     if (this.filters.status === 'active') {
       filtered = filtered.filter(s => !s.isDeleted);
     } else if (this.filters.status === 'deleted') {
       filtered = filtered.filter(s => s.isDeleted);
     }
 
-    // Фильтр по наличию адреса
     if (this.filters.hasAddress) {
       filtered = filtered.filter(s => s.address);
     }
 
-    // Фильтр по наличию партнера
     if (this.filters.hasPartner) {
       filtered = filtered.filter(s => s.partner);
     }
@@ -689,7 +738,6 @@ export class StoresComponent implements OnInit {
     this.updatePagination();
   }
 
-  // Сброс фильтров
   clearFilters(): void {
     this.searchQuery = '';
     this.filters = {
@@ -702,7 +750,6 @@ export class StoresComponent implements OnInit {
     this.sortStores();
   }
 
-  // Проверка активных фильтров
   hasActiveFilters(): boolean {
     return this.searchQuery !== '' ||
       this.filters.type !== 'all' ||
@@ -711,7 +758,6 @@ export class StoresComponent implements OnInit {
       this.filters.hasPartner;
   }
 
-  // Сортировка
   sortStores(): void {
     this.filteredStores.sort((a, b) => {
       let aValue: any = a[this.sortField as keyof ProductPlace];
@@ -728,19 +774,16 @@ export class StoresComponent implements OnInit {
     });
   }
 
-  // Переключение сортировки
   toggleSortDirection(): void {
     this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     this.sortStores();
   }
 
-  // Получение типа магазина
   getStoreTypeLabel(type: number): string {
     const storeType = this.storeTypes.find(t => t.value === type);
     return storeType ? `${storeType.icon} ${storeType.label}` : 'Неизвестно';
   }
 
-  // Получение полного адреса
   getFullAddress(address?: Address): string {
     if (!address) return 'Адрес не указан';
 
@@ -757,18 +800,15 @@ export class StoresComponent implements OnInit {
     return parts.join(', ') || 'Адрес не указан';
   }
 
-  // Форматирование телефона
   formatPhone(phone: string): string {
     if (!phone) return 'Не указан';
     return phone;
   }
 
-  // Получение URL изображения
   getImageUrl(fileInfoId: string): string {
-    return `https://via.placeholder.com/300x200?text=Store`;
+    return `${environment.production}/api/Files/${fileInfoId}`;
   }
 
-  // Пагинация
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredStores.length / this.itemsPerPage);
     this.currentPage = Math.min(this.currentPage, this.totalPages || 1);
@@ -804,13 +844,237 @@ export class StoresComponent implements OnInit {
     return pages;
   }
 
-  // Быстрый просмотр
   showQuickView(store: ProductPlace): void {
     this.quickViewData = { store };
     this.isShowQuickView = true;
   }
 
-  // Показ уведомлений
+  openAddressModal(): void {
+    if (this.selectedStore?.address) {
+      this.addressForm = { ...this.selectedStore.address };
+    } else {
+      this.addressForm = {
+        region: '',
+        area: '',
+        city: '',
+        street: '',
+        house: '',
+        housing: '',
+        floorNumber: '',
+        office: '',
+        postIndex: '',
+        latitude: 0,
+        longitude: 0,
+        system: 'yandex',
+        transportCompanyType: 0
+      };
+    }
+    this.showAddressModal = true;
+  }
+
+  saveAddress(): void {
+    if (!this.validateAddressForm()) return;
+
+    this.isLoading = true;
+    this.http.post<any>(`${environment.production}/api/Entities/Address`, this.addressForm)
+      .pipe(
+        catchError(error => {
+          console.error('Ошибка сохранения адреса:', error);
+          this.showNotification('Ошибка сохранения адреса', 'error');
+          return [];
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe((response: any) => {
+        if (response && response.data) {
+          this.formData.addressId = response.data.id;
+          this.showAddressModal = false;
+          this.showNotification('Адрес сохранен', 'success');
+          if (this.selectedStore) {
+            this.loadStoreDetails(this.selectedStore.id);
+          }
+        }
+      });
+  }
+
+  openPartnerModal(): void {
+    if (this.selectedStore?.partner) {
+      this.partnerForm = { ...this.selectedStore.partner };
+    } else {
+      this.partnerForm = {
+        shortName: '',
+        fullName: '',
+        inn: '',
+        ogrn: '',
+        email: '',
+        typeOfActivity: ''
+      };
+    }
+    this.showPartnerModal = true;
+  }
+
+  savePartner(): void {
+    if (!this.validatePartnerForm()) return;
+
+    this.isLoading = true;
+    this.http.post<any>(`${environment.production}/api/Entities/Partner`, this.partnerForm)
+      .pipe(
+        catchError(error => {
+          console.error('Ошибка сохранения партнера:', error);
+          this.showNotification('Ошибка сохранения партнера', 'error');
+          return [];
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe((response: any) => {
+        if (response && response.data) {
+          this.formData.partnerId = response.data.id;
+          this.showPartnerModal = false;
+          this.showNotification('Партнер сохранен', 'success');
+          if (this.selectedStore) {
+            this.loadStoreDetails(this.selectedStore.id);
+          }
+        }
+      });
+  }
+
+  openScheduleModal(): void {
+    if (this.selectedStore?.storeSchedule) {
+      this.scheduleForm = {
+        ...this.selectedStore.storeSchedule,
+        workingHours: [...this.selectedStore.storeSchedule.workingHours],
+        exceptionDays: [...this.selectedStore.storeSchedule.exceptionDays]
+      };
+    } else {
+      this.scheduleForm = {
+        id: '',
+        isDeleted: false,
+        storeId: this.selectedStore?.id || this.formData.id || '',
+        workingHours: [],
+        exceptionDays: []
+      };
+    }
+    this.showScheduleModal = true;
+  }
+
+  addWorkingHour(): void {
+    this.scheduleForm.workingHours.push({
+      id: '',
+      isDeleted: false,
+      dateTime: new Date().toISOString(),
+      dayOfWeek: 0,
+      openTime: '09:00',
+      closeTime: '18:00'
+    });
+  }
+
+  removeWorkingHour(index: number): void {
+    this.scheduleForm.workingHours.splice(index, 1);
+  }
+
+  addExceptionDay(): void {
+    this.scheduleForm.exceptionDays.push({
+      id: '',
+      isDeleted: false,
+      date: new Date().toISOString().split('T')[0],
+      isClosed: true,
+      openTime: '',
+      closeTime: ''
+    });
+  }
+
+  removeExceptionDay(index: number): void {
+    this.scheduleForm.exceptionDays.splice(index, 1);
+  }
+
+  saveSchedule(): void {
+    if (!this.selectedStore && !this.formData.id) {
+      this.showNotification('Сначала сохраните магазин', 'error');
+      return;
+    }
+
+    this.isLoading = true;
+    const storeId = this.selectedStore?.id || this.formData.id;
+
+    // Создаем или обновляем расписание
+    const schedulePayload = {
+      storeId: storeId
+    };
+
+    this.http.post<any>(`${environment.production}/api/Entities/StoreSchedule`, schedulePayload)
+      .pipe(
+        catchError(error => {
+          console.error('Ошибка создания расписания:', error);
+          this.showNotification('Ошибка создания расписания', 'error');
+          return [];
+        })
+      )
+      .subscribe((response: any) => {
+        if (response && response.data) {
+          const scheduleId = response.data.id;
+          
+          // Сохраняем рабочие дни
+          const workingHoursPromises = this.scheduleForm.workingHours.map(hour => {
+            return this.http.post<any>(`${environment.production}/api/Entities/StoreScheduleWorkingHour`, {
+              dateTime: hour.dateTime,
+              dayOfWeek: hour.dayOfWeek,
+              openTime: hour.openTime,
+              closeTime: hour.closeTime
+            }).toPromise();
+          });
+
+          // Сохраняем дни исключения
+          const exceptionDaysPromises = this.scheduleForm.exceptionDays.map(day => {
+            return this.http.post<any>(`${environment.production}/api/Entities/StoreScheduleExceptionDay`, {
+              date: day.date,
+              isClosed: day.isClosed,
+              openTime: day.isClosed ? '' : day.openTime,
+              closeTime: day.isClosed ? '' : day.closeTime
+            }).toPromise();
+          });
+
+          Promise.all([...workingHoursPromises, ...exceptionDaysPromises])
+            .then(() => {
+              this.showScheduleModal = false;
+              this.showNotification('Расписание сохранено', 'success');
+              if (this.selectedStore) {
+                this.loadStoreDetails(this.selectedStore.id);
+              }
+            })
+            .catch(error => {
+              console.error('Ошибка сохранения расписания:', error);
+              this.showNotification('Ошибка сохранения расписания', 'error');
+            })
+            .finally(() => {
+              this.isLoading = false;
+            });
+        } else {
+          this.isLoading = false;
+        }
+      });
+  }
+
+  getDayOfWeekName(dayOfWeek: number): string {
+    const day = this.daysOfWeek.find(d => d.value === dayOfWeek);
+    return day ? day.label : 'Неизвестно';
+  }
+
+  getScheduleSummary(schedule: StoreSchedule): string {
+    if (!schedule || !schedule.workingHours?.length) {
+      return 'Расписание не указано';
+    }
+
+    const sortedHours = [...schedule.workingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+    const firstDay = sortedHours[0];
+    const lastDay = sortedHours[sortedHours.length - 1];
+
+    if (firstDay.openTime === lastDay.openTime && firstDay.closeTime === lastDay.closeTime) {
+      return `${firstDay.openTime} - ${firstDay.closeTime}`;
+    }
+
+    return `${this.getDayOfWeekName(firstDay.dayOfWeek)} - ${this.getDayOfWeekName(lastDay.dayOfWeek)}`;
+  }
+
   showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     const container = document.getElementById('notification-stack');
     if (!container) return;
@@ -830,7 +1094,6 @@ export class StoresComponent implements OnInit {
     }, 3000);
   }
 
-  // Экспорт данных
   exportData(): void {
     const data = this.filteredStores.map(store => ({
       'Название': store.shortName,
@@ -853,11 +1116,10 @@ export class StoresComponent implements OnInit {
     a.download = `stores_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    this.showNotification('Данные экспортированы', 'success');
   }
 
-  // Генерация отчета
   generateReport(): void {
-    console.log('Генерация отчета...');
     this.showNotification('Отчет сгенерирован', 'success');
   }
 }

@@ -1,109 +1,115 @@
-/* Overlay */
 .popup-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.45);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 999;
-    animation: fadeIn 0.25s ease;
+    animation: fadeIn 0.3s ease;
 }
 
-/* Popup box */
 .popup {
     background: #fff;
-    padding: 40px 30px;
-    border-radius: 20px;
-    width: 380px;
+    padding: 44px 34px;
+    border-radius: 24px;
+    width: 400px;
     max-width: 95vw;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    box-shadow:
+        0 24px 60px rgba(50, 113, 32, 0.12),
+        0 8px 20px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, opacity 0.3s ease;
     overflow: hidden;
+    border: 1px solid rgba(50, 113, 32, 0.08);
 
     @media (max-width: 480px) {
-        width: 90vw;
-        padding: 25px 20px;
+        width: 92vw;
+        padding: 28px 22px;
+        border-radius: 20px;
     }
 }
 
-/* Close button */
 .close-button {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 16px;
+    right: 16px;
     cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
     transition: all 0.2s ease;
 
+    &:hover {
+        background-color: rgba(50, 113, 32, 0.08);
+    }
+
     svg path {
-        stroke: #666;
-        stroke-opacity: 0.5;
+        stroke: #999;
+        stroke-opacity: 0.7;
         transition: stroke 0.2s, stroke-opacity 0.2s;
     }
 
     &:hover svg path {
-        stroke: #5A4BB8;
+        stroke: #327120;
         stroke-opacity: 1;
     }
 }
 
-/* Tabs */
 .popup-tabs {
     display: flex;
-    gap: 10px;
-    margin-bottom: 25px;
+    gap: 8px;
+    margin-bottom: 28px;
     width: 100%;
     position: relative;
+    background: #f5f7f5;
+    padding: 5px;
+    border-radius: 14px;
 
     button {
         flex: 1;
-        padding: 14px 0;
+        padding: 12px 0;
         border: none;
-        border-radius: 12px;
+        border-radius: 10px;
         background: transparent;
         cursor: pointer;
         font-weight: 600;
         font-size: 14px;
-        color: #555;
+        color: #777;
         transition: all 0.3s ease;
         position: relative;
 
         &.active {
-            color: #7666e3;
-
-            &::after {
-                content: '';
-                position: absolute;
-                bottom: -4px;
-                left: 10%;
-                width: 80%;
-                height: 4px;
-                border-radius: 2px;
-                background: linear-gradient(135deg, #5A4BB8, #7F6FF2);
-            }
+            color: #fff;
+            background: linear-gradient(135deg, #327120, #4a9e30);
+            box-shadow: 0 4px 12px rgba(50, 113, 32, 0.25);
         }
 
         &:hover:not(.active) {
-            color: #5A4BB8;
+            color: #327120;
+            background: rgba(50, 113, 32, 0.06);
         }
     }
 }
 
-/* Form slides */
 .form-slide {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
     width: 100%;
     animation: slideFade 0.4s ease forwards;
     overflow: hidden;
+    padding: 15px;
+
 }
 
-/* Input groups */
 .input-group {
     position: relative;
     display: flex;
@@ -128,77 +134,92 @@
     }
 
     input {
-        padding: 14px 12px;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
+        padding: 16px 14px;
+        border: 1.5px solid #e8ede7;
+        border-radius: 14px;
         font-size: 14px;
         outline: none;
         transition: all 0.25s ease, transform 0.2s ease;
-        background-color: #fafafa;
+        background-color: #f9faf9;
+        color: #333;
 
         &:focus {
-            border-color: #5A4BB8;
-            box-shadow: 0 0 0 3px rgba(90, 75, 184, 0.15);
+            border-color: #327120;
+            box-shadow: 0 0 0 4px rgba(50, 113, 32, 0.1);
             background-color: #fff;
-            transform: scale(1.02);
+            transform: scale(1.01);
+        }
+
+        &::placeholder {
+            color: transparent;
         }
     }
 
     label {
         position: absolute;
         top: 50%;
-        left: 12px;
+        left: 14px;
         transform: translateY(-50%);
-        font-size: 13px;
+        font-size: 14px;
         color: #aaa;
         pointer-events: none;
-        transition: all 0.2s ease;
+        transition: all 0.25s ease;
         background-color: transparent;
-        padding: 0 4px;
+        padding: 0 6px;
     }
 
     input:focus+label,
     input:not(:placeholder-shown)+label {
-        top: -8px;
+        top: -1px;
         left: 10px;
         font-size: 11px;
-        color: #5A4BB8;
+        font-weight: 600;
+        color: #327120;
         background-color: #fff;
+        letter-spacing: 0.3px;
     }
 
     &.invalid input {
-        border-color: #dc3545;
+        border-color: #e53935;
+        box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.08);
     }
 
     .error-message {
         font-size: 11px;
-        color: #dc3545;
-        margin-top: 3px;
+        color: #e53935;
+        margin-top: 4px;
+        padding-left: 4px;
+        font-weight: 500;
     }
 }
 
-/* Submit button */
 .submit-btn {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     border: none;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #5A4BB8, #7F6FF2);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #327120, #4a9e30);
     color: #fff;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 15px;
     cursor: pointer;
-    box-shadow: 0 6px 16px rgba(90, 75, 184, 0.25);
+    box-shadow: 0 6px 20px rgba(50, 113, 32, 0.3);
     transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
 
     &:hover {
-        background: linear-gradient(135deg, #402abb, #5A4BB8);
-        transform: scale(1.03);
-        box-shadow: 0 8px 20px rgba(90, 75, 184, 0.35);
+        background: linear-gradient(135deg, #265a17, #327120);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(50, 113, 32, 0.35);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 12px rgba(50, 113, 32, 0.25);
     }
 }
 
-/* Animations */
 @keyframes slideFade {
     from {
         opacity: 0;

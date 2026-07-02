@@ -1,14 +1,37 @@
 <div class="sidebar" [class.collapsed]="isCollapsed">
   <div class="sidebar-header">
-    <span *ngIf="!isCollapsed" class="brand"><img src="logo.png" alt=""></span>
+    <span *ngIf="!isCollapsed" class="brand">
+      <img src="logo.png" alt="Logo">
+    </span>
+    <button class="collapse-btn" (click)="toggleCollapse()" [title]="isCollapsed ? 'Развернуть' : 'Свернуть'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6" *ngIf="!isCollapsed"/>
+        <polyline points="9 18 15 12 9 6" *ngIf="isCollapsed"/>
+      </svg>
+    </button>
   </div>
 
   <nav class="menu">
     <button *ngFor="let item of menu" class="menu-item" [routerLink]="item.router" routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }">
+      [routerLinkActiveOptions]="{ exact: true }" [title]="isCollapsed ? item.label : ''">
       <span class="icon" [innerHTML]="item.icon"></span>
       <span class="label" *ngIf="!isCollapsed">{{ item.label }}</span>
       <span *ngIf="item.badge && !isCollapsed" class="badge">{{ item.badge }}</span>
     </button>
   </nav>
+
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <div class="user-info">
+      <div class="user-avatar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="user-details">
+        <span class="user-name">Администратор</span>
+        <span class="user-role">Админ</span>
+      </div>
+    </div>
+  </div>
 </div>

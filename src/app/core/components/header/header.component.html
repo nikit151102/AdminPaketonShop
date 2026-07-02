@@ -1,55 +1,109 @@
+<!-- header.component.html -->
 <header class="app-header" [attr.data-theme]="theme">
   <div class="header-inner">
-    <!-- left: logo / hamburger -->
+    <!-- Left: Logo / Hamburger -->
     <div class="left">
-      <!-- hamburger для мобильных -->
+      <!-- Hamburger для мобильных -->
       <button
         class="hamburger"
         aria-label="Toggle menu"
-        [attr.aria-expanded]="sidebarCollapsed"
+        [attr.aria-expanded]="isSidebarCollapsed"
         (click)="toggleMenu()"
+        title="Меню"
       >
-        <!-- inline SVG гамбургера — анимируется через класс .open -->
         <svg class="icon-hamburger" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
           <path class="line top" d="M3 6h18" stroke-width="2" stroke-linecap="round" />
           <path class="line mid" d="M3 12h18" stroke-width="2" stroke-linecap="round" />
           <path class="line bot" d="M3 18h18" stroke-width="2" stroke-linecap="round" />
         </svg>
       </button>
-
-      <div class="logo" title="Admin">
-        <span class="brand">Вкладка</span>
-      </div>
     </div>
 
-    <!-- right: user area -->
+    <!-- Right: Actions & User -->
     <div class="right">
-      <!-- notifications -->
-      <button class="icon-btn notif" aria-label="Notifications" title="Notifications">
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2z" fill="none" stroke-width="2"></path>
-          <path d="M18 8a6 6 0 0 0-12 0v5l-2 2h16l-2-2z" fill="none" stroke-width="2"></path>
+
+      <!-- Уведомления -->
+      <!-- <button class="icon-btn notif" aria-label="Notifications" title="Уведомления">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
         <span class="notif-badge" aria-hidden="true">3</span>
-      </button>
+      </button> -->
 
-      <!-- user avatar + dropdown -->
-      <div class="user" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+      <!-- Сообщения -->
+      <!-- <button class="icon-btn messages" aria-label="Messages" title="Сообщения">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="notif-badge" aria-hidden="true">5</span>
+      </button> -->
+
+      <!-- Разделитель -->
+      <div class="divider"></div>
+
+      <!-- Пользователь -->
+      <div class="user" tabindex="0" role="button" aria-haspopup="true" [attr.aria-expanded]="isUserMenuOpen">
         <button class="avatar-btn" aria-label="User menu" (click)="$event.stopPropagation(); toggleOpen('user');">
-          <svg class="avatar" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
-            <circle cx="12" cy="8" r="3" />
-            <path d="M4 20c1.5-4 6-6 8-6s6.5 2 8 6" fill="none" stroke-width="1.2"></path>
+          <div class="avatar-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="user-info">
+            <span class="user-name">Администратор</span>
+            <span class="user-role">Admin</span>
+          </div>
+          <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
 
-        <!-- простой dropdown профиля -->
-        <div class="user-menu" [class.open]="isOpen('user')" role="menu" (click)="$event.stopPropagation()">
-          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'profile', label:'Profile'})">Profile</button>
-          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'settings', label:'Settings'})">Settings</button>
-          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'logout', label:'Sign out'})">Sign out</button>
+        <!-- Dropdown меню профиля -->
+        <div class="user-menu" [class.open]="isUserMenuOpen" role="menu" (click)="$event.stopPropagation()">
+          <div class="menu-header">
+            <div class="menu-avatar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="menu-user-info">
+              <div class="menu-user-name">Администратор</div>
+              <div class="menu-user-email">admin&#64;example.com</div>
+            </div>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'profile', label:'Профиль'})">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Профиль</span>
+          </button>
+          <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'settings', label:'Настройки'})">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span>Настройки</span>
+          </button>
+
+          <div class="menu-divider"></div>
+
+          <button role="menuitem" tabindex="0" class="logout" (click)="onNavigate.emit({id:'logout', label:'Выход'})">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Выход</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
-
 </header>

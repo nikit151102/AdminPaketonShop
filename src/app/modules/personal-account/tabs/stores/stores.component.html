@@ -8,21 +8,29 @@
     <div class="header-content">
       <div class="title-section">
         <h1 class="page-title">
-          <span class="title-icon">🏪</span>
+          <span class="title-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21V13h6v8"/></svg>
+          </span>
           Управление магазинами
         </h1>
         <p class="page-description">Точки реализации товаров и услуг</p>
       </div>
 
       <div class="header-actions">
-        <button class="icon-button" (click)="exportData()" [disabled]="!stores.length" title="Экспорт">
-          <span class="icon">📥</span>
+        <button class="icon-button" (click)="exportData()" [disabled]="!stores.length" title="Экспорт в CSV">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </span>
         </button>
-        <button class="icon-button" (click)="generateReport()" title="Отчет">
-          <span class="icon">📊</span>
+        <button class="icon-button" (click)="generateReport()" title="Отчёт">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>
         </button>
         <button class="primary-button" (click)="startCreate()">
-          <span class="icon">➕</span>
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
           Добавить магазин
         </button>
       </div>
@@ -33,22 +41,18 @@
       <div class="stat-card">
         <div class="stat-value">{{ stats.total }}</div>
         <div class="stat-label">Всего магазинов</div>
-        <div class="stat-trend">+12%</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{{ stats.active }}</div>
         <div class="stat-label">Активных</div>
-        <div class="stat-trend positive">+8%</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{{ stats.deleted }}</div>
-        <div class="stat-label">Удаленных</div>
-        <div class="stat-trend negative">-3%</div>
+        <div class="stat-label">Удалённых</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{{ stats.withAddress }}</div>
         <div class="stat-label">С адресом</div>
-        <div class="stat-trend neutral">{{ ((stats.withAddress / stats.total) * 100 || 0).toFixed(0) }}%</div>
       </div>
     </div>
   </div>
@@ -56,48 +60,44 @@
   <!-- Фильтры -->
   <div class="filters-bar">
     <div class="search-wrapper">
-      <span class="search-icon">🔍</span>
-      <input type="text" 
+      <span class="search-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input type="text"
              class="search-input"
-             [(ngModel)]="searchQuery" 
+             [(ngModel)]="searchQuery"
              (ngModelChange)="onSearchChange()"
              placeholder="Поиск по названию, адресу, телефону...">
-      <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; filterStores('')">✕</button>
+      <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; filterStores('')" title="Очистить">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <div class="filter-group">
       <select class="filter-select" [(ngModel)]="filters.type" (change)="applyFilters()">
         <option value="all">Все типы</option>
-        <option *ngFor="let type of storeTypes" [value]="type.value">{{ type.icon }} {{ type.label }}</option>
+        <option *ngFor="let type of storeTypes" [value]="type.value">{{ type.label }}</option>
       </select>
 
       <select class="filter-select" [(ngModel)]="filters.status" (change)="applyFilters()">
         <option value="all">Все статусы</option>
         <option value="active">Активные</option>
-        <option value="deleted">Удаленные</option>
+        <option value="deleted">Удалённые</option>
       </select>
 
       <label class="checkbox-wrapper">
-        <input type="checkbox" 
-               class="checkbox-input"
-               [(ngModel)]="filters.hasAddress" 
-               (change)="applyFilters()">
+        <input type="checkbox" class="checkbox-input" [(ngModel)]="filters.hasAddress" (change)="applyFilters()">
         <span class="checkbox-custom"></span>
         <span class="checkbox-label">С адресом</span>
       </label>
 
       <label class="checkbox-wrapper">
-        <input type="checkbox" 
-               class="checkbox-input"
-               [(ngModel)]="filters.hasPartner" 
-               (change)="applyFilters()">
+        <input type="checkbox" class="checkbox-input" [(ngModel)]="filters.hasPartner" (change)="applyFilters()">
         <span class="checkbox-custom"></span>
-        <span class="checkbox-label">С партнером</span>
+        <span class="checkbox-label">С партнёром</span>
       </label>
 
-      <button *ngIf="hasActiveFilters()" class="clear-filters" (click)="clearFilters()">
-        Сбросить
-      </button>
+      <button *ngIf="hasActiveFilters()" class="clear-filters" (click)="clearFilters()">Сбросить</button>
     </div>
   </div>
 
@@ -111,31 +111,40 @@
 
     <!-- Пустое состояние -->
     <div class="empty-state" *ngIf="!isLoading && filteredStores.length === 0">
-      <div class="empty-icon">🏪</div>
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21V13h6v8"/></svg>
+      </div>
       <h3>Магазины не найдены</h3>
       <p>Добавьте первый магазин или измените параметры поиска</p>
       <button class="primary-button" (click)="startCreate()">
-        <span class="icon">➕</span>
+        <span class="icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </span>
         Добавить магазин
       </button>
     </div>
 
     <!-- Сетка магазинов -->
     <div class="stores-grid" *ngIf="!isLoading && filteredStores.length > 0">
-      <div class="store-card" 
+      <div class="store-card"
            *ngFor="let store of getCurrentPageStores()"
            [class.deleted]="store.isDeleted"
            (click)="selectStore(store)">
-        
+
         <div class="card-header">
           <div class="card-type">
-            <span class="type-icon">{{ storeTypes[store.productPlaceType]?.icon || '🏪' }}</span>
-            <span class="type-label">{{ storeTypes[store.productPlaceType]?.label || 'Магазин' }}</span>
+            <span class="type-icon">
+              <ng-container [ngSwitch]="store.productPlaceType">
+                <svg *ngSwitchCase="1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                <svg *ngSwitchDefault width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21V13h6v8"/></svg>
+              </ng-container>
+            </span>
+            <span class="type-label">{{ store.productPlaceType === 1 ? 'Склад' : 'Розничный магазин' }}</span>
           </div>
 
           <div class="card-status">
             <span class="status-indicator" [class.deleted]="store.isDeleted"></span>
-            <span class="status-text">{{ store.isDeleted ? 'Удален' : 'Активен' }}</span>
+            <span class="status-text">{{ store.isDeleted ? 'Удалён' : 'Активен' }}</span>
           </div>
         </div>
 
@@ -145,37 +154,68 @@
 
           <div class="store-contacts" *ngIf="store.phoneNumber || store.email">
             <div class="contact-item" *ngIf="store.phoneNumber">
-              <span class="contact-icon">📞</span>
+              <span class="contact-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </span>
               <span>{{ store.phoneNumber }}</span>
             </div>
             <div class="contact-item" *ngIf="store.email">
-              <span class="contact-icon">✉️</span>
+              <span class="contact-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
               <span>{{ store.email }}</span>
             </div>
           </div>
 
           <div class="store-address" *ngIf="store.address">
-            <span class="address-icon">📍</span>
+            <span class="address-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
             <span class="address-text">{{ getFullAddress(store.address) }}</span>
           </div>
 
+          <div class="store-schedule" *ngIf="store.storeSchedule">
+            <span class="schedule-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            <span class="schedule-text">{{ getScheduleSummary(store.storeSchedule) }}</span>
+          </div>
+
           <div class="store-badges">
-            <span class="badge" *ngIf="store.partner" title="Есть партнер">🤝</span>
-            <span class="badge" *ngIf="store.address" title="Есть адрес">📍</span>
-            <span class="badge" *ngIf="store.imageInstances?.length" title="Есть фото">📷</span>
+            <span class="badge" *ngIf="store.partner" title="Есть партнёр">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <span class="badge" *ngIf="store.address" title="Есть адрес">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <span class="badge" *ngIf="store.imageInstances?.length" title="Есть фото">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </span>
+            <span class="badge" *ngIf="store.isDeliveryIncluded" title="Доставка">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </span>
+            <span class="badge" *ngIf="store.storeSchedule" title="Есть расписание">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
           </div>
         </div>
 
         <div class="card-footer">
           <div class="card-actions">
             <button class="action-button" (click)="showQuickView(store); $event.stopPropagation()" title="Быстрый просмотр">
-              <span class="icon">👁️</span>
+              <span class="icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
             </button>
             <button class="action-button" (click)="startEdit(store); $event.stopPropagation()" title="Редактировать">
-              <span class="icon">✏️</span>
+              <span class="icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </span>
             </button>
             <button class="action-button delete" (click)="selectedStore = store; showDeleteConfirm = true; $event.stopPropagation()" title="Удалить">
-              <span class="icon">🗑️</span>
+              <span class="icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </span>
             </button>
           </div>
         </div>
@@ -185,15 +225,17 @@
     <!-- Пагинация -->
     <div class="pagination" *ngIf="filteredStores.length > itemsPerPage">
       <div class="pagination-info">
-        Показано {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, filteredStores.length) }}
+        Показано {{ (currentPage - 1) * itemsPerPage + 1 }}–{{ Math.min(currentPage * itemsPerPage, filteredStores.length) }}
         из {{ filteredStores.length }}
       </div>
       <div class="pagination-controls">
-        <button class="page-button" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
-          <span class="icon">◀</span>
+        <button class="page-button" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Назад">
+          <span class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </span>
         </button>
         <div class="page-numbers">
-          <button *ngFor="let page of getPaginationPages()" 
+          <button *ngFor="let page of getPaginationPages()"
                   class="page-number"
                   [class.active]="page === currentPage"
                   [class.disabled]="page === '...'"
@@ -201,8 +243,10 @@
             {{ page }}
           </button>
         </div>
-        <button class="page-button" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
-          <span class="icon">▶</span>
+        <button class="page-button" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Вперёд">
+          <span class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
         </button>
       </div>
     </div>
@@ -213,11 +257,16 @@
     <div class="modal-container large" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="title-icon">{{ isCreating ? '➕' : '✏️' }}</span>
+          <span class="title-icon">
+            <svg *ngIf="isCreating" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg *ngIf="isEditing" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </span>
           {{ isCreating ? 'Новый магазин' : 'Редактирование магазина' }}
         </h2>
-        <button class="close-button" (click)="cancelEdit()">
-          <span class="icon">✕</span>
+        <button class="close-button" (click)="cancelEdit()" title="Закрыть">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
         </button>
       </div>
 
@@ -229,55 +278,45 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Короткое название</label>
-                <input type="text" 
-                       class="form-input" 
-                       [(ngModel)]="formData.shortName" 
-                       name="shortName"
-                       [class.error]="errors.shortName"
-                       placeholder="Например: Магазин на Ленина">
+                <input type="text" class="form-input" [(ngModel)]="formData.shortName" name="shortName"
+                       [class.error]="errors.shortName" placeholder="Например: Магазин на Ленина">
                 <div class="error-message" *ngIf="errors.shortName">{{ errors.shortName }}</div>
               </div>
 
               <div class="form-group">
                 <label class="form-label required">Полное название</label>
-                <input type="text" 
-                       class="form-input" 
-                       [(ngModel)]="formData.fullName" 
-                       name="fullName"
-                       [class.error]="errors.fullName"
-                       placeholder="Например: ООО Магазин на Ленина">
+                <input type="text" class="form-input" [(ngModel)]="formData.fullName" name="fullName"
+                       [class.error]="errors.fullName" placeholder="Например: ООО Магазин на Ленина">
                 <div class="error-message" *ngIf="errors.fullName">{{ errors.fullName }}</div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Тип магазина</label>
                 <select class="form-select" [(ngModel)]="formData.productPlaceType" name="productPlaceType">
-                  <option *ngFor="let type of storeTypes" [value]="type.value">
-                    {{ type.icon }} {{ type.label }}
-                  </option>
+                  <option *ngFor="let type of storeTypes" [value]="type.value">{{ type.label }}</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Телефон</label>
-                <input type="tel" 
-                       class="form-input" 
-                       [(ngModel)]="formData.phoneNumber" 
-                       name="phoneNumber"
-                       [class.error]="errors.phoneNumber"
-                       placeholder="+7 (999) 123-45-67">
+                <input type="tel" class="form-input" [(ngModel)]="formData.phoneNumber" name="phoneNumber"
+                       [class.error]="errors.phoneNumber" placeholder="+7 (999) 123-45-67">
                 <div class="error-message" *ngIf="errors.phoneNumber">{{ errors.phoneNumber }}</div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Email</label>
-                <input type="email" 
-                       class="form-input" 
-                       [(ngModel)]="formData.email" 
-                       name="email"
-                       [class.error]="errors.email"
-                       placeholder="shop@example.com">
+                <input type="email" class="form-input" [(ngModel)]="formData.email" name="email"
+                       [class.error]="errors.email" placeholder="shop@example.com">
                 <div class="error-message" *ngIf="errors.email">{{ errors.email }}</div>
+              </div>
+
+              <div class="form-group" style="justify-content: flex-end;">
+                <label class="checkbox-wrapper" style="align-self: center;">
+                  <input type="checkbox" class="checkbox-input" [(ngModel)]="formData.isDeliveryIncluded" name="isDeliveryIncluded">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-label">Доступна доставка</span>
+                </label>
               </div>
             </div>
           </div>
@@ -286,19 +325,80 @@
           <div class="form-section">
             <div class="section-header">
               <h3 class="section-title">Адрес</h3>
-              <button type="button" class="section-button" (click)="showAddressModal = true">
-                <span class="icon">✏️</span>
+              <button type="button" class="section-button" (click)="openAddressModal()">
+                <span class="icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </span>
                 {{ formData.addressId ? 'Изменить адрес' : 'Добавить адрес' }}
               </button>
             </div>
             <div class="address-preview" *ngIf="selectedStore?.address">
               <div class="address-details">
-                <span class="address-icon">📍</span>
-                <span>{{ getFullAddress(selectedStore?.address) }}</span>
+                <span class="address-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
+                <span>{{ getFullAddress(selectedStore!.address!) }}</span>
               </div>
             </div>
             <div class="address-empty" *ngIf="!selectedStore?.address && isEditing">
               <p>Адрес не указан</p>
+            </div>
+          </div>
+
+          <!-- Партнёр -->
+          <div class="form-section">
+            <div class="section-header">
+              <h3 class="section-title">Партнёр</h3>
+              <button type="button" class="section-button" (click)="openPartnerModal()">
+                <span class="icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                {{ formData.partnerId ? 'Изменить партнёра' : 'Добавить партнёра' }}
+              </button>
+            </div>
+            <div class="partner-preview" *ngIf="selectedStore?.partner">
+              <div class="partner-details">
+                <span class="partner-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <div>
+                  <div class="partner-name">{{ selectedStore!.partner!.shortName }}</div>
+                  <div class="partner-info">{{ selectedStore!.partner!.fullName }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="partner-empty" *ngIf="!selectedStore?.partner && isEditing">
+              <p>Партнёр не указан</p>
+            </div>
+          </div>
+
+          <!-- Расписание -->
+          <div class="form-section">
+            <div class="section-header">
+              <h3 class="section-title">Расписание работы</h3>
+              <button type="button" class="section-button" (click)="openScheduleModal()">
+                <span class="icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                {{ selectedStore?.storeSchedule ? 'Изменить расписание' : 'Добавить расписание' }}
+              </button>
+            </div>
+            <div class="schedule-preview" *ngIf="selectedStore?.storeSchedule">
+              <div class="schedule-summary">
+                <div class="schedule-days" *ngIf="selectedStore!.storeSchedule!.workingHours">
+                  <div *ngFor="let day of selectedStore!.storeSchedule!.workingHours" class="schedule-day">
+                    <span class="day-name">{{ getDayOfWeekName(day.dayOfWeek) }}:</span>
+                    <span class="day-time">{{ day.openTime }} – {{ day.closeTime }}</span>
+                  </div>
+                </div>
+                <div *ngIf="selectedStore!.storeSchedule!.exceptionDays?.length" class="schedule-exceptions">
+                  <span class="exceptions-label">Исключения:</span>
+                  <span class="exceptions-count">{{ selectedStore!.storeSchedule!.exceptionDays?.length }} дн.</span>
+                </div>
+              </div>
+            </div>
+            <div class="schedule-empty" *ngIf="!selectedStore?.storeSchedule && isEditing">
+              <p>Расписание не указано</p>
             </div>
           </div>
 
@@ -309,17 +409,16 @@
               <div class="tags-list">
                 <span class="tag" *ngFor="let instruction of getInstructions; let i = index">
                   {{ instruction }}
-                  <button type="button" class="tag-remove" (click)="removeGetInstruction(i)">×</button>
+                  <button type="button" class="tag-remove" (click)="removeGetInstruction(i)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
                 </span>
               </div>
               <div class="tag-input-group">
-                <input type="text" 
-                       class="tag-input"
-                       [(ngModel)]="newGetInstruction" 
-                       name="newGetInstruction"
-                       (keyup.enter)="addGetInstruction()"
-                       placeholder="Новая инструкция">
+                <input type="text" class="tag-input" [(ngModel)]="newGetInstruction" name="newGetInstruction"
+                       (keyup.enter)="addGetInstruction()" placeholder="Новая инструкция">
                 <button type="button" class="tag-add-button" (click)="addGetInstruction()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Добавить
                 </button>
               </div>
@@ -333,17 +432,16 @@
               <div class="tags-list">
                 <span class="tag advantage" *ngFor="let advantage of advantageList; let i = index">
                   {{ advantage }}
-                  <button type="button" class="tag-remove" (click)="removeAdvantage(i)">×</button>
+                  <button type="button" class="tag-remove" (click)="removeAdvantage(i)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
                 </span>
               </div>
               <div class="tag-input-group">
-                <input type="text" 
-                       class="tag-input"
-                       [(ngModel)]="newAdvantage" 
-                       name="newAdvantage"
-                       (keyup.enter)="addAdvantage()"
-                       placeholder="Новое преимущество">
+                <input type="text" class="tag-input" [(ngModel)]="newAdvantage" name="newAdvantage"
+                       (keyup.enter)="addAdvantage()" placeholder="Новое преимущество">
                 <button type="button" class="tag-add-button" (click)="addAdvantage()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Добавить
                 </button>
               </div>
@@ -353,17 +451,19 @@
           <!-- Изображения -->
           <div class="form-section">
             <h3 class="section-title">Изображения</h3>
-            
+
             <!-- Существующие изображения -->
             <div class="existing-images" *ngIf="selectedStore?.imageInstances?.length && isEditing">
               <h4 class="subsection-title">Текущие изображения</h4>
               <div class="images-grid">
-                <div *ngFor="let image of selectedStore?.imageInstances" class="image-item">
+                <div *ngFor="let image of selectedStore!.imageInstances" class="image-item">
                   <div class="image-container">
                     <img [src]="getImageUrl(image.fileInfoId)" alt="Store">
                     <div class="image-overlay">
-                      <button type="button" class="delete-image" (click)="deleteImage(image.id)">
-                        <span class="icon">🗑️</span>
+                      <button type="button" class="delete-image" (click)="deleteImage(image.id)" title="Удалить">
+                        <span class="icon">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -374,28 +474,29 @@
             <!-- Новые изображения -->
             <h4 class="subsection-title">Новые изображения</h4>
             <div class="upload-area" (click)="fileInput.click()">
-              <input type="file" 
-                     #fileInput
-                     (change)="onFileSelected($event)"
-                     accept="image/*"
-                     multiple
-                     hidden>
-              
+              <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" multiple hidden>
+
               <div class="upload-content" *ngIf="!selectedFiles.length">
-                <span class="upload-icon">📁</span>
+                <span class="upload-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                </span>
                 <p>Перетащите изображения или кликните для выбора</p>
                 <span class="upload-hint">JPG, PNG, GIF до 5MB</span>
               </div>
-              
+
               <div class="upload-preview" *ngIf="selectedFiles.length">
                 <div *ngFor="let file of selectedFiles; let i = index" class="preview-item">
                   <img [src]="file.preview" alt="Preview">
-                  <button type="button" class="remove-preview" (click)="removeFile(i); $event.stopPropagation()">
-                    <span class="icon">✕</span>
+                  <button type="button" class="remove-preview" (click)="removeFile(i); $event.stopPropagation()" title="Удалить">
+                    <span class="icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </span>
                   </button>
                 </div>
                 <div class="add-more" (click)="fileInput.click(); $event.stopPropagation()">
-                  <span class="icon">➕</span>
+                  <span class="icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </span>
                 </div>
               </div>
             </div>
@@ -414,24 +515,315 @@
     </div>
   </div>
 
+  <!-- Модальное окно адреса -->
+  <div class="modal-overlay" *ngIf="showAddressModal" [class.show]="showAddressModal" (click)="showAddressModal = false">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          Адрес магазина
+        </h2>
+        <button class="close-button" (click)="showAddressModal = false" title="Закрыть">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form class="address-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">Город</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.city" name="city"
+                     [class.error]="addressErrors.city" placeholder="Москва">
+              <div class="error-message" *ngIf="addressErrors.city">{{ addressErrors.city }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Регион</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.region" name="region" placeholder="Московская область">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Улица</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.street" name="street"
+                     [class.error]="addressErrors.street" placeholder="Ленина">
+              <div class="error-message" *ngIf="addressErrors.street">{{ addressErrors.street }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Дом</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.house" name="house"
+                     [class.error]="addressErrors.house" placeholder="1">
+              <div class="error-message" *ngIf="addressErrors.house">{{ addressErrors.house }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Корпус</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.housing" name="housing" placeholder="1">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Офис</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.office" name="office" placeholder="101">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Почтовый индекс</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.postIndex" name="postIndex" placeholder="123456">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Этаж</label>
+              <input type="text" class="form-input" [(ngModel)]="addressForm.floorNumber" name="floorNumber" placeholder="1">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary-button" (click)="showAddressModal = false">Отмена</button>
+            <button type="button" class="primary-button" (click)="saveAddress()" [disabled]="isLoading">
+              <span *ngIf="!isLoading">Сохранить</span>
+              <span *ngIf="isLoading" class="button-spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно партнёра -->
+  <div class="modal-overlay" *ngIf="showPartnerModal" [class.show]="showPartnerModal" (click)="showPartnerModal = false">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          Партнёр
+        </h2>
+        <button class="close-button" (click)="showPartnerModal = false" title="Закрыть">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form class="partner-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">Короткое название</label>
+              <input type="text" class="form-input" [(ngModel)]="partnerForm.shortName" name="shortName"
+                     [class.error]="partnerErrors.shortName" placeholder="ООО Партнёр">
+              <div class="error-message" *ngIf="partnerErrors.shortName">{{ partnerErrors.shortName }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Полное название</label>
+              <input type="text" class="form-input" [(ngModel)]="partnerForm.fullName" name="fullName"
+                     [class.error]="partnerErrors.fullName" placeholder="Общество с ограниченной ответственностью Партнёр">
+              <div class="error-message" *ngIf="partnerErrors.fullName">{{ partnerErrors.fullName }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">ИНН</label>
+              <input type="text" class="form-input" [(ngModel)]="partnerForm.inn" name="inn"
+                     [class.error]="partnerErrors.inn" placeholder="1234567890">
+              <div class="error-message" *ngIf="partnerErrors.inn">{{ partnerErrors.inn }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">ОГРН</label>
+              <input type="text" class="form-input" [(ngModel)]="partnerForm.ogrn" name="ogrn" placeholder="1234567890123">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" [(ngModel)]="partnerForm.email" name="email"
+                     [class.error]="partnerErrors.email" placeholder="partner@example.com">
+              <div class="error-message" *ngIf="partnerErrors.email">{{ partnerErrors.email }}</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Вид деятельности</label>
+              <input type="text" class="form-input" [(ngModel)]="partnerForm.typeOfActivity" name="typeOfActivity" placeholder="Розничная торговля">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary-button" (click)="showPartnerModal = false">Отмена</button>
+            <button type="button" class="primary-button" (click)="savePartner()" [disabled]="isLoading">
+              <span *ngIf="!isLoading">Сохранить</span>
+              <span *ngIf="isLoading" class="button-spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно расписания -->
+  <div class="modal-overlay" *ngIf="showScheduleModal" [class.show]="showScheduleModal" (click)="showScheduleModal = false">
+    <div class="modal-container large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>
+          Расписание работы
+        </h2>
+        <button class="close-button" (click)="showScheduleModal = false" title="Закрыть">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Дни недели -->
+        <div class="schedule-section">
+          <div class="section-header">
+            <h3 class="section-title">Рабочие дни</h3>
+            <button type="button" class="section-button" (click)="addWorkingHour()">
+              <span class="icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </span>
+              Добавить день
+            </button>
+          </div>
+
+          <div class="working-hours-list">
+            <div *ngFor="let hour of scheduleForm.workingHours; let i = index" class="working-hour-item">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">День недели</label>
+                  <select class="form-select" [(ngModel)]="hour.dayOfWeek" name="dayOfWeek{{i}}">
+                    <option *ngFor="let day of daysOfWeek" [value]="day.value">{{ day.label }}</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Время открытия</label>
+                  <input type="time" class="form-input" [(ngModel)]="hour.openTime" name="openTime{{i}}">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Время закрытия</label>
+                  <input type="time" class="form-input" [(ngModel)]="hour.closeTime" name="closeTime{{i}}">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">&nbsp;</label>
+                  <button type="button" class="danger-button" (click)="removeWorkingHour(i)">
+                    <span class="icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                    </span>
+                    Удалить
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="scheduleForm.workingHours.length === 0" class="empty-list">
+              <p>Рабочие дни не добавлены</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Дни исключения -->
+        <div class="schedule-section">
+          <div class="section-header">
+            <h3 class="section-title">Дни-исключения</h3>
+            <button type="button" class="section-button" (click)="addExceptionDay()">
+              <span class="icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </span>
+              Добавить исключение
+            </button>
+          </div>
+
+          <div class="exception-days-list">
+            <div *ngFor="let day of scheduleForm.exceptionDays; let i = index" class="exception-day-item">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Дата</label>
+                  <input type="date" class="form-input" [(ngModel)]="day.date" name="date{{i}}">
+                </div>
+
+                <div class="form-group">
+                  <label class="checkbox-wrapper" style="align-self: flex-end;">
+                    <input type="checkbox" class="checkbox-input" [(ngModel)]="day.isClosed" name="isClosed{{i}}">
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-label">Закрыто</span>
+                  </label>
+                </div>
+
+                <div class="form-group" *ngIf="!day.isClosed">
+                  <label class="form-label">Время открытия</label>
+                  <input type="time" class="form-input" [(ngModel)]="day.openTime" name="exceptionOpenTime{{i}}">
+                </div>
+
+                <div class="form-group" *ngIf="!day.isClosed">
+                  <label class="form-label">Время закрытия</label>
+                  <input type="time" class="form-input" [(ngModel)]="day.closeTime" name="exceptionCloseTime{{i}}">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">&nbsp;</label>
+                  <button type="button" class="danger-button" (click)="removeExceptionDay(i)">
+                    <span class="icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                    </span>
+                    Удалить
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="scheduleForm.exceptionDays.length === 0" class="empty-list">
+              <p>Дни-исключения не добавлены</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="secondary-button" (click)="showScheduleModal = false">Отмена</button>
+          <button type="button" class="primary-button" (click)="saveSchedule()" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Сохранить расписание</span>
+            <span *ngIf="isLoading" class="button-spinner"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Модальное окно подтверждения удаления -->
   <div class="modal-overlay" *ngIf="showDeleteConfirm" [class.show]="showDeleteConfirm" (click)="showDeleteConfirm = false">
     <div class="modal-container small" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="title-icon warning">⚠️</span>
+          <span class="title-icon warning">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
           Подтверждение удаления
         </h2>
-        <button class="close-button" (click)="showDeleteConfirm = false">
-          <span class="icon">✕</span>
+        <button class="close-button" (click)="showDeleteConfirm = false" title="Закрыть">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
         </button>
       </div>
 
       <div class="modal-body">
         <div class="delete-content">
-          <div class="delete-icon">🗑️</div>
+          <div class="delete-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
           <h3>Вы уверены?</h3>
-          <p>Вы собираетесь удалить магазин <strong>"{{ selectedStore?.shortName }}"</strong></p>
+          <p>Вы собираетесь удалить магазин <strong>«{{ selectedStore?.shortName }}»</strong></p>
           <p class="delete-warning">Это действие нельзя отменить.</p>
         </div>
 
@@ -451,11 +843,15 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">
-          <span class="title-icon">👁️</span>
+          <span class="title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
           Быстрый просмотр
         </h2>
-        <button class="close-button" (click)="isShowQuickView = false">
-          <span class="icon">✕</span>
+        <button class="close-button" (click)="isShowQuickView = false" title="Закрыть">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </span>
         </button>
       </div>
 
@@ -463,51 +859,76 @@
         <div class="quickview-content" *ngIf="quickViewData.store">
           <div class="quickview-header">
             <div class="quickview-icon large">
-              {{ storeTypes[quickViewData.store.productPlaceType]?.icon || '🏪' }}
+              <ng-container [ngSwitch]="quickViewData.store!.productPlaceType">
+                <svg *ngSwitchCase="1" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                <svg *ngSwitchDefault width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21V13h6v8"/></svg>
+              </ng-container>
             </div>
             <div class="quickview-info">
-              <h3>{{ quickViewData.store.shortName }}</h3>
-              <p>{{ quickViewData.store.fullName }}</p>
+              <h3>{{ quickViewData.store!.shortName }}</h3>
+              <p>{{ quickViewData.store!.fullName }}</p>
             </div>
           </div>
 
           <div class="quickview-details">
             <div class="detail-row">
               <span class="detail-label">Тип:</span>
-              <span class="detail-value">{{ getStoreTypeLabel(quickViewData.store.productPlaceType) }}</span>
+              <span class="detail-value">{{ getStoreTypeLabel(quickViewData.store!.productPlaceType) }}</span>
             </div>
-            <div class="detail-row" *ngIf="quickViewData.store.phoneNumber">
+            <div class="detail-row" *ngIf="quickViewData.store!.phoneNumber">
               <span class="detail-label">Телефон:</span>
-              <span class="detail-value">{{ quickViewData.store.phoneNumber }}</span>
+              <span class="detail-value">{{ quickViewData.store!.phoneNumber }}</span>
             </div>
-            <div class="detail-row" *ngIf="quickViewData.store.email">
+            <div class="detail-row" *ngIf="quickViewData.store!.email">
               <span class="detail-label">Email:</span>
-              <span class="detail-value">{{ quickViewData.store.email }}</span>
+              <span class="detail-value">{{ quickViewData.store!.email }}</span>
             </div>
-            <div class="detail-row" *ngIf="quickViewData.store.address">
+            <div class="detail-row" *ngIf="quickViewData.store!.address">
               <span class="detail-label">Адрес:</span>
-              <span class="detail-value">{{ getFullAddress(quickViewData.store.address) }}</span>
+              <span class="detail-value">{{ getFullAddress(quickViewData.store!.address) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Доставка:</span>
+              <span class="detail-value">{{ quickViewData.store!.isDeliveryIncluded ? 'Да' : 'Нет' }}</span>
             </div>
           </div>
 
-          <div class="quickview-sections" *ngIf="quickViewData.store.getInstructions?.length">
+          <div class="quickview-sections" *ngIf="quickViewData.store!.storeSchedule">
+            <h4>Расписание работы</h4>
+            <div class="schedule-display">
+              <div *ngFor="let hour of quickViewData.store!.storeSchedule!.workingHours" class="schedule-display-item">
+                <span class="day-name">{{ getDayOfWeekName(hour.dayOfWeek) }}:</span>
+                <span class="day-time">{{ hour.openTime }} – {{ hour.closeTime }}</span>
+              </div>
+              <div *ngIf="quickViewData.store!.storeSchedule!.exceptionDays?.length" class="exceptions-display">
+                <strong>Исключения:</strong>
+                <div *ngFor="let exception of quickViewData.store!.storeSchedule!.exceptionDays" class="exception-item">
+                  <span>{{ exception.date }}:</span>
+                  <span *ngIf="exception.isClosed">Закрыто</span>
+                  <span *ngIf="!exception.isClosed">{{ exception.openTime }} – {{ exception.closeTime }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="quickview-sections" *ngIf="quickViewData.store!.getInstructions?.length">
             <h4>Инструкции по получению</h4>
             <ul class="instruction-list">
-              <li *ngFor="let instruction of quickViewData.store.getInstructions">{{ instruction }}</li>
+              <li *ngFor="let instruction of quickViewData.store!.getInstructions">{{ instruction }}</li>
             </ul>
           </div>
 
-          <div class="quickview-sections" *ngIf="quickViewData.store.advantageList?.length">
+          <div class="quickview-sections" *ngIf="quickViewData.store!.advantageList?.length">
             <h4>Преимущества</h4>
             <ul class="advantage-list">
-              <li *ngFor="let advantage of quickViewData.store.advantageList">{{ advantage }}</li>
+              <li *ngFor="let advantage of quickViewData.store!.advantageList">{{ advantage }}</li>
             </ul>
           </div>
 
-          <div class="quickview-images" *ngIf="quickViewData.store.imageInstances?.length">
+          <div class="quickview-sections" *ngIf="quickViewData.store!.imageInstances?.length">
             <h4>Изображения</h4>
             <div class="images-preview">
-              <div *ngFor="let image of quickViewData.store.imageInstances" class="image-thumb">
+              <div *ngFor="let image of quickViewData.store!.imageInstances" class="image-thumb">
                 <img [src]="getImageUrl(image.fileInfoId)" alt="Store">
               </div>
             </div>

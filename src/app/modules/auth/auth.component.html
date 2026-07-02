@@ -1,24 +1,7 @@
-<div class="popup-overlay"  (click)="closePopUp()">
-  <div class="popup" (click)="$event.stopPropagation()">
-
-    <!-- Закрыть -->
-    <div class="close-button" (click)="closePopUp()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M5 5L18 18M5 18L18 5" stroke="#333334" stroke-opacity="0.3" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-    </div>
-
-    <!-- Вкладки -->
-    <div class="popup-tabs">
-      <button [class.active]="authMode === 'login'" (click)="authMode='login'">Вход</button>
-      <button [class.active]="authMode === 'register'" (click)="authMode='register'">Регистрация</button>
-    </div>
-
-    <!-- Форма -->
+<div class="popup-overlay">
+  <div class="popup">
     <form [formGroup]="authForm" autocomplete="off" class="auth-form">
-      
-      <!-- Логин -->
-      <div *ngIf="authMode==='login'" class="form-slide">
+      <div class="form-slide">
         <div class="input-group">
           <input type="text" id="email" formControlName="email" autocomplete="off"/>
           <label for="email">Email</label>
@@ -30,28 +13,8 @@
         <button type="submit" class="submit-btn" (click)="onSubmit()">Войти</button>
       </div>
 
-      <!-- Регистрация -->
-      <div *ngIf="authMode==='register'" class="form-slide">
-        <div class="input-group">
-          <input type="text" id="name" formControlName="name" autocomplete="off"/>
-          <label for="name">Имя</label>
-        </div>
-        <div class="input-group">
-          <input type="text" id="regEmail" formControlName="email" autocomplete="off"/>
-          <label for="regEmail">Email</label>
-        </div>
-        <div class="input-group">
-          <input type="password" id="regPassword" formControlName="password" autocomplete="off"/>
-          <label for="regPassword">Пароль</label>
-        </div>
-        <div class="input-group">
-          <input type="password" id="confirmPassword" formControlName="confirmPassword" autocomplete="off"/>
-          <label for="confirmPassword">Подтвердите пароль</label>
-        </div>
-        <button type="submit" class="submit-btn">Зарегистрироваться</button>
-      </div>
-
     </form>
 
   </div>
 </div>
+
