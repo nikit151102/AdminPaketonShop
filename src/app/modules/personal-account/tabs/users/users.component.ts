@@ -5,94 +5,61 @@ import { environment } from '../../../../../environment';
 import { formatShortDate } from '../../../../../utils/date.utils';
 import { UsersService } from './users.service';
 
+interface User {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  email?: string;
+  userName?: string;
+  password?: string;
+  positionId?: string;
+  permissionIds?: string[];
+  createDateTime?: string;
+  position?: {
+    id: string;
+    name: string;
+    code?: number;
+  };
+  permissions?: Array<{
+    id: string;
+    name: string;
+    permissionCategory?: string;
+  }>;
+}
+
 @Component({
   selector: 'app-users',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss'
 })
 export class UsersComponent implements OnInit {
-  users: any[] = [
-    {
-      createDateTime: '2025-09-28T11:39:35.592Z',
-      changeDateTime: '2025-09-28T11:39:35.592Z',
-      id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-      firstName: 'Ivan',
-      lastName: 'Petrov',
-      patronymic: 'Sergeevich',
-      email: 'ivan.petrov@example.com',
-      userName: 'ivan.petrov',
-      initialPassCode: 1234,
-      permissions: [
-        {
-          createDateTime: '2025-09-28T11:39:35.592Z',
-          changeDateTime: '2025-09-28T11:39:35.592Z',
-          id: '11111111-1111-1111-1111-111111111111',
-          name: 'VIEW_DASHBOARD',
-          permissionCategory: 'ADMIN'
-        },
-        {
-          createDateTime: '2025-09-28T11:39:35.592Z',
-          changeDateTime: '2025-09-28T11:39:35.592Z',
-          id: '22222222-2222-2222-2222-222222222222',
-          name: 'EDIT_USER',
-          permissionCategory: 'ADMIN'
-        }
-      ],
-      position: {
-        createDateTime: '2025-09-28T11:39:35.592Z',
-        changeDateTime: '2025-09-28T11:39:35.592Z',
-        id: '33333333-3333-3333-3333-333333333333',
-        code: 101,
-        name: 'Manager'
-      },
-      token: 'sample-token-123'
-    },
-    {
-      createDateTime: '2025-09-28T12:10:00.000Z',
-      changeDateTime: '2025-09-28T12:10:00.000Z',
-      id: '4bb85f64-5717-4562-b3fc-2c963f66bbb7',
-      firstName: 'Anna',
-      lastName: 'Smirnova',
-      patronymic: 'Ivanovna',
-      email: 'anna.smirnova@example.com',
-      userName: 'anna.smirnova',
-      initialPassCode: 5678,
-      permissions: [
-        {
-          createDateTime: '2025-09-28T12:10:00.000Z',
-          changeDateTime: '2025-09-28T12:10:00.000Z',
-          id: '44444444-4444-4444-4444-444444444444',
-          name: 'VIEW_REPORTS',
-          permissionCategory: 'USER'
-        }
-      ],
-      position: {
-        createDateTime: '2025-09-28T12:10:00.000Z',
-        changeDateTime: '2025-09-28T12:10:00.000Z',
-        id: '55555555-5555-5555-5555-555555555555',
-        code: 102,
-        name: 'Analyst'
-      },
-      token: 'sample-token-456'
-    }
-  ];
+  users: User[] = [];
   loading = false;
   page = 0;
   pageSize = 30;
   isDesktop: boolean = true;
-  domain: string = environment.domain
+  domain: string = environment.domain;
+
+  showModal = false;
+  isEditMode = false;
+  showDeleteConfirm = false;
+  selectedUserId: string | null = null;
+
+  currentUser: User = {};
+  availablePositions: any[] = [];
+  availablePermissions: any[] = [];
+
   columns: { [key: string]: boolean } = {
-    article: true,
-    fullName: true,
-    description: false,
-    retailPrice: true,
-    wholesalePrice: true,
-    createDateTime: true,
-    manufacturer: false,
-    packCount: true,
-    productImageLinks: true,
-    keywords: false
+    firstName: true,
+    lastName: true,
+    email: true,
+    userName: true,
+    position: true,
+    permissions: true,
+    createDateTime: true
   };
 
   columnsVisible = false;
@@ -107,78 +74,151 @@ export class UsersComponent implements OnInit {
     { key: 'createDateTime', label: 'Дата создания' }
   ];
 
-
-  selectedColumns: string[] = [
-    'firstName',
-    'lastName',
-    'email',
-    'userName',
-    'position',
-    'permissions',
-    'createDateTime'
-  ];
-
   constructor(private usersService: UsersService) { }
 
   ngOnInit(): void {
     this.updateScreenSize();
-    this.loadProducts();
+    this.loadUsers();
   }
 
   get filteredSelectedColumns(): string[] {
-    return this.selectedColumns.filter(col =>
-      this.columnOptions.some(option => option.key === col)
-    );
+    return this.columnOptions
+      .filter(option => this.columns[option.key])
+      .map(option => option.key);
   }
 
-  formatShortDate(date: string) {
+  formatShortDate(date: string): string {
     return formatShortDate(date);
   }
-  loadProducts(): void {
+
+  loadUsers(): void {
     if (this.loading) return;
     this.loading = true;
 
-    this.usersService.getAll([], this.page, this.pageSize).subscribe((data: any) => {
-      if (data && data.data) {
-        this.users = [...this.users, ...data.data];
-        this.page++;
+    this.usersService.getAll([], this.page, this.pageSize).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          if (this.page === 0) {
+            this.users = response.data;
+          } else {
+            this.users = [...this.users, ...response.data];
+          }
+          this.page++;
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Ошибка загрузки пользователей:', error);
+        this.loading = false;
       }
-      this.loading = false;
     });
   }
 
-  @HostListener('window:scroll', [])
+  @HostListener('window:scroll')
   onScroll(): void {
     const scrollPosition = window.scrollY + window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
 
-    if (scrollPosition === documentHeight) {
-      this.loadProducts();
+    if (scrollPosition >= documentHeight - 100) {
+      this.loadUsers();
     }
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event: any) {
+  @HostListener('window:resize')
+  onResize(): void {
     this.updateScreenSize();
   }
 
-  private updateScreenSize() {
+  private updateScreenSize(): void {
     this.isDesktop = window.innerWidth >= 1100;
   }
 
-  editUser(productId: string): void {
+  openCreateModal(): void {
+    this.isEditMode = false;
+    this.currentUser = {};
+    this.showModal = true;
   }
 
-  deleteUser(productId: string): void {
+  editUser(userId: string): void {
+    this.isEditMode = true;
+    this.selectedUserId = userId;
+
+    this.usersService.getById(userId).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.currentUser = { ...response.data };
+          this.showModal = true;
+        }
+      },
+      error: (error) => {
+        console.error('Ошибка загрузки пользователя:', error);
+      }
+    });
   }
 
-  toggleColVisibility() {
-    this.columnsVisible = !this.columnsVisible
+  saveUser(): void {
+    if (this.isEditMode && this.selectedUserId) {
+      this.usersService.update(this.selectedUserId, this.currentUser).subscribe({
+        next: () => {
+          this.showModal = false;
+          this.page = 0;
+          this.loadUsers();
+        },
+        error: (error) => {
+          console.error('Ошибка обновления пользователя:', error);
+        }
+      });
+    } else {
+      this.usersService.create(this.currentUser).subscribe({
+        next: () => {
+          this.showModal = false;
+          this.page = 0;
+          this.loadUsers();
+        },
+        error: (error) => {
+          console.error('Ошибка создания пользователя:', error);
+        }
+      });
+    }
+  }
+
+  confirmDelete(userId: string): void {
+    this.selectedUserId = userId;
+    this.showDeleteConfirm = true;
+  }
+
+  deleteUser(): void {
+    if (!this.selectedUserId) return;
+
+    this.usersService.delete(this.selectedUserId).subscribe({
+      next: () => {
+        this.showDeleteConfirm = false;
+        this.page = 0;
+        this.loadUsers();
+      },
+      error: (error) => {
+        console.error('Ошибка удаления пользователя:', error);
+      }
+    });
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.currentUser = {};
+    this.selectedUserId = null;
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm = false;
+    this.selectedUserId = null;
+  }
+
+  toggleColVisibility(): void {
+    this.columnsVisible = !this.columnsVisible;
   }
 
   toggleColumnVisibility(columnKey: string, value: boolean): void {
     this.columns[columnKey] = value;
-    this.selectedColumns = Object.keys(this.columns).filter(key => this.columns[key]);
   }
 
   getColumnLabel(columnKey: string): string {
@@ -187,12 +227,6 @@ export class UsersComponent implements OnInit {
   }
 
   removeColumn(columnKey: string): void {
-    this.selectedColumns = this.selectedColumns.filter(column => column !== columnKey);
     this.columns[columnKey] = false;
   }
-
 }
-
-
-
-

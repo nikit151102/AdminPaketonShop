@@ -1,0 +1,51 @@
+<div class="filter-popover" (click)="$event.stopPropagation()">
+    <div class="filter-type-select">
+        <select [(ngModel)]="selectedType">
+            <option *ngFor="let t of availableTypes" [ngValue]="t.value">{{ t.label }}</option>
+        </select>
+    </div>
+
+    <input *ngIf="isSingleValue" [(ngModel)]="singleValue" placeholder="Значение" class="filter-input">
+
+    <div *ngIf="isMultiValue" class="multi-values">
+        <div *ngFor="let opt of column.enumOptions" class="option">
+            <input type="checkbox" [checked]="multiValues.includes(opt.value)" (change)="toggleMulti(opt.value)"
+                [id]="'opt-' + opt.value">
+            <label [for]="'opt-' + opt.value">{{ opt.label }}</label>
+        </div>
+    </div>
+
+    <!-- Блок для диапазона (число или дата) -->
+    <div *ngIf="isBetween" class="range-inputs">
+        <!-- Если это диапазон дат, используем type="date" -->
+        <ng-container *ngIf="isDateBetween; else defaultRange">
+            <div class="date-input-group">
+                <label>С:</label>
+                <input type="date" [(ngModel)]="rangeFrom" class="date-input" />
+            </div>
+            <div class="date-input-group">
+                <label>По:</label>
+                <input type="date" [(ngModel)]="rangeTo" class="date-input" />
+            </div>
+        </ng-container>
+        
+        <!-- Если это обычный числовой диапазон -->
+        <ng-template #defaultRange>
+            <input [(ngModel)]="rangeFrom" placeholder="От" class="filter-input">
+            <input [(ngModel)]="rangeTo" placeholder="До" class="filter-input">
+        </ng-template>
+    </div>
+
+    <div *ngIf="isBoolean" class="boolean-select">
+        <label><input type="radio" [(ngModel)]="boolValue" [ngModelOptions]="{standalone: true}" [value]="true">
+            Да</label>
+        <label><input type="radio" [(ngModel)]="boolValue" [ngModelOptions]="{standalone: true}" [value]="false">
+            Нет</label>
+    </div>
+
+    <!-- Единые кнопки для всех типов фильтров -->
+    <div class="filter-actions">
+        <button class="btn-apply" (click)="getApply()">Применить</button>
+        <button class="btn-clear" (click)="clear()">Сбросить</button>
+    </div>
+</div>

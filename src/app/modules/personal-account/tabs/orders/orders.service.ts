@@ -6,15 +6,15 @@ import { environment } from '../../../../../environment';
 @Injectable({
   providedIn: 'root'
 })
-export class UsersService {
-  private readonly apiUrl = `${environment.production}/api/User`;
+export class OrdersService {
+  private readonly apiUrl = `${environment.production}/api/Entities/DeliveryOrder`;
 
   constructor(private http: HttpClient) { }
 
-  getAll(filters: any[] = [], page: number = 0, pageSize: number = 30): Observable<any> {
+  getAll(filters: any[] = [], sorts: any[] = [], page: number = 0, pageSize: number = 30): Observable<any> {
     return this.http.post(`${this.apiUrl}/Filter`, {
       filters,
-      sorts: [],
+      sorts,
       page,
       pageSize
     });
@@ -24,14 +24,14 @@ export class UsersService {
     return this.http.get(`${this.apiUrl}/${id}`);
   }
 
-  create(user: any): Observable<any> {
-    const cleanUser = this.removeNullFields(user);
-    return this.http.post(this.apiUrl, cleanUser);
+  create(order: any): Observable<any> {
+    const cleanOrder = this.removeNullFields(order);
+    return this.http.post(this.apiUrl, cleanOrder);
   }
 
-  update(id: string, user: any): Observable<any> {
-    const cleanUser = this.removeNullFields({ ...user, id });
-    return this.http.put(`${this.apiUrl}/${id}`, cleanUser);
+  update(id: string, order: any): Observable<any> {
+    const cleanOrder = this.removeNullFields({ ...order, id });
+    return this.http.put(`${this.apiUrl}/${id}`, cleanOrder);
   }
 
   delete(id: string): Observable<any> {
@@ -47,7 +47,7 @@ export class UsersService {
           if (value.length > 0) {
             cleaned[key] = value;
           }
-        } else if (typeof value === 'object') {
+        } else if (typeof value === 'object' && !(value instanceof Date)) {
           const nestedCleaned = this.removeNullFields(value);
           if (Object.keys(nestedCleaned).length > 0) {
             cleaned[key] = nestedCleaned;

@@ -1,75 +1,84 @@
 <div class="container">
   <div class="controls">
+    <div class="controls-header">
+      <h2>Управление пользователями</h2>
+      <button class="btn-create" (click)="openCreateModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Добавить пользователя
+      </button>
+    </div>
+
     <div class="column-toggle">
       <button class="column-toggle-button" (click)="toggleColVisibility()">
-        Показать/скрыть столбцы
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        Настроить столбцы
       </button>
 
       <div class="column-options" [class.show]="columnsVisible">
-        <label class="custom-select">
-          <span>Выбрать столбцы</span>
-          <div class="checkbox-group">
-            <div *ngFor="let column of columnOptions" class="checkbox-item">
-              <input
-                type="checkbox"
-                id="{{ column.key }}"
-                [(ngModel)]="columns[column.key]"
-                (ngModelChange)="toggleColumnVisibility(column.key, $event)"
-              />
-              <label for="{{ column.key }}">{{ column.label }}</label>
-            </div>
+        <div class="checkbox-group">
+          <div *ngFor="let column of columnOptions" class="checkbox-item">
+            <input type="checkbox" [id]="column.key" [checked]="columns[column.key]"
+              (change)="toggleColumnVisibility(column.key, $any($event.target).checked)" />
+            <label [for]="column.key">{{ column.label }}</label>
           </div>
-        </label>
+        </div>
       </div>
     </div>
 
-    <div class="selected-columns">
-      <span *ngFor="let column of filteredSelectedColumns">
+    <div class="selected-columns" *ngIf="filteredSelectedColumns.length > 0">
+      <span *ngFor="let column of filteredSelectedColumns" class="column-tag">
         {{ getColumnLabel(column) }}
-        <button class="btn-delete-column" (click)="removeColumn(column)">
-          &#10005;
+        <button class="btn-remove-column" (click)="removeColumn(column)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       </span>
     </div>
   </div>
 
   <div class="products-container">
-    <!-- Таблица для десктопа -->
-    <table class="products-table">
+    <table class="products-table" *ngIf="isDesktop">
       <thead>
         <tr>
           <th *ngIf="columns['firstName']">Имя</th>
           <th *ngIf="columns['lastName']">Фамилия</th>
+          <th *ngIf="columns['middleName']">Отчество</th>
           <th *ngIf="columns['email']">Email</th>
-          <th *ngIf="columns['userName']">Логин</th>
-          <th *ngIf="columns['position']">Должность</th>
-          <th *ngIf="columns['permissions']">Права</th>
           <th *ngIf="columns['createDateTime']">Дата создания</th>
           <th>Действия</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let user of users">
-          <td *ngIf="columns['firstName']">{{ user.firstName }}</td>
-          <td *ngIf="columns['lastName']">{{ user.lastName }}</td>
-          <td *ngIf="columns['email']">{{ user.email }}</td>
-          <td *ngIf="columns['userName']">{{ user.userName }}</td>
-          <td *ngIf="columns['position']">{{ user.position?.name }}</td>
-          <td *ngIf="columns['permissions']">
-            <span *ngFor="let p of user.permissions; let i = index">
-              {{ p.name }}<span *ngIf="i < user.permissions.length - 1">, </span>
-            </span>
-          </td>
+          <td *ngIf="columns['firstName']">{{ user.firstName || '-' }}</td>
+          <td *ngIf="columns['lastName']">{{ user.lastName || '-' }}</td>
+          <td *ngIf="columns['middleName']">{{ user.middleName || '-' }}</td>
+
+          <td *ngIf="columns['email']">{{ user.email || '-' }}</td>
           <td *ngIf="columns['createDateTime']">
-            {{ formatShortDate(user.createDateTime) }}
+            {{ user.createDateTime ? formatShortDate(user.createDateTime) : '-' }}
           </td>
           <td>
             <div class="actions">
-              <button (click)="editUser(user.id)" class="btn-edit">
-                ✏️
+              <button (click)="editUser(user.id!)" class="btn-edit" title="Редактировать">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
               </button>
-              <button (click)="deleteUser(user.id)" class="btn-delete">
-                🗑️
+              <button (click)="confirmDelete(user.id!)" class="btn-delete" title="Удалить">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
               </button>
             </div>
           </td>
@@ -77,7 +86,6 @@
       </tbody>
     </table>
 
-    <!-- Карточки для мобильных -->
     <div class="product-cards" *ngIf="!isDesktop">
       <div class="product-card" *ngFor="let user of users">
         <div class="product-header">
@@ -85,32 +93,147 @@
             <h3 class="product-title" *ngIf="columns['firstName'] || columns['lastName']">
               {{ user.lastName }} {{ user.firstName }}
             </h3>
-            <p *ngIf="columns['email']">{{ user.email }}</p>
-            <p *ngIf="columns['userName']"><strong>Логин:</strong> {{ user.userName }}</p>
+            <p *ngIf="columns['email']" class="product-info">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              {{ user.email || '-' }}
+            </p>
+            <p *ngIf="columns['userName']" class="product-info">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <strong>Логин:</strong> {{ user.userName || '-' }}
+            </p>
           </div>
         </div>
 
         <div class="product-extra-info">
-          <p *ngIf="columns['position']"><strong>Должность:</strong> {{ user.position?.name }}</p>
-          <p *ngIf="columns['permissions']"><strong>Права:</strong>
-            <span *ngFor="let p of user.permissions; let i = index">
-              {{ p.name }}<span *ngIf="i < user.permissions.length - 1">, </span>
-            </span>
+          <p *ngIf="columns['position']" class="product-info">
+            <strong>Должность:</strong> {{ user.position?.name || '-' }}
           </p>
-          <p *ngIf="columns['createDateTime']">
-            <strong>Дата создания:</strong> {{ formatShortDate(user.createDateTime) }}
+          <p *ngIf="columns['createDateTime']" class="product-info">
+            <strong>Дата создания:</strong> {{ user.createDateTime ? formatShortDate(user.createDateTime) : '-' }}
           </p>
         </div>
 
         <div class="product-actions">
-          <button (click)="editUser(user.id)" class="btn-edit">✏️</button>
-          <button (click)="deleteUser(user.id)" class="btn-delete">🗑️</button>
+          <button (click)="editUser(user.id!)" class="btn-edit" title="Редактировать">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+          <button (click)="confirmDelete(user.id!)" class="btn-delete" title="Удалить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
 
     <div *ngIf="loading" class="loading-indicator">
+      <div class="spinner"></div>
       <p>Загрузка пользователей...</p>
+    </div>
+
+    <div *ngIf="!loading && users.length === 0" class="empty-state">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <line x1="23" y1="11" x2="17" y2="11" />
+      </svg>
+      <p>Пользователи не найдены</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditMode ? 'Редактирование пользователя' : 'Создание пользователя' }}</h3>
+      <button class="btn-close" (click)="closeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" [(ngModel)]="currentUser.firstName" placeholder="Введите имя" />
+        </div>
+
+        <div class="form-group">
+          <label>Фамилия</label>
+          <input type="text" [(ngModel)]="currentUser.lastName" placeholder="Введите фамилию" />
+        </div>
+
+        <div class="form-group">
+          <label>Отчество</label>
+          <input type="text" [(ngModel)]="currentUser.middleName" placeholder="Введите отчество" />
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="currentUser.email" placeholder="example@mail.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Логин</label>
+          <input type="text" [(ngModel)]="currentUser.userName" placeholder="Введите логин" />
+        </div>
+
+        <div class="form-group" *ngIf="!isEditMode">
+          <label>Пароль</label>
+          <input type="password" [(ngModel)]="currentUser.password" placeholder="Введите пароль" />
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">Отмена</button>
+      <button class="btn-save" (click)="saveUser()">
+        {{ isEditMode ? 'Сохранить' : 'Создать' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
+  <div class="modal modal-small" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Подтверждение удаления</h3>
+      <button class="btn-close" (click)="cancelDelete()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="warning-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      </div>
+      <p class="warning-text">Вы уверены, что хотите удалить этого пользователя?</p>
+      <p class="warning-subtext">Это действие нельзя отменить.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cancelDelete()">Отмена</button>
+      <button class="btn-delete-confirm" (click)="deleteUser()">Удалить</button>
     </div>
   </div>
 </div>

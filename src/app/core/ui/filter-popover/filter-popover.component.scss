@@ -1,0 +1,176 @@
+// filter-popover.scss
+.filter-popover {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 250px;
+
+  .filter-type-select {
+    margin-bottom: 12px;
+
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+  }
+
+  .filter-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .multi-values {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      label {
+        font-size: 13px;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .range-inputs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+  }
+
+  .boolean-select {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 8px;
+
+    button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &.btn-apply {
+        background: #327220;
+        color: white;
+
+        &:hover {
+          background: #285a1a;
+        }
+      }
+
+      &.btn-clear {
+        background: #f3f4f6;
+        color: #4b5563;
+
+        &:hover {
+          background: #e5e7eb;
+        }
+      }
+    }
+  }
+}
+
+.date-range-filter {
+  padding: 12px;
+  
+  .date-input-group {
+    margin-bottom: 12px;
+    
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .date-input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+    }
+  }
+  
+  .filter-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    
+    button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-apply {
+      background: #007bff;
+      color: white;
+      
+      &:hover {
+        background: #0056b3;
+      }
+    }
+    
+    .btn-clear {
+      background: #f8f9fa;
+      color: #333;
+      
+      &:hover {
+        background: #e2e6ea;
+      }
+    }
+  }
+}

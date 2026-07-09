@@ -1,0 +1,556 @@
+<div class="container">
+    <div class="controls">
+        <div class="controls-header">
+            <h2>Управление заявками на оптовые цены</h2>
+            <button class="btn-create" (click)="loadOrders()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                Обновить
+            </button>
+        </div>
+
+        <div class="filters-row">
+            <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
+                    placeholder="Поиск по номеру, контрагенту или клиенту..." />
+            </div>
+
+            <div class="status-filter">
+                <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+                    <option [ngValue]="null">Все статусы</option>
+                    <option *ngFor="let status of orderStatuses" [ngValue]="status.value">
+                        {{ status.label }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="column-toggle">
+                <button class="column-toggle-button" (click)="toggleColVisibility()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Столбцы
+                </button>
+
+                <div class="column-options" [class.show]="columnsVisible">
+                    <div class="checkbox-group">
+                        <div *ngFor="let column of columnOptions" class="checkbox-item">
+                            <input type="checkbox" [id]="column.key" [checked]="columns[column.key]"
+                                (change)="toggleColumnVisibility(column.key, $any($event.target).checked)" />
+                            <label [for]="column.key">{{ column.label }}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="selected-columns" *ngIf="filteredSelectedColumns.length > 0">
+            <span *ngFor="let column of filteredSelectedColumns" class="column-tag">
+                {{ getColumnLabel(column) }}
+                <button class="btn-remove-column" (click)="removeColumn(column)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </span>
+        </div>
+    </div>
+
+    <div class="orders-container">
+        <table class="orders-table" *ngIf="isDesktop">
+            <thead>
+                <tr>
+                    <th *ngIf="columns['number']">Номер</th>
+                    <th *ngIf="columns['orderDateTime']">Дата создания</th>
+                    <!-- <th *ngIf="columns['period']">Период действия</th> -->
+                    <th *ngIf="columns['partner']">Контрагент</th>
+                    <th *ngIf="columns['user']">Клиент</th>
+                    <th *ngIf="columns['status']">Статус</th>
+                    <th *ngIf="columns['documents']">Документы</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let order of filteredOrders">
+                    <td *ngIf="columns['number']">
+                        <span class="order-number">{{ order.number || '-' }}</span>
+                    </td>
+                    <td *ngIf="columns['orderDateTime']">
+                        {{ order.orderDateTime ? formatShortDate(order.orderDateTime) : '-' }}
+                    </td>
+                    <!-- <td *ngIf="columns['period']">
+                        <div class="period-cell">
+                            <span class="period-from">{{ formatShortDate(order.beginDateTime) }}</span>
+                            <span class="period-to">{{ formatShortDate(order.endDateTime) }}</span>
+                        </div>
+                    </td> -->
+                    <td *ngIf="columns['partner']">
+                        <div class="partner-cell">
+                            <span class="partner-name">{{ order.partnerInstance?.partner?.shortName || '-' }}</span>
+                            <span class="partner-inn">ИНН: {{ order.partnerInstance?.partner?.inn || '-' }}</span>
+                        </div>
+                    </td>
+                    <td *ngIf="columns['user']">
+                        <span class="user-name">{{ getFullName(order.userInstance) }}</span>
+                    </td>
+                    <td *ngIf="columns['status']">
+                        <span class="status-badge" [ngClass]="getStatusClass(order.wholesaleOrderStatus)">
+                            {{ getStatusText(order.wholesaleOrderStatus) }}
+                        </span>
+                    </td>
+                    <td *ngIf="columns['documents']">
+                        <span class="documents-count">{{ order.orderDocuments?.length || 0 }} шт.</span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button (click)="openDetails(order)" class="btn-details" title="Подробнее">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                            <button (click)="openContractModal(order)" class="btn-contract" title="Подписать договор">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                </svg>
+                            </button>
+                            <button (click)="confirmDeleteOrder(order)" class="btn-delete" title="Удалить">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="order-cards" *ngIf="!isDesktop">
+            <div class="order-card" *ngFor="let order of filteredOrders">
+                <div class="card-header">
+                    <div class="card-main-info">
+                        <h3 class="card-title">Заявка № {{ order.number || 'не указан' }}</h3>
+                        <p class="card-date">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {{ order.orderDateTime ? formatShortDate(order.orderDateTime) : '-' }}
+                        </p>
+                    </div>
+                    <span class="status-badge" [ngClass]="getStatusClass(order.wholesaleOrderStatus)">
+                        {{ getStatusText(order.wholesaleOrderStatus) }}
+                    </span>
+                </div>
+
+                <div class="card-extra-info">
+                    <p class="card-info">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <strong>Контрагент:</strong> {{ order.partnerInstance?.partner?.shortName || '-' }}
+                    </p>
+                    <p class="card-info">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <strong>Клиент:</strong> {{ getFullName(order.userInstance) }}
+                    </p>
+                    <p class="card-info">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <strong>Период:</strong> {{ formatShortDate(order.beginDateTime) }} - {{
+                        formatShortDate(order.endDateTime) }}
+                    </p>
+                    <p class="card-info">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        <strong>Документы:</strong> {{ order.orderDocuments?.length || 0 }} шт.
+                    </p>
+                </div>
+
+                <div class="card-actions">
+                    <button (click)="openDetails(order)" class="btn-details" title="Подробнее">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                    <button (click)="openContractModal(order)" class="btn-contract" title="Подписать договор">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                    </button>
+                    <button (click)="confirmDeleteOrder(order)" class="btn-delete" title="Удалить">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="loading" class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Загрузка заявок...</p>
+        </div>
+
+        <div *ngIf="!loading && filteredOrders.length === 0" class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <p>Заявки не найдены</p>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно деталей -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetails()">
+    <div class="modal modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Детали заявки № {{ selectedOrder?.number }}</h3>
+            <button class="btn-close" (click)="closeDetails()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body" *ngIf="selectedOrder">
+            <div class="details-grid">
+                <div class="detail-section">
+                    <h4>Основная информация</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Номер заявки:</span>
+                        <span class="detail-value">{{ selectedOrder.number || '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Дата создания:</span>
+                        <span class="detail-value">{{ formatShortDate(selectedOrder.orderDateTime) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Период действия:</span>
+                        <span class="detail-value">{{ formatShortDate(selectedOrder.beginDateTime) }} - {{
+                            formatShortDate(selectedOrder.endDateTime) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Статус:</span>
+                        <span class="status-badge" [ngClass]="getStatusClass(selectedOrder.wholesaleOrderStatus)">
+                            {{ getStatusText(selectedOrder.wholesaleOrderStatus) }}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Тип цены:</span>
+                        <span class="detail-value">{{ getViewPriceTypeText(selectedOrder.viewPriceType) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="selectedOrder.salePercent">
+                        <span class="detail-label">Скидка:</span>
+                        <span class="detail-value">{{ (selectedOrder.salePercent * 100).toFixed(2) }}%</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Контрагент</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Название:</span>
+                        <span class="detail-value">{{ selectedOrder.partnerInstance?.partner?.shortName || '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Полное название:</span>
+                        <span class="detail-value">{{ selectedOrder.partnerInstance?.partner?.fullName || '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">ИНН:</span>
+                        <span class="detail-value">{{ selectedOrder.partnerInstance?.partner?.inn || '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">ОГРН:</span>
+                        <span class="detail-value">{{ selectedOrder.partnerInstance?.partner?.ogrn || '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ selectedOrder.partnerInstance?.partner?.email || '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Клиент</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">ФИО:</span>
+                        <span class="detail-value">{{ getFullName(selectedOrder.userInstance) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="documents-section">
+                <h4>Документы ({{ selectedOrder.orderDocuments?.length || 0 }})</h4>
+                <div class="documents-list" *ngIf="selectedOrder.orderDocuments?.length">
+                    <div class="document-item" *ngFor="let doc of selectedOrder.orderDocuments">
+                        <div class="document-info">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                            <div class="document-details">
+                                <span class="document-name">{{ doc.fileInfo.fileName }}</span>
+                                <span class="document-type">{{ getDocumentTypeText(doc.orderDocumentType) }}</span>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button (click)="downloadDocument(doc.fileInfo.url, doc.fileInfo.fileName)"
+                                class="btn-download">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                            </button>
+                            <button (click)="confirmDeleteDocument(doc)" class="btn-delete-doc">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="no-documents" *ngIf="!selectedOrder.orderDocuments?.length">
+                    <p>Документы не загружены</p>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <h4>Действия</h4>
+                <div class="action-buttons">
+                    <button (click)="closeDetails(); openContractModal(selectedOrder!)" class="btn-action-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        Подписать договор
+                    </button>
+                    <button (click)="closeDetails(); openSbModal(selectedOrder!)" class="btn-action-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        Загрузить проверку СБ
+                    </button>
+                    <button *ngIf="selectedOrder.wholesaleOrderStatus !== 1"
+                        (click)="activateOrder(selectedOrder); closeDetails()" class="btn-action-success">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                        </svg>
+                        Разблокировать
+                    </button>
+                    <button *ngIf="selectedOrder.wholesaleOrderStatus === 1"
+                        (click)="deactivateOrder(selectedOrder); closeDetails()" class="btn-action-warning">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Заблокировать
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подписания договора -->
+<div class="modal-overlay" *ngIf="showContractModal" (click)="closeContractModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Подписание договора</h3>
+            <button class="btn-close" (click)="closeContractModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Тип цены для просмотра</label>
+                    <select [(ngModel)]="selectedViewPriceType">
+                        <option [ngValue]="null" disabled>Выберите тип цены...</option>
+                        <option *ngFor="let type of viewPriceTypes" [ngValue]="type.value">
+                            {{ type.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Процент скидки (0-8%)</label>
+                    <input type="number" [(ngModel)]="salePercentInput" min="0" max="8" step="0.1"
+                        placeholder="Например: 1.5" />
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Файл договора</label>
+                    <input type="file" (change)="onContractFileSelected($event)" accept=".pdf,.doc,.docx,.jpg,.png" />
+                    <small *ngIf="contractFile">{{ contractFile.name }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeContractModal()">Отмена</button>
+            <button class="btn-save" (click)="submitContract()" [disabled]="isUploading || !isContractFormValid()">
+                <span *ngIf="!isUploading">Подписать и загрузить</span>
+                <span *ngIf="isUploading" class="loading">
+                    <div class="spinner-small"></div>
+                    Загрузка...
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно загрузки СБ -->
+<div class="modal-overlay" *ngIf="showSbModal" (click)="closeSbModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Загрузка проверки СБ</h3>
+            <button class="btn-close" (click)="closeSbModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Файл проверки службы безопасности</label>
+                    <input type="file" (change)="onSbFileSelected($event)" accept=".pdf,.doc,.docx,.jpg,.png" />
+                    <small *ngIf="sbFile">{{ sbFile.name }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeSbModal()">Отмена</button>
+            <button class="btn-save" (click)="submitSbDocument()" [disabled]="isUploading || !sbFile">
+                <span *ngIf="!isUploading">Загрузить</span>
+                <span *ngIf="isUploading" class="loading">
+                    <div class="spinner-small"></div>
+                    Загрузка...
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Подтверждение удаления заявки -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="showDeleteConfirm = false">
+    <div class="modal modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Подтверждение удаления</h3>
+            <button class="btn-close" (click)="showDeleteConfirm = false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="warning-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+            </div>
+            <p class="warning-text">Удалить заявку № {{ selectedOrder?.number }}?</p>
+            <p class="warning-subtext">Это действие нельзя отменить.</p>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="showDeleteConfirm = false">Отмена</button>
+            <button class="btn-delete-confirm" (click)="deleteOrder()">Удалить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Подтверждение удаления документа -->
+<div class="modal-overlay" *ngIf="showDeleteDocConfirm" (click)="showDeleteDocConfirm = false">
+    <div class="modal modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Удаление документа</h3>
+            <button class="btn-close" (click)="showDeleteDocConfirm = false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="warning-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+            </div>
+            <p class="warning-text">Удалить документ?</p>
+            <p class="warning-subtext">{{ selectedDocument?.fileInfo?.fileName }}</p>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="showDeleteDocConfirm = false">Отмена</button>
+            <button class="btn-delete-confirm" (click)="deleteDocument()">Удалить</button>
+        </div>
+    </div>
+</div>

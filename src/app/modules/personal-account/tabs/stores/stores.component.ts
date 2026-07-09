@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil, catchError, finalize } from 'rxjs';
 import { environment } from '../../../../../environment';
@@ -153,13 +153,25 @@ interface ApiResponse<T> {
   pageSize?: number;
 }
 
+interface ScheduleCell {
+  day: number;
+  hour: number;
+  selected: boolean;
+}
+
+interface SchedulePreset {
+  id: string;
+  label: string;
+  hours: { day: number; open: number; close: number }[];
+}
+
 @Component({
   selector: 'app-stores',
   imports: [CommonModule, FormsModule],
   templateUrl: './stores.component.html',
   styleUrl: './stores.component.scss'
 })
-export class StoresComponent implements OnInit {
+export class StoresComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef;
 
   stores: ProductPlace[] = [];
@@ -180,13 +192,23 @@ export class StoresComponent implements OnInit {
   ];
 
   daysOfWeek = [
-    { value: 0, label: 'Понедельник' },
-    { value: 1, label: 'Вторник' },
-    { value: 2, label: 'Среда' },
-    { value: 3, label: 'Четверг' },
-    { value: 4, label: 'Пятница' },
-    { value: 5, label: 'Суббота' },
-    { value: 6, label: 'Воскресенье' }
+    { value: 0, label: 'Пн', full: 'Понедельник' },
+    { value: 1, label: 'Вт', full: 'Вторник' },
+    { value: 2, label: 'Ср', full: 'Среда' },
+    { value: 3, label: 'Чт', full: 'Четверг' },
+    { value: 4, label: 'Пт', full: 'Пятница' },
+    { value: 5, label: 'Сб', full: 'Суббота' },
+    { value: 6, label: 'Вс', full: 'Воскресенье' }
+  ];
+
+  timeSlots = Array.from({ length: 24 }, (_, i) => i);
+
+  schedulePresets: SchedulePreset[] = [
+    { id: '24/7', label: '24/7', hours: this.daysOfWeek.map(d => ({ day: d.value, open: 0, close: 24 })) },
+    { id: 'workday', label: 'Пн-Пт 9:00-18:00', hours: [0,1,2,3,4].map(d => ({ day: d, open: 9, close: 18 })) },
+    { id: 'retail', label: 'Ежедневно 10:00-22:00', hours: this.daysOfWeek.map(d => ({ day: d.value, open: 10, close: 22 })) },
+    { id: 'weekend', label: 'Сб-Вс 10:00-20:00', hours: [5,6].map(d => ({ day: d, open: 10, close: 20 })) },
+    { id: 'closed', label: 'Выходной', hours: [] }
   ];
 
   isLoading = false;
@@ -196,7 +218,9 @@ export class StoresComponent implements OnInit {
   showAddressModal = false;
   showPartnerModal = false;
   showScheduleModal = false;
+  showScheduleInline = false;
   isShowQuickView = false;
+  inlineScheduleStoreId: string | null = null;
 
   searchQuery = '';
   sortField = 'shortName';
@@ -209,7 +233,7 @@ export class StoresComponent implements OnInit {
   };
 
   currentPage = 1;
-  itemsPerPage = 12;
+  itemsPerPage = 100;
   totalPages = 1;
   Math = Math;
 
@@ -255,13 +279,14 @@ export class StoresComponent implements OnInit {
     typeOfActivity: ''
   };
 
-  scheduleForm: StoreSchedule = {
-    id: '',
-    isDeleted: false,
-    storeId: '',
-    workingHours: [],
-    exceptionDays: []
-  };
+  scheduleForm: {
+    storeScheduleId?: string;
+    workingHours: { day: number; open: number; close: number }[];
+    exceptionDays: ExceptionDay[];
+  } = {
+      workingHours: [],
+      exceptionDays: []
+    };
 
   getInstructions: string[] = [];
   advantageList: string[] = [];
@@ -277,6 +302,13 @@ export class StoresComponent implements OnInit {
 
   quickViewData: { store?: ProductPlace } = {};
 
+  scheduleGrid: ScheduleCell[][] = [];
+  isDragging = false;
+  dragValue: boolean | null = null;
+  dragStartCell: { day: number; hour: number } | null = null;
+
+  expandedRowId: string | null = null;
+
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -284,6 +316,7 @@ export class StoresComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStores();
+    this.initScheduleGrid();
 
     this.searchSubject.pipe(
       debounceTime(300),
@@ -343,6 +376,9 @@ export class StoresComponent implements OnInit {
             this.selectedStore = response.data;
           }
           this.calculateStats();
+          if (response.data.storeSchedule) {
+            this.loadScheduleToGrid(response.data.storeSchedule);
+          }
         }
       });
   }
@@ -362,6 +398,7 @@ export class StoresComponent implements OnInit {
 
   startCreate(): void {
     this.resetForm();
+    this.initScheduleGrid();
     this.isCreating = true;
     this.isEditing = false;
   }
@@ -385,6 +422,12 @@ export class StoresComponent implements OnInit {
     };
     this.getInstructions = [...(store.getInstructions || [])];
     this.advantageList = [...(store.advantageList || [])];
+
+    this.initScheduleGrid();
+    if (store.storeSchedule) {
+      this.loadScheduleToGrid(store.storeSchedule);
+    }
+
     this.isEditing = true;
     this.isCreating = false;
   }
@@ -496,8 +539,14 @@ export class StoresComponent implements OnInit {
       )
       .subscribe((response: any) => {
         if (response && response.data) {
+          const newStoreId = response.data.id;
+          
           if (this.selectedFiles.length > 0) {
-            this.uploadImages(response.data.id);
+            this.uploadImages(newStoreId);
+          }
+          
+          if (this.hasScheduleChanges()) {
+            this.saveSchedule(newStoreId, undefined);
           } else {
             this.loadStores();
             this.showNotification('Магазин создан', 'success');
@@ -541,6 +590,11 @@ export class StoresComponent implements OnInit {
         if (response && response.data) {
           if (this.selectedFiles.length > 0) {
             this.uploadImages(response.data.id);
+          }
+          
+          if (this.hasScheduleChanges()) {
+            const existingScheduleId = this.selectedStore?.storeSchedule?.id;
+            this.saveSchedule(response.data.id, existingScheduleId);
           } else {
             this.loadStores();
             if (this.selectedStore?.id === this.formData.id) {
@@ -552,6 +606,156 @@ export class StoresComponent implements OnInit {
         }
       });
   }
+  
+  hasScheduleChanges(): boolean {
+    return this.scheduleForm.workingHours.some(wh => wh.open < wh.close);
+  }
+
+  saveSchedule(storeId: string, existingScheduleId?: string): void {
+    if (!this.hasScheduleChanges()) return;
+
+    this.isLoading = true;
+
+    const scheduleIdToUse = existingScheduleId || this.selectedStore?.storeSchedule?.id;
+
+    const saveWorkingHours = (schedId: string): Promise<void> => {
+      const workingHoursRequests = this.scheduleForm.workingHours
+        .filter(wh => wh.open < wh.close)
+        .map(wh =>
+          this.http.post(
+            `${environment.production}/api/Entities/StoreScheduleWorkingHour`,
+            {
+              storeScheduleId: schedId,
+              dateTime: new Date().toISOString(),
+              dayOfWeek: wh.day,
+              openTime: this.formatTime(wh.open),
+              closeTime: this.formatTime(wh.close)
+            }
+          ).toPromise()
+        );
+
+      return workingHoursRequests.length > 0
+        ? Promise.all(workingHoursRequests).then(() => {})
+        : Promise.resolve();
+    };
+
+    const deleteWorkingHours = (workingHours: WorkingHour[]): Promise<void> => {
+      const deleteRequests = workingHours
+        .filter(wh => wh.id)
+        .map(wh => this.http.delete(`${environment.production}/api/Entities/StoreScheduleWorkingHour/${wh.id}`).toPromise());
+
+      return deleteRequests.length > 0
+        ? Promise.all(deleteRequests).then(() => {})
+        : Promise.resolve();
+    };
+
+    if (scheduleIdToUse) {
+      this.http.get<ApiResponse<StoreSchedule>>(
+        `${environment.production}/api/Entities/StoreSchedule/${scheduleIdToUse}`
+      ).pipe(
+        catchError(error => {
+          console.error('Ошибка получения расписания:', error);
+          this.isLoading = false;
+          return [];
+        })
+      ).subscribe((scheduleResponse: any) => {
+        if (scheduleResponse && scheduleResponse.data) {
+          deleteWorkingHours(scheduleResponse.data.workingHours || [])
+            .then(() => saveWorkingHours(scheduleIdToUse))
+            .then(() => {
+              this.loadStores();
+              if (this.selectedStore?.id === storeId) {
+                this.loadStoreDetails(storeId);
+              }
+              this.showNotification('Расписание обновлено', 'success');
+              this.cancelEdit();
+            })
+            .catch(error => {
+              console.error('Ошибка обновления рабочих часов:', error);
+              this.showNotification('Ошибка сохранения расписания', 'error');
+              this.isLoading = false;
+            });
+        } else {
+          this.isLoading = false;
+        }
+      });
+    } else {
+      this.http.post<ApiResponse<StoreSchedule>>(
+        `${environment.production}/api/Entities/StoreSchedule`,
+        { storeId }
+      ).pipe(
+        catchError(error => {
+          console.error('Ошибка создания расписания:', error);
+          this.isLoading = false;
+          return [];
+        })
+      ).subscribe((scheduleResponse: any) => {
+        if (scheduleResponse && scheduleResponse.data) {
+          const newScheduleId = scheduleResponse.data.id;
+
+          saveWorkingHours(newScheduleId)
+            .then(() => {
+              this.loadStores();
+              if (this.selectedStore?.id === storeId) {
+                this.loadStoreDetails(storeId);
+              }
+              this.showNotification('Расписание сохранено', 'success');
+              this.cancelEdit();
+            })
+            .catch(error => {
+              console.error('Ошибка сохранения рабочих часов:', error);
+              this.showNotification('Ошибка сохранения расписания', 'error');
+              this.isLoading = false;
+            });
+        } else {
+          this.isLoading = false;
+        }
+      });
+    }
+  }
+
+  formatTime(hour: number): string {
+    return `${hour.toString().padStart(2, '0')}:00`;
+  }
+
+
+  getScheduleDisplay(schedule?: StoreSchedule): string {
+  if (!schedule?.workingHours?.length) return '—';
+  
+  // Фильтруем и парсим рабочие часы
+  const parsedHours = schedule.workingHours
+    .filter(wh => {
+      const open = parseInt(wh.openTime.split(':')[0], 10);
+      const close = parseInt(wh.closeTime.split(':')[0], 10);
+      return open < close;
+    })
+    .map(h => ({
+      day: h.dayOfWeek,
+      open: parseInt(h.openTime.split(':')[0], 10),
+      close: parseInt(h.closeTime.split(':')[0], 10)
+    }));
+  
+  if (!parsedHours.length) return 'Выходной';
+  
+  // Проверяем, одинаковое ли время во все дни
+  const sameHours = parsedHours.every(h => 
+    h.open === parsedHours[0].open && h.close === parsedHours[0].close
+  );
+  
+  if (sameHours && parsedHours.length === 7) {
+    return `Ежедневно ${this.formatTime(parsedHours[0].open)}–${this.formatTime(parsedHours[0].close)}`;
+  }
+  if (sameHours) {
+    return `${this.formatTime(parsedHours[0].open)}–${this.formatTime(parsedHours[0].close)}`;
+  }
+  
+  // Формируем краткое описание для разных дней
+  return parsedHours
+    .map(h => `${this.daysOfWeek[h.day]?.label}:${this.formatTime(h.open)}-${this.formatTime(h.close)}`)
+    .slice(0, 3)
+    .join(', ') + (parsedHours.length > 3 ? '...' : '');
+}
+
 
   uploadImages(id: string): void {
     const formData = new FormData();
@@ -689,6 +893,10 @@ export class StoresComponent implements OnInit {
     this.selectedFiles = [];
     this.imagesToDelete = [];
     this.errors = {};
+    this.scheduleForm = {
+      workingHours: [],
+      exceptionDays: []
+    };
   }
 
   onSearchChange(): void {
@@ -785,23 +993,19 @@ export class StoresComponent implements OnInit {
   }
 
   getFullAddress(address?: Address): string {
-    if (!address) return 'Адрес не указан';
-
+    if (!address) return '—';
     const parts = [
-      address.region,
-      address.area,
       address.city,
       address.street,
       address.house,
       address.housing ? `корп. ${address.housing}` : '',
       address.office ? `оф. ${address.office}` : ''
     ].filter(p => p && p.trim());
-
-    return parts.join(', ') || 'Адрес не указан';
+    return parts.join(', ') || '—';
   }
 
   formatPhone(phone: string): string {
-    if (!phone) return 'Не указан';
+    if (!phone) return '—';
     return phone;
   }
 
@@ -828,7 +1032,6 @@ export class StoresComponent implements OnInit {
   getPaginationPages(): (number | string)[] {
     const pages: (number | string)[] = [];
     const maxVisible = 5;
-
     if (this.totalPages <= maxVisible) {
       for (let i = 1; i <= this.totalPages; i++) pages.push(i);
     } else {
@@ -840,13 +1043,50 @@ export class StoresComponent implements OnInit {
         [1, '...', this.currentPage - 1, this.currentPage, this.currentPage + 1, '...', this.totalPages].forEach(p => pages.push(p));
       }
     }
-
     return pages;
+  }
+
+  toggleRowExpand(storeId: string): void {
+    this.expandedRowId = this.expandedRowId === storeId ? null : storeId;
   }
 
   showQuickView(store: ProductPlace): void {
     this.quickViewData = { store };
     this.isShowQuickView = true;
+  }
+
+  openInlineSchedule(store: ProductPlace): void {
+    this.inlineScheduleStoreId = store.id;
+    this.showScheduleInline = true;
+    this.initScheduleGrid();
+    if (store.storeSchedule) {
+      this.loadScheduleToGrid(store.storeSchedule);
+    }
+  }
+
+  closeInlineSchedule(): void {
+    this.showScheduleInline = false;
+    this.inlineScheduleStoreId = null;
+  }
+
+  applySchedulePreset(presetId: string): void {
+    const preset = this.schedulePresets.find(p => p.id === presetId);
+    if (!preset) return;
+    
+    this.initScheduleGrid();
+    preset.hours.forEach(h => {
+      for (let hour = h.open; hour < h.close; hour++) {
+        const cell = this.scheduleGrid[h.day]?.[hour];
+        if (cell) cell.selected = true;
+      }
+    });
+    this.updateScheduleFormFromGrid();
+  }
+
+  saveInlineSchedule(storeId: string): void {
+    this.updateScheduleFormFromGrid();
+    this.saveSchedule(storeId, this.stores.find(s => s.id === storeId)?.storeSchedule?.id);
+    this.closeInlineSchedule();
   }
 
   openAddressModal(): void {
@@ -874,7 +1114,6 @@ export class StoresComponent implements OnInit {
 
   saveAddress(): void {
     if (!this.validateAddressForm()) return;
-
     this.isLoading = true;
     this.http.post<any>(`${environment.production}/api/Entities/Address`, this.addressForm)
       .pipe(
@@ -915,7 +1154,6 @@ export class StoresComponent implements OnInit {
 
   savePartner(): void {
     if (!this.validatePartnerForm()) return;
-
     this.isLoading = true;
     this.http.post<any>(`${environment.production}/api/Entities/Partner`, this.partnerForm)
       .pipe(
@@ -939,155 +1177,120 @@ export class StoresComponent implements OnInit {
   }
 
   openScheduleModal(): void {
+    this.initScheduleGrid();
     if (this.selectedStore?.storeSchedule) {
-      this.scheduleForm = {
-        ...this.selectedStore.storeSchedule,
-        workingHours: [...this.selectedStore.storeSchedule.workingHours],
-        exceptionDays: [...this.selectedStore.storeSchedule.exceptionDays]
-      };
-    } else {
-      this.scheduleForm = {
-        id: '',
-        isDeleted: false,
-        storeId: this.selectedStore?.id || this.formData.id || '',
-        workingHours: [],
-        exceptionDays: []
-      };
+      this.loadScheduleToGrid(this.selectedStore.storeSchedule);
     }
     this.showScheduleModal = true;
   }
 
-  addWorkingHour(): void {
-    this.scheduleForm.workingHours.push({
-      id: '',
-      isDeleted: false,
-      dateTime: new Date().toISOString(),
-      dayOfWeek: 0,
-      openTime: '09:00',
-      closeTime: '18:00'
+  initScheduleGrid(): void {
+    this.scheduleGrid = this.daysOfWeek.map(day =>
+      this.timeSlots.map(hour => ({
+        day: day.value,
+        hour,
+        selected: false
+      }))
+    );
+  }
+
+  loadScheduleToGrid(schedule: StoreSchedule): void {
+    this.initScheduleGrid();
+    schedule.workingHours.forEach(wh => {
+      const openHour = parseInt(wh.openTime.split(':')[0], 10);
+      const closeHour = parseInt(wh.closeTime.split(':')[0], 10);
+      for (let h = openHour; h < closeHour; h++) {
+        const cell = this.scheduleGrid[wh.dayOfWeek]?.[h];
+        if (cell) {
+          cell.selected = true;
+        }
+      }
     });
+    this.updateScheduleFormFromGrid();
   }
 
-  removeWorkingHour(index: number): void {
-    this.scheduleForm.workingHours.splice(index, 1);
-  }
-
-  addExceptionDay(): void {
-    this.scheduleForm.exceptionDays.push({
-      id: '',
-      isDeleted: false,
-      date: new Date().toISOString().split('T')[0],
-      isClosed: true,
-      openTime: '',
-      closeTime: ''
-    });
-  }
-
-  removeExceptionDay(index: number): void {
-    this.scheduleForm.exceptionDays.splice(index, 1);
-  }
-
-  saveSchedule(): void {
-    if (!this.selectedStore && !this.formData.id) {
-      this.showNotification('Сначала сохраните магазин', 'error');
-      return;
-    }
-
-    this.isLoading = true;
-    const storeId = this.selectedStore?.id || this.formData.id;
-
-    // Создаем или обновляем расписание
-    const schedulePayload = {
-      storeId: storeId
-    };
-
-    this.http.post<any>(`${environment.production}/api/Entities/StoreSchedule`, schedulePayload)
-      .pipe(
-        catchError(error => {
-          console.error('Ошибка создания расписания:', error);
-          this.showNotification('Ошибка создания расписания', 'error');
-          return [];
-        })
-      )
-      .subscribe((response: any) => {
-        if (response && response.data) {
-          const scheduleId = response.data.id;
-          
-          // Сохраняем рабочие дни
-          const workingHoursPromises = this.scheduleForm.workingHours.map(hour => {
-            return this.http.post<any>(`${environment.production}/api/Entities/StoreScheduleWorkingHour`, {
-              dateTime: hour.dateTime,
-              dayOfWeek: hour.dayOfWeek,
-              openTime: hour.openTime,
-              closeTime: hour.closeTime
-            }).toPromise();
-          });
-
-          // Сохраняем дни исключения
-          const exceptionDaysPromises = this.scheduleForm.exceptionDays.map(day => {
-            return this.http.post<any>(`${environment.production}/api/Entities/StoreScheduleExceptionDay`, {
-              date: day.date,
-              isClosed: day.isClosed,
-              openTime: day.isClosed ? '' : day.openTime,
-              closeTime: day.isClosed ? '' : day.closeTime
-            }).toPromise();
-          });
-
-          Promise.all([...workingHoursPromises, ...exceptionDaysPromises])
-            .then(() => {
-              this.showScheduleModal = false;
-              this.showNotification('Расписание сохранено', 'success');
-              if (this.selectedStore) {
-                this.loadStoreDetails(this.selectedStore.id);
-              }
-            })
-            .catch(error => {
-              console.error('Ошибка сохранения расписания:', error);
-              this.showNotification('Ошибка сохранения расписания', 'error');
-            })
-            .finally(() => {
-              this.isLoading = false;
-            });
-        } else {
-          this.isLoading = false;
+  updateScheduleFormFromGrid(): void {
+    const workingHours: { day: number; open: number; close: number }[] = [];
+    this.scheduleGrid.forEach((dayCells, dayIndex) => {
+      let inRange = false;
+      let openHour = 0;
+      dayCells.forEach(cell => {
+        if (cell.selected && !inRange) {
+          inRange = true;
+          openHour = cell.hour;
+        } else if (!cell.selected && inRange) {
+          inRange = false;
+          workingHours.push({ day: dayIndex, open: openHour, close: cell.hour });
         }
       });
+      if (inRange) {
+        workingHours.push({ day: dayIndex, open: openHour, close: 24 });
+      }
+    });
+    this.scheduleForm.workingHours = workingHours;
   }
 
-  getDayOfWeekName(dayOfWeek: number): string {
-    const day = this.daysOfWeek.find(d => d.value === dayOfWeek);
-    return day ? day.label : 'Неизвестно';
+  toggleCell(day: number, hour: number): void {
+    const cell = this.scheduleGrid[day]?.[hour];
+    if (cell) {
+      cell.selected = !cell.selected;
+      this.updateScheduleFormFromGrid();
+    }
   }
 
-  getScheduleSummary(schedule: StoreSchedule): string {
-    if (!schedule || !schedule.workingHours?.length) {
-      return 'Расписание не указано';
+  startDrag(day: number, hour: number, event: MouseEvent): void {
+    event.preventDefault();
+    const cell = this.scheduleGrid[day]?.[hour];
+    if (!cell) return;
+    this.isDragging = true;
+    this.dragValue = !cell.selected;
+    this.dragStartCell = { day, hour };
+    cell.selected = this.dragValue;
+    this.updateScheduleFormFromGrid();
+  }
+
+  onDragOver(day: number, hour: number, event: MouseEvent): void {
+    if (!this.isDragging || this.dragValue === null) return;
+    event.preventDefault();
+    const cell = this.scheduleGrid[day]?.[hour];
+    if (cell && cell.selected !== this.dragValue) {
+      cell.selected = this.dragValue;
+      this.updateScheduleFormFromGrid();
     }
+  }
 
-    const sortedHours = [...schedule.workingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
-    const firstDay = sortedHours[0];
-    const lastDay = sortedHours[sortedHours.length - 1];
+  endDrag(): void {
+    this.isDragging = false;
+    this.dragValue = null;
+    this.dragStartCell = null;
+  }
 
-    if (firstDay.openTime === lastDay.openTime && firstDay.closeTime === lastDay.closeTime) {
-      return `${firstDay.openTime} - ${firstDay.closeTime}`;
-    }
+  clearSchedule(): void {
+    this.initScheduleGrid();
+    this.updateScheduleFormFromGrid();
+  }
 
-    return `${this.getDayOfWeekName(firstDay.dayOfWeek)} - ${this.getDayOfWeekName(lastDay.dayOfWeek)}`;
+  getScheduleSummary(): string {
+    const activeDays = this.scheduleForm.workingHours.filter(wh => wh.open < wh.close);
+    if (activeDays.length === 0) return '—';
+    const dayLabels = activeDays.map(wh => this.daysOfWeek[wh.day]?.label).filter(Boolean);
+    if (dayLabels.length === 7) return 'Ежедневно';
+    return dayLabels.join(', ');
+  }
+
+  getDaySchedule(day: number): string {
+    const hours = this.scheduleForm.workingHours.filter(wh => wh.day === day && wh.open < wh.close);
+    if (hours.length === 0) return 'Выходной';
+    return hours.map(h => `${this.formatTime(h.open)}–${this.formatTime(h.close)}`).join(', ');
   }
 
   showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     const container = document.getElementById('notification-stack');
     if (!container) return;
-
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.innerHTML = `
-      <div class="notification-content">${message}</div>
-      <button class="notification-close">✕</button>
-    `;
-
+    notification.innerHTML = `<div class="notification-content">${message}</div><button class="notification-close">✕</button>`;
     container.appendChild(notification);
-
     setTimeout(() => {
       notification.classList.add('hide');
       setTimeout(() => notification.remove(), 300);
@@ -1104,11 +1307,9 @@ export class StoresComponent implements OnInit {
       'Адрес': this.getFullAddress(store.address),
       'Статус': store.isDeleted ? 'Удален' : 'Активен'
     }));
-
     const headers = Object.keys(data[0]).join(';');
     const rows = data.map(obj => Object.values(obj).map(val => `"${val}"`).join(';'));
     const csv = [headers, ...rows].join('\n');
-
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1121,5 +1322,9 @@ export class StoresComponent implements OnInit {
 
   generateReport(): void {
     this.showNotification('Отчет сгенерирован', 'success');
+  }
+
+  trackByFn(index: number, item: ProductPlace): string {
+    return item.id;
   }
 }

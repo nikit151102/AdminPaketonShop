@@ -1,0 +1,462 @@
+<div class="orders-wrapper" [class.fullscreen]="isFullscreen">
+    <!-- Toolbar -->
+    <div class="table-toolbar">
+        <div class="toolbar-left">
+            <h2>Управление заказами</h2>
+        </div>
+        <div class="toolbar-right">
+            <!-- Export -->
+            <div class="dropdown">
+                <button class="icon-btn" (click)="toggleDropdown('export')" title="Экспорт">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                </button>
+                <div class="dropdown-menu" *ngIf="activeDropdown === 'export'">
+                    <button (click)="exportCSV(); closeDropdown()">CSV</button>
+                    <button (click)="exportExcel(); closeDropdown()">Excel</button>
+                </div>
+            </div>
+
+            <!-- Columns -->
+            <div class="dropdown">
+                <button class="icon-btn" (click)="toggleDropdown('columns')" title="Колонки">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 18h5V5h-5v13zm-6 0h5V5H4v13zM16 5v13h5V5h-5z" />
+                    </svg>
+                </button>
+                <div class="dropdown-menu" *ngIf="activeDropdown === 'columns'">
+                    <button *ngFor="let col of columnOptions" (click)="toggleColumnVisibility(col); closeDropdown()">
+                        <span class="checkbox-icon">
+                            {{ isColumnVisible(col) ? '☑' : '☐' }}
+                        </span>
+                        {{ col.header }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Clear Filters -->
+            <button *ngIf="hasAnyFilters()" class="icon-btn" (click)="clearAllFilters()" title="Очистить все фильтры">
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+            </button>
+
+            <!-- Fullscreen -->
+            <button class="icon-btn" (click)="toggleFullscreen()"
+                [title]="isFullscreen ? 'Выйти из полного экрана' : 'Полный экран'">
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path *ngIf="!isFullscreen"
+                        d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                    <path *ngIf="isFullscreen"
+                        d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Filters -->
+    <div class="active-filters" *ngIf="hasAnyFilters()">
+        <span class="filters-label">Активные фильтры:</span>
+        <div class="filters-list">
+
+            <ng-container *ngFor="let col of columnOptions">
+
+                <span *ngIf="activeFilters[col.field] && isColumnVisible(col)" class="filter-tag">
+                    {{ col.header }}: {{ getFilterValuesDisplay(col) }}
+                    <button class="remove-filter" (click)="removeFilter(col.field)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                        </svg>
+                    </button>
+                </span>
+            </ng-container>
+
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="orders-table" *ngIf="isDesktop">
+            <thead>
+                <tr>
+                    <th *ngFor="let col of visibleColumns" [style.width]="col.width || 'auto'">
+                        <div class="th-content">
+                            <!-- Label + Sort -->
+                            <span class="th-label" (click)="toggleSort(col)">{{ col.header }}</span>
+
+                            <!-- Sort Button -->
+                            <button class="icon-btn-small" *ngIf="col.sortable" (click)="toggleSort(col)"
+                                title="Сортировка">
+                                <svg class="icon-small" viewBox="0 0 24 24" fill="currentColor">
+                                    <path *ngIf="getSortIcon(col) === 'unfold_more'"
+                                        d="M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z" />
+                                    <path *ngIf="getSortIcon(col) === 'arrow_upward'"
+                                        d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" />
+                                    <path *ngIf="getSortIcon(col) === 'arrow_downward'"
+                                        d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" />
+                                </svg>
+                            </button>
+
+                            <!-- Filter Button -->
+                            <div class="dropdown filter-dropdown" *ngIf="col.filterable">
+                                <button class="icon-btn-small" [class.active]="activeFilters[col.field]"
+                                    (click)="toggleDropdown('filter-' + col.field); $event.stopPropagation()"
+                                    title="Фильтр">
+                                    <svg class="icon-small" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                    </svg>
+                                </button>
+                                <div class="dropdown-menu filter-menu" *ngIf="activeDropdown === 'filter-' + col.field"
+                                    (click)="$event.stopPropagation()">
+                                    <app-filter-popover [column]="col"
+                                        [currentFilter]="activeFilters[col.field]?.values"
+                                        (apply)="applyFilter(col, $event.values, $event.type)">
+                                    </app-filter-popover>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                    <th class="col-actions">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let order of orders">
+                    <td *ngFor="let col of visibleColumns">
+                        <span *ngIf="col.field === 'orderNumber'" class="order-number">{{ order.orderNumber || '-'
+                            }}</span>
+                        <span *ngIf="col.field === 'orderDateTime'">{{ order.orderDateTime ?
+                            formatDate(order.orderDateTime) : '-' }}</span>
+                        <span *ngIf="col.field === 'orderStatus'" class="status-badge"
+                            [ngClass]="getOrderStatusClass(order.orderStatus)">
+                            {{ getOrderStatusText(order.orderStatus) }}
+                        </span>
+                        <span *ngIf="col.field === 'isPaidFor'" class="payment-badge" [class.paid]="order.isPaidFor">
+                            {{ order.isPaidFor ? 'Да' : 'Нет' }}
+                        </span>
+                        <span *ngIf="col.field === 'totalCost'" class="cost-value">{{ formatCurrency(order.totalCost)
+                            }}</span>
+                        <span *ngIf="col.field === 'productCount'" class="count-value">{{ order.productCount || 0
+                            }}</span>
+                        <span *ngIf="col.field === 'userInstance.fullName'" class="user-name">{{
+                            getUserName(order.userInstance) }}</span>
+                        <span *ngIf="col.field === 'userInstance.phoneNumber'" class="phone-value">{{
+                            order.userInstance?.phoneNumber || '-' }}</span>
+                        <span *ngIf="col.field === 'address.city'" class="city-value">{{ order.address?.city || '-'
+                            }}</span>
+                        <span *ngIf="col.field === 'deliveryType.shortName'" class="delivery-type">{{
+                            getDeliveryTypeName(order.deliveryType) }}</span>
+                    </td>
+                    <td class="col-actions">
+                        <div class="actions">
+                            <button (click)="openDetailsModal(order.id!)" class="btn-details" title="Подробнее">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                            <button (click)="openEditModal(order.id!)" class="btn-edit" title="Редактировать">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                            </button>
+                            <button (click)="confirmDelete(order.id!)" class="btn-delete" title="Удалить">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Mobile Cards -->
+        <div class="order-cards" *ngIf="!isDesktop">
+            <div class="order-card" *ngFor="let order of orders">
+                <div class="card-header">
+                    <div class="card-main-info">
+                        <h3 class="card-title">Заказ {{ order.orderNumber || '№ не указан' }}</h3>
+                        <p class="card-date">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {{ order.orderDateTime ? formatDate(order.orderDateTime) : '-' }}
+                        </p>
+                    </div>
+                    <span class="status-badge" [ngClass]="getOrderStatusClass(order.orderStatus)">
+                        {{ getOrderStatusText(order.orderStatus) }}
+                    </span>
+                </div>
+
+                <div class="card-extra-info">
+                    <p class="card-info"><strong>Клиент:</strong> {{ getUserName(order.userInstance) }}</p>
+                    <p class="card-info"><strong>Телефон:</strong> {{ order.userInstance?.phoneNumber || '-' }}</p>
+                    <p class="card-info"><strong>Город:</strong> {{ order.address?.city || '-' }}</p>
+                    <p class="card-info"><strong>Сумма:</strong> {{ formatCurrency(order.totalCost) }}</p>
+                    <p class="card-info"><strong>Товаров:</strong> {{ order.productCount || 0 }}</p>
+                    <p class="card-info"><strong>Доставка:</strong> {{ getDeliveryTypeName(order.deliveryType) }}</p>
+                    <p class="card-info"><strong>Оплачен:</strong> {{ order.isPaidFor ? 'Да' : 'Нет' }}</p>
+                </div>
+
+                <div class="card-actions">
+                    <button (click)="openDetailsModal(order.id!)" class="btn-details" title="Подробнее">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                    <button (click)="openEditModal(order.id!)" class="btn-edit" title="Редактировать">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                    <button (click)="confirmDelete(order.id!)" class="btn-delete" title="Удалить">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading / Empty -->
+        <div *ngIf="loading" class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Загрузка заказов...</p>
+        </div>
+
+        <div *ngIf="!loading && orders.length === 0" class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            <p>Заказы не найдены</p>
+            <button *ngIf="hasAnyFilters()" class="btn-primary" (click)="clearAllFilters()">Сбросить фильтры</button>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalCount > pageSize">
+        <span class="page-info">
+            Показано {{ Math.min(page * pageSize, totalCount) }} из {{ totalCount }}
+        </span>
+        <div class="page-controls">
+            <button class="page-btn" (click)="page > 0 && loadOrders(true)" [disabled]="page === 0">← Назад</button>
+            <span class="page-num">{{ page + 1 }}</span>
+            <button class="page-btn" (click)="loadOrders()" [disabled]="page * pageSize >= totalCount">Вперёд →</button>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeModal()">
+    <div class="modal modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Детали заказа {{ currentOrder.orderNumber }}</h3>
+            <button class="btn-close" (click)="closeModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="details-grid">
+                <div class="detail-section">
+                    <h4>Основная информация</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Номер заказа:</span>
+                        <span class="detail-value">{{ currentOrder.orderNumber || '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Дата заказа:</span>
+                        <span class="detail-value">{{ currentOrder.orderDateTime ?
+                            formatDate(currentOrder.orderDateTime) : '-' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Статус:</span>
+                        <span class="status-badge" [ngClass]="getOrderStatusClass(currentOrder.orderStatus)">
+                            {{ getOrderStatusText(currentOrder.orderStatus) }}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Оплачен:</span>
+                        <span class="detail-value">{{ currentOrder.isPaidFor ? 'Да' : 'Нет' }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Клиент</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Имя:</span>
+                        <span class="detail-value">{{ getUserName(currentOrder.userInstance) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="currentOrder.userInstance?.email">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ currentOrder.userInstance.email }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="currentOrder.userInstance?.phoneNumber">
+                        <span class="detail-label">Телефон:</span>
+                        <span class="detail-value">{{ currentOrder.userInstance.phoneNumber }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Доставка</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Адрес:</span>
+                        <span class="detail-value">{{ getAddressText(currentOrder.address) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Тип доставки:</span>
+                        <span class="detail-value">{{ getDeliveryTypeName(currentOrder.deliveryType) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="currentOrder.readyDateTime">
+                        <span class="detail-label">Готов к:</span>
+                        <span class="detail-value">{{ formatDate(currentOrder.readyDateTime) }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h4>Стоимость</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Стоимость товаров:</span>
+                        <span class="detail-value">{{ formatCurrency(currentOrder.orderCost) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Стоимость доставки:</span>
+                        <span class="detail-value">{{ formatCurrency(currentOrder.deliveryCost) }}</span>
+                    </div>
+                    <div class="detail-item total">
+                        <span class="detail-label">Итого:</span>
+                        <span class="detail-value">{{ formatCurrency(currentOrder.totalCost) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="products-section"
+                *ngIf="currentOrder.productPositions && currentOrder.productPositions?.length">
+                <h4>Товары в заказе ({{ currentOrder.productPositions.length }})</h4>
+                <div class="products-list">
+                    <div class="product-item" *ngFor="let position of currentOrder.productPositions">
+                        <div class="product-info">
+                            <span class="product-name">{{ position.product?.fullName || 'Товар' }}</span>
+                            <span class="product-article">Арт: {{ position.product?.article || '-' }}</span>
+                        </div>
+                        <div class="product-details">
+                            <span class="product-count">{{ position.count }} шт.</span>
+                            <span class="product-price">{{ formatCurrency(position.totalCost) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Редактирование заказа</h3>
+            <button class="btn-close" (click)="closeModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Статус заказа</label>
+                    <select [(ngModel)]="currentOrder.orderStatus">
+                        <option *ngFor="let status of orderStatuses" [value]="status.value">
+                            {{ status.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Тип оплаты</label>
+                    <select [(ngModel)]="currentOrder.paymentType">
+                        <option *ngFor="let type of paymentTypes" [value]="type.value">
+                            {{ type.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" [(ngModel)]="currentOrder.isPaidFor" />
+                        Оплачен
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" [(ngModel)]="currentOrder.consultation" />
+                        Консультация
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeModal()">Отмена</button>
+            <button class="btn-save" (click)="saveOrder()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
+    <div class="modal modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Подтверждение удаления</h3>
+            <button class="btn-close" (click)="cancelDelete()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="warning-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+            </div>
+            <p class="warning-text">Вы уверены, что хотите удалить этот заказ?</p>
+            <p class="warning-subtext">Это действие нельзя отменить.</p>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="cancelDelete()">Отмена</button>
+            <button class="btn-delete-confirm" (click)="deleteOrder()">Удалить</button>
+        </div>
+    </div>
+</div>
