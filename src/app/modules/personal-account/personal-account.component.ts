@@ -4,6 +4,7 @@ import { HeaderComponent } from '../../core/components/header/header.component';
 import { SidebarComponent } from '../../core/components/sidebar/sidebar.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { getSideMenu, SideMenuItem } from './side-menu';
+import { ProfileService } from '../../core/services/profile.service';
 
 @Component({
   selector: 'app-personal-account',
@@ -16,11 +17,15 @@ export class PersonalAccountComponent implements OnInit {
   sideMenu: SideMenuItem[] = [];
   sidebarCollapsed = false;
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(private sanitizer: DomSanitizer, private profileService:ProfileService) {}
 
   ngOnInit(): void {
     this.sideMenu = getSideMenu(this.sanitizer);
     this.checkScreenSize();
+
+    this.profileService.getProfileData().subscribe((data:any)=>{
+      console.log(data)
+    })
   }
 
   @HostListener('window:resize')

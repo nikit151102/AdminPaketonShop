@@ -285,42 +285,77 @@
     color: var(--primary);
   }
 
+
   .status-badge {
-    display: inline-block;
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 
-    &.status-new {
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--info);
+    // Черновик — серый
+    &.status-draft {
+      background: rgba(107, 114, 128, 0.1);
+      color: #6b7280;
     }
 
+    // В обработке — оранжевый
     &.status-processing {
       background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
+      color: #d97706;
     }
 
-    &.status-assembled {
+    // Подтвержден — синий
+    &.status-confirmed {
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+    }
+
+    // В сборке — фиолетовый
+    &.status-assembling {
       background: rgba(139, 92, 246, 0.1);
-      color: #8b5cf6;
+      color: #7c3aed;
     }
 
-    &.status-sent {
-      background: rgba(50, 113, 32, 0.1);
+    // Передан в доставку — зелёный (основной)
+    &.status-shipped {
+      background: rgba(50, 114, 32, 0.1);
       color: var(--primary);
     }
 
-    &.status-delivered {
+    // Готов к выдаче — ярко-зелёный
+    &.status-ready {
       background: rgba(16, 185, 129, 0.1);
-      color: var(--success);
+      color: #059669;
     }
 
-    &.status-cancelled {
+    // Выдан — зелёный с галочкой
+    &.status-delivered {
+      background: rgba(16, 185, 129, 0.15);
+      color: #047857;
+    }
+
+    // Отложен — жёлто-оранжевый
+    &.status-postponed {
+      background: rgba(245, 158, 11, 0.12);
+      color: #b45309;
+    }
+
+    // Отменен пользователем — красный
+    &.status-cancelled-user {
       background: rgba(220, 38, 38, 0.1);
-      color: var(--danger);
+      color: #dc2626;
+    }
+
+    // Отменен администратором — тёмно-красный
+    &.status-cancelled-admin {
+      background: rgba(153, 27, 27, 0.1);
+      color: #991b1b;
     }
   }
 

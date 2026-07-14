@@ -34,6 +34,12 @@ export class OrdersService {
     return this.http.put(`${this.apiUrl}/${id}`, cleanOrder);
   }
 
+
+
+  changeStatus(id: any, newOrderStatus: number | undefined): Observable<any> {
+    return this.http.put(`${this.apiUrl}/ChangeStatus/${id}`, { "newOrderStatus": newOrderStatus });
+  }
+
   delete(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }

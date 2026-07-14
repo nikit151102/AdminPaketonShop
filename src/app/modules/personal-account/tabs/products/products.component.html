@@ -1,712 +1,509 @@
 <div class="products-management">
-    <!-- Заголовок и управление -->
-    <div class="management-header">
-        <div class="header-content">
-            <h1 class="page-title">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z" />
-                    <path d="M9.5 5C7.01 5 5 7.01 5 9.5S7.01 14 9.5 14 14 11.99 14 9.5 11.99 5 9.5 5z" />
+  <!-- Header -->
+  <div class="management-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        Управление товарами
+      </h1>
+      <p class="page-subtitle">Создание, редактирование и управление товарами магазина</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Добавить товар
+      </button>
+      <div class="header-dropdown">
+        <button class="btn-secondary dropdown-toggle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Экспорт
+        </button>
+        <div class="dropdown-menu">
+          <button (click)="exportToCSV()">CSV</button>
+          <button (click)="importFromCSV()">Импорт из CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="control-panel">
+    <div class="control-section">
+      <div class="search-container">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchQueryChange($event)"
+          placeholder="Поиск по названию или артикулу..."/>
+        <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; loadProducts()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="filters-container">
+        <div class="filter-group">
+          <label>Категория:</label>
+          <select [(ngModel)]="selectedCategory" (change)="filterByCategory(selectedCategory)">
+            <option value="">Все категории</option>
+            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Сортировка:</label>
+          <select [(ngModel)]="sortField" (change)="sortBy(sortField)">
+            <option value="fullName">По названию</option>
+            <option value="article">По артикулу</option>
+            <option value="retailPrice">По цене</option>
+          </select>
+          <button class="sort-direction" (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'"
+            [class.desc]="sortDirection === 'desc'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12l7-7 7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn-view-mode" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+        <button class="btn-view-mode" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="4" y1="6" x2="4.01" y2="6"/><line x1="4" y1="12" x2="4.01" y2="12"/><line x1="4" y1="18" x2="4.01" y2="18"/>
+          </svg>
+        </button>
+        <button class="btn-clear-filters" (click)="clearFilters()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          Сбросить
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div *ngIf="selectedProducts.length > 0" class="bulk-actions-panel">
+      <div class="bulk-selection-info">
+        <span>Выбрано: {{ selectedProducts.length }}</span>
+        <button class="btn-clear-selection" (click)="selectedProducts = []">Очистить</button>
+      </div>
+      <div class="bulk-actions">
+        <select [(ngModel)]="bulkAction">
+          <option value="">Действие...</option>
+          <option value="delete">Удалить выбранное</option>
+        </select>
+        <button class="btn-primary" (click)="executeBulkAction()" [disabled]="!bulkAction">Применить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="products-content">
+    <div *ngIf="!isLoading; else loadingTpl" class="products-container">
+      <div *ngIf="products.length > 0; else emptyTpl">
+
+        <!-- GRID VIEW -->
+        <div *ngIf="viewMode === 'grid'" class="products-grid">
+          <div *ngFor="let product of products" class="product-card"
+            [class.selected]="selectedProducts.includes(product.id)">
+            <div class="card-checkbox">
+              <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
+                (change)="toggleProductSelection(product.id)"/>
+            </div>
+
+            <div class="card-image" (click)="selectProduct(product)">
+              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName"/>
+              <div *ngIf="!getProductImage(product)" class="image-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
                 </svg>
-                Управление товарами
-            </h1>
-            <p class="page-subtitle">Создание, редактирование и управление товарами магазина</p>
+              </div>
+              <div *ngIf="getTotalStock(product) === 0" class="stock-badge out">Нет в наличии</div>
+            </div>
+
+            <div class="card-body">
+              <h3 class="card-title" (click)="selectProduct(product)">{{ product.fullName }}</h3>
+              <div class="card-meta">
+                <span class="article-tag">{{ product.article }}</span>
+                <span class="card-price">{{ getProductPrice(product) | number:'1.2-2' }} ₽</span>
+              </div>
+              <div class="card-categories" *ngIf="product.productCategoryIds?.length">
+                <span class="cat-tag" *ngFor="let catId of product.productCategoryIds.slice(0, 2)">
+                  {{ getProductCategories(product) }}
+                </span>
+              </div>
+              <div class="card-stock">
+                Остаток: <strong>{{ getTotalStock(product) }}</strong> шт.
+              </div>
+              <div class="card-actions">
+                <button class="btn-action edit" (click)="startEdit(product)" title="Редактировать">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true" title="Удалить">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="header-actions">
-            <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        <!-- LIST VIEW -->
+        <div *ngIf="viewMode === 'list'" class="products-list">
+          <div class="list-header-row">
+            <div class="lc-check"></div>
+            <div class="lc-img"></div>
+            <div class="lc-name">Название</div>
+            <div class="lc-article">Артикул</div>
+            <div class="lc-price">Цена</div>
+            <div class="lc-stock">Остаток</div>
+            <div class="lc-actions">Действия</div>
+          </div>
+          <div *ngFor="let product of products" class="list-row"
+            [class.selected]="selectedProducts.includes(product.id)" (click)="selectProduct(product)">
+            <div class="lc-check" (click)="$event.stopPropagation()">
+              <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
+                (change)="toggleProductSelection(product.id)"/>
+            </div>
+            <div class="lc-img">
+              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName"/>
+              <div *ngIf="!getProductImage(product)" class="img-ph-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
                 </svg>
-                Добавить товар
-            </button>
-
-            <div class="header-dropdown">
-                <button class="btn-secondary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 10l5 5 5-5z" />
-                    </svg>
-                    Экспорт
-                </button>
-                <div class="dropdown-menu">
-                    <button (click)="exportToCSV()">CSV</button>
-                    <button (click)="importFromCSV()">Импорт из CSV</button>
-                </div>
+              </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Панель управления -->
-    <div class="control-panel">
-        <div class="control-section">
-            <!-- Поиск -->
-            <div class="search-container">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z" />
+            <div class="lc-name"><span class="name-text">{{ product.fullName }}</span></div>
+            <div class="lc-article"><span class="article-tag">{{ product.article }}</span></div>
+            <div class="lc-price"><span class="price-value">{{ getProductPrice(product) | number:'1.2-2' }} ₽</span></div>
+            <div class="lc-stock">
+              <span [class.out]="getTotalStock(product) === 0">{{ getTotalStock(product) }} шт.</span>
+            </div>
+            <div class="lc-actions" (click)="$event.stopPropagation()">
+              <button class="btn-action edit" (click)="startEdit(product)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchQueryChange($event)"
-                    placeholder="Поиск товаров по названию или артикулу..." />
-                <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; loadProducts()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Фильтры -->
-            <div class="filters-container">
-                <div class="filter-group">
-                    <label>Категория:</label>
-                    <select [(ngModel)]="selectedCategory" (change)="filterByCategory(selectedCategory)">
-                        <option value="">Все категории</option>
-                        <option *ngFor="let category of categories" [value]="category.id">
-                            {{ category.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Сортировка:</label>
-                    <select [(ngModel)]="sortField" (change)="sortBy(sortField)">
-                        <option value="fullName">По названию</option>
-                        <option value="article">По артикулу</option>
-                        <option value="price">По цене</option>
-                    </select>
-                    <button class="sort-direction" (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path *ngIf="sortDirection === 'asc'" d="M7 14l5-5 5 5z" />
-                            <path *ngIf="sortDirection === 'desc'" d="M7 10l5 5 5-5z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Быстрые действия -->
-            <div class="quick-actions">
-                <button class="btn-view-mode" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
-                    </svg>
-                </button>
-                <button class="btn-view-mode" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
-                    </svg>
-                </button>
-                <button class="btn-clear-filters" (click)="clearFilters()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                    </svg>
-                    Очистить фильтры
-                </button>
-            </div>
-        </div>
-
-        <!-- Массовые действия -->
-        <div *ngIf="selectedProducts.length > 0" class="bulk-actions-panel">
-            <div class="bulk-selection-info">
-                <span>Выбрано: {{ selectedProducts.length }} товаров</span>
-                <button class="btn-clear-selection" (click)="selectedProducts = []">
-                    Очистить выбор
-                </button>
-            </div>
-            <div class="bulk-actions">
-                <select [(ngModel)]="bulkAction">
-                    <option value="">Выберите действие...</option>
-                    <option value="delete">Удалить выбранное</option>
-                    <option value="category">Изменить категорию</option>
-                    <option value="price">Изменить цену</option>
-                </select>
-                <button class="btn-primary" (click)="executeBulkAction()" [disabled]="!bulkAction">
-                    Применить
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Основной контент -->
-    <div class="products-content">
-        <!-- Сетка товаров -->
-        <div *ngIf="!isLoading; else loading" class="products-container">
-            <!-- Список товаров -->
-            <div *ngIf="products.length > 0; else emptyProducts">
-                <!-- Режим сетки -->
-                <div *ngIf="viewMode === 'grid'" class="products-grid">
-                    <div *ngFor="let product of products" class="product-card">
-                        <div class="product-checkbox">
-                            <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
-                                (change)="toggleProductSelection(product.id)" />
-                        </div>
-
-                        <div class="product-image" (click)="selectProduct(product)">
-                            <img *ngIf="product.imageLinks.length > 0" [src]="product.imageLinks[0]"
-                                [alt]="product.fullName" />
-                            <div *ngIf="!product.imageLinks?.length" class="image-placeholder">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                </svg>
-                            </div>
-                            <div class="product-badge" *ngIf="getTotalStock(product) === 0">
-                                Нет в наличии
-                            </div>
-                        </div>
-
-                        <div class="product-info">
-                            <h3 class="product-title" (click)="selectProduct(product)">{{ product.fullName }}</h3>
-                            <div class="product-meta">
-                                <span class="product-article">Арт: {{ product.article }}</span>
-                                <span class="product-price">{{ product.price }} ₽</span>
-                            </div>
-
-                            <div class="product-categories">
-                                <span class="category-tag"
-                                    *ngFor="let categoryId of product.productCategoryIds.slice(0, 2)">
-                                    {{ getProductCategories(product) }}
-                                </span>
-                                <span *ngIf="product.productCategoryIds.length > 2" class="category-more">
-                                    +{{ product.productCategoryIds.length - 2 }}
-                                </span>
-                            </div>
-
-                            <div class="product-properties">
-                                <div class="property-item"
-                                    *ngFor="let prop of product.properties | keyvalue | slice:0:2">
-                                    <span class="property-key">{{ prop.key }}:</span>
-                                    <span class="property-value">{{ prop.value }}</span>
-                                </div>
-                            </div>
-
-                            <div class="product-stock">
-                                <span>Остатки: {{ getTotalStock(product) }} шт.</span>
-                            </div>
-
-                            <div class="product-actions">
-                                <button class="btn-action" (click)="startEdit(product)" title="Редактировать">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                    </svg>
-                                </button>
-                                <button class="btn-action danger"
-                                    (click)="selectedProduct = product; showDeleteConfirm = true" title="Удалить">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Режим списка -->
-                <div *ngIf="viewMode === 'list'" class="products-list">
-                    <div class="list-header">
-                        <div class="list-column">Изображение</div>
-                        <div class="list-column">Артикул</div>
-                        <div class="list-column">Название</div>
-                        <div class="list-column">Цена</div>
-                        <div class="list-column">Категории</div>
-                        <div class="list-column">Остатки</div>
-                        <div class="list-column">Действия</div>
-                    </div>
-
-                    <div *ngFor="let product of products" class="list-item">
-                        <div class="list-checkbox">
-                            <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
-                                (change)="toggleProductSelection(product.id)" />
-                        </div>
-
-                        <div class="list-column">
-                            <img *ngIf="product.imageLinks.length > 0" [src]="product.imageLinks[0]"
-                                [alt]="product.fullName" class="list-image" />
-                            <div *ngIf="!product.imageLinks?.length" class="list-image-placeholder">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        <div class="list-column">
-                            <span class="list-article">{{ product.article }}</span>
-                        </div>
-
-                        <div class="list-column">
-                            <span class="list-title" (click)="selectProduct(product)">{{ product.fullName }}</span>
-                        </div>
-
-                        <div class="list-column">
-                            <span class="list-price">{{ product.price }} ₽</span>
-                        </div>
-
-                        <div class="list-column">
-                            <span class="list-categories">{{ getProductCategories(product) }}</span>
-                        </div>
-
-                        <div class="list-column">
-                            <span class="list-stock" [class.out-of-stock]="getTotalStock(product) === 0">
-                                {{ getTotalStock(product) }} шт.
-                            </span>
-                        </div>
-
-                        <div class="list-column">
-                            <div class="list-actions">
-                                <button class="btn-action" (click)="startEdit(product)" title="Редактировать">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                    </svg>
-                                </button>
-                                <button class="btn-action danger"
-                                    (click)="selectedProduct = product; showDeleteConfirm = true" title="Удалить">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Пустой список -->
-            <ng-template #emptyProducts>
-                <div class="empty-products">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z" />
-                    </svg>
-                    <h3>Товары не найдены</h3>
-                    <p>Попробуйте изменить условия поиска или фильтры</p>
-                    <button class="btn-primary" (click)="clearFilters()">
-                        Сбросить фильтры
-                    </button>
-                </div>
-            </ng-template>
-        </div>
-
-        <!-- Загрузка -->
-        <ng-template #loading>
-            <div class="loading-products">
-                <div class="loading-spinner"></div>
-                <p>Загрузка товаров...</p>
-            </div>
-        </ng-template>
-
-        <!-- Пагинация -->
-        <div *ngIf="products.length > 0 && totalPages > 1" class="pagination">
-            <button class="pagination-btn" (click)="prevPage()" [disabled]="currentPage === 0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+              </button>
+              <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                 </svg>
-                Назад
-            </button>
-
-            <div class="pagination-pages">
-                <button *ngFor="let page of generatePageNumbers()" class="pagination-page"
-                    [class.active]="page === currentPage + 1" (click)="goToPage(page)" [disabled]="page === '...'">
-                    {{ page }}
-                </button>
+              </button>
             </div>
-
-            <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
-                Вперед
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-                </svg>
-            </button>
-
-            <div class="pagination-info">
-                Показано {{ products.length }} из {{ totalProducts }} товаров
-            </div>
+          </div>
         </div>
+      </div>
+
+      <ng-template #emptyTpl>
+        <div class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <h3>Товары не найдены</h3>
+          <p>Попробуйте изменить условия поиска</p>
+          <button class="btn-primary" (click)="clearFilters()">Сбросить фильтры</button>
+        </div>
+      </ng-template>
     </div>
 
-    <!-- Форма создания товара -->
-    <div *ngIf="isCreating" class="modal-overlay active">
-        <div class="modal-container large">
-            <form class="product-form" (ngSubmit)="createProduct()">
-                <div class="modal-header">
-                    <h2>Добавление нового товара</h2>
-                    <button type="button" class="modal-close" (click)="cancelCreate()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                        </svg>
-                    </button>
-                </div>
+    <ng-template #loadingTpl>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Загрузка товаров...</p>
+      </div>
+    </ng-template>
 
-                <div class="modal-content">
-                    <!-- Основная информация -->
-                    <div class="form-section">
-                        <h3>Основная информация</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Артикул *</label>
-                                <input type="text" [(ngModel)]="newProduct.article" name="article" required>
-                            </div>
+    <!-- Pagination -->
+    <div *ngIf="products.length > 0 && totalPages > 1" class="pagination">
+      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <div class="page-numbers">
+        <button *ngFor="let p of generatePageNumbers()" class="page-num"
+          [class.active]="p === currentPage + 1" (click)="goToPage(p)" [disabled]="p === '...'">
+          {{ p }}
+        </button>
+      </div>
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+      <span class="page-info">{{ products.length }} из {{ totalProducts }}</span>
+    </div>
+  </div>
+</div>
 
-                            <div class="form-group">
-                                <label>Название *</label>
-                                <input type="text" [(ngModel)]="newProduct.fullName" name="fullName" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Короткое название</label>
-                                <input type="text" [(ngModel)]="newProduct.shortName" name="shortName">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Описание</label>
-                            <textarea [(ngModel)]="newProduct.description" name="description" rows="4"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Цены -->
-                    <div class="form-section">
-                        <h3>Цены</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Розничная цена *</label>
-                                <input type="number" [(ngModel)]="newProduct.retailPrice" name="retailPrice" required
-                                    step="0.01">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Оптовая цена</label>
-                                <input type="number" [(ngModel)]="newProduct.wholesalePrice" name="wholesalePrice"
-                                    step="0.01">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Категории -->
-                    <div class="form-section">
-                        <h3>Категории</h3>
-                        <div class="categories-selector">
-                            <div class="categories-list">
-                                <div *ngFor="let category of categories" class="category-option">
-                                    <input type="checkbox" [id]="'cat-' + category.id" [value]="category.id"
-                                        [(ngModel)]="newProduct.productCategories"
-                                        [ngModelOptions]="{standalone: true}">
-                                    <label [for]="'cat-' + category.id">{{ category.name }}</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Изображения -->
-                    <div class="form-section">
-                        <h3>Изображения</h3>
-                        <div class="image-upload-section">
-                            <div class="image-upload-dropzone" (click)="imageUpload.click()">
-                                <input #imageUpload type="file" accept="image/*" (change)="onImageUpload($event)"
-                                    hidden />
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                                </svg>
-                                <p>Перетащите или выберите изображения</p>
-                                <span>JPG, PNG, размер до 5MB</span>
-                            </div>
-
-                            <div *ngIf="isUploadingImage" class="uploading-images">
-                                <div class="spinner-small"></div>
-                                <span>Загрузка...</span>
-                            </div>
-
-                            <div *ngIf="uploadedImages.length > 0" class="uploaded-images">
-                                <div *ngFor="let image of uploadedImages; let i = index" class="uploaded-image">
-                                    <img [src]="image.url" [alt]="'Изображение ' + (i + 1)">
-                                    <button type="button" class="remove-image" (click)="removeImage(i)">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                            <path
-                                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Свойства -->
-                    <div class="form-section">
-                        <div class="section-header">
-                            <h3>Свойства товара</h3>
-                            <button type="button" class="btn-small" (click)="addProperty()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                                </svg>
-                                Добавить свойство
-                            </button>
-                        </div>
-
-                        <div class="properties-form">
-                            <div *ngFor="let prop of productProperties; let i = index" class="property-row">
-                                <input type="text" [(ngModel)]="prop.key" [name]="'prop-key-' + i"
-                                    placeholder="Название свойства">
-                                <input type="text" [(ngModel)]="prop.value" [name]="'prop-value-' + i"
-                                    placeholder="Значение">
-                                <button type="button" class="btn-remove-property" (click)="removeProperty(i)"
-                                    [disabled]="productProperties.length === 1">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="submit" class="btn-primary" [disabled]="isLoading">
-                        <span *ngIf="!isLoading">Создать товар</span>
-                        <span *ngIf="isLoading" class="loading">
-                            <div class="spinner-small"></div>
-                            Создание...
-                        </span>
-                    </button>
-                    <button type="button" class="btn-secondary" (click)="cancelCreate()">
-                        Отмена
-                    </button>
-                </div>
-            </form>
+<!-- CREATE MODAL -->
+<div class="modal-overlay" *ngIf="isCreating" (click)="cancelCreate()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Новый товар</h2>
+      <button class="modal-close" (click)="cancelCreate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <form class="modal-body" (ngSubmit)="createProduct()">
+      <div class="form-section">
+        <h3>Основная информация</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Артикул <span class="req">*</span></label>
+            <input [(ngModel)]="newProduct.article" name="article" required/>
+          </div>
+          <div class="form-group">
+            <label>Название <span class="req">*</span></label>
+            <input [(ngModel)]="newProduct.fullName" name="fullName" required/>
+          </div>
+          <div class="form-group">
+            <label>Короткое название</label>
+            <input [(ngModel)]="newProduct.shortName" name="shortName"/>
+          </div>
         </div>
+        <div class="form-group full">
+          <label>Описание</label>
+          <textarea [(ngModel)]="newProduct.description" name="description" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Цены</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Розничная цена <span class="req">*</span></label>
+            <input type="number" [(ngModel)]="newProduct.retailPrice" name="retailPrice" required step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Оптовая цена</label>
+            <input type="number" [(ngModel)]="newProduct.wholesalePrice" name="wholesalePrice" step="0.01"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Категории</h3>
+        <div class="categories-selector">
+          <label *ngFor="let cat of categories" class="cat-checkbox">
+            <input type="checkbox" [value]="cat.id" [(ngModel)]="newProduct.productCategories"
+              [ngModelOptions]="{standalone: true}"/>
+            <span class="cat-check-mark"></span>
+            <span>{{ cat.name }}</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Изображения</h3>
+        <div class="upload-dropzone" (click)="imageUpload.click()">
+          <input #imageUpload type="file" accept="image/*" (change)="onImageUpload($event)" hidden/>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p>Нажмите для загрузки изображений</p>
+        </div>
+        <div *ngIf="uploadedImages.length" class="uploaded-grid">
+          <div *ngFor="let img of uploadedImages; let i = index" class="uploaded-thumb">
+            <img [src]="img.url" alt="img"/>
+            <button type="button" class="remove-img" (click)="removeImage(i)">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-header-row">
+          <h3>Свойства</h3>
+          <button type="button" class="btn-small" (click)="addProperty()">+ Свойство</button>
+        </div>
+        <div *ngFor="let prop of productProperties; let i = index" class="prop-row">
+          <input [(ngModel)]="prop.key" [name]="'pk'+i" placeholder="Ключ"/>
+          <input [(ngModel)]="prop.value" [name]="'pv'+i" placeholder="Значение"/>
+          <button type="button" class="btn-remove-prop" (click)="removeProperty(i)"
+            [disabled]="productProperties.length === 1">✕</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelCreate()">Отмена</button>
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Создание...' : 'Создать товар' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" *ngIf="isEditing" (click)="cancelEdit()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Редактирование товара</h2>
+      <button class="modal-close" (click)="cancelEdit()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <form class="modal-body" (ngSubmit)="updateProduct()">
+      <div class="form-section">
+        <h3>Основная информация</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Артикул <span class="req">*</span></label>
+            <input [(ngModel)]="editProduct.article" name="editArticle" required/>
+          </div>
+          <div class="form-group">
+            <label>Название <span class="req">*</span></label>
+            <input [(ngModel)]="editProduct.fullName" name="editFullName" required/>
+          </div>
+          <div class="form-group">
+            <label>Короткое название</label>
+            <input [(ngModel)]="editProduct.shortName" name="editShortName"/>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Описание</label>
+          <textarea [(ngModel)]="editProduct.description" name="editDescription" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3>Цены</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Розничная цена <span class="req">*</span></label>
+            <input type="number" [(ngModel)]="editProduct.retailPrice" name="editRetailPrice" required step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Оптовая цена</label>
+            <input type="number" [(ngModel)]="editProduct.wholesalePrice" name="editWholesalePrice" step="0.01"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelEdit()">Отмена</button>
+        <button type="submit" class="btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Сохранение...' : 'Сохранить' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="modal-overlay" *ngIf="isViewingDetails && selectedProduct" (click)="closeDetails()">
+  <div class="modal modal-xl" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedProduct.fullName }}</h2>
+      <button class="modal-close" (click)="closeDetails()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body details-body">
+      <div class="details-top">
+        <div class="details-image">
+          <img *ngIf="getProductImage(selectedProduct)" [src]="getProductImage(selectedProduct)" [alt]="selectedProduct.fullName"/>
+          <div *ngIf="!getProductImage(selectedProduct)" class="img-ph-lg">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+        </div>
+        <div class="details-main">
+          <div class="detail-row"><span class="dl">Артикул:</span><span class="dv mono">{{ selectedProduct.article }}</span></div>
+          <div class="detail-row"><span class="dl">Цена:</span><span class="dv price">{{ getProductPrice(selectedProduct) | number:'1.2-2' }} ₽</span></div>
+          <div class="detail-row"><span class="dl">Остаток:</span><span class="dv">{{ getTotalStock(selectedProduct) }} шт.</span></div>
+          <div class="detail-row"><span class="dl">Категории:</span><span class="dv">{{ getProductCategories(selectedProduct) }}</span></div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedProduct.description" class="details-section">
+        <h3>Описание</h3>
+        <p class="desc-text">{{ selectedProduct.description }}</p>
+      </div>
+
+      <div *ngIf="selectedProduct.remains && getTotalStock(selectedProduct) > 0" class="details-section">
+        <h3>Остатки на складах</h3>
+        <div class="remains-grid">
+          <div *ngFor="let r of selectedProduct.remains | keyvalue" class="remain-row">
+            <span class="remain-loc">{{ r.key }}</span>
+            <span class="remain-val">{{ r.value }} шт.</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedProduct.properties && (selectedProduct.properties | keyvalue).length" class="details-section">
+        <h3>Характеристики</h3>
+        <div class="props-grid">
+          <div *ngFor="let p of selectedProduct.properties | keyvalue" class="prop-item">
+            <span class="prop-key">{{ p.key }}</span>
+            <span class="prop-val">{{ p.value }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Форма редактирования -->
-    <div *ngIf="isEditing" class="modal-overlay active">
-        <div class="modal-container large">
-            <form class="product-form" (ngSubmit)="updateProduct()">
-                <div class="modal-header">
-                    <h2>Редактирование товара</h2>
-                    <button type="button" class="modal-close" (click)="cancelEdit()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="modal-content">
-                    <!-- Аналогичная форма, но с данными editProduct -->
-                    <!-- Для краткости показана только структура -->
-                    <div class="form-section">
-                        <h3>Основная информация</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Артикул *</label>
-                                <input type="text" [(ngModel)]="editProduct.article" name="editArticle" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Название *</label>
-                                <input type="text" [(ngModel)]="editProduct.fullName" name="editFullName" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Короткое название</label>
-                                <input type="text" [(ngModel)]="editProduct.shortName" name="editShortName">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Описание</label>
-                            <textarea [(ngModel)]="editProduct.description" name="editDescription" rows="4"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Остальные секции аналогично форме создания -->
-                </div>
-
-                <div class="modal-actions">
-                    <button type="submit" class="btn-primary" [disabled]="isLoading">
-                        <span *ngIf="!isLoading">Сохранить изменения</span>
-                        <span *ngIf="isLoading" class="loading">
-                            <div class="spinner-small"></div>
-                            Сохранение...
-                        </span>
-                    </button>
-                    <button type="button" class="btn-secondary" (click)="cancelEdit()">
-                        Отмена
-                    </button>
-                </div>
-            </form>
-        </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDetails()">Закрыть</button>
+      <button class="btn-primary" (click)="closeDetails(); startEdit(selectedProduct!)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Редактировать
+      </button>
+      <button class="btn-danger" (click)="showDeleteConfirm = true">Удалить</button>
     </div>
+  </div>
+</div>
 
-    <!-- Детали товара -->
-    <div *ngIf="isViewingDetails && selectedProduct" class="modal-overlay active">
-        <div class="modal-container extra-large">
-            <div class="product-details">
-                <div class="modal-header">
-                    <h2>{{ selectedProduct.fullName }}</h2>
-                    <button type="button" class="modal-close" (click)="closeDetails()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="modal-content">
-                    <div class="details-content">
-                        <!-- Галерея изображений -->
-                        <div class="details-gallery">
-                            <div class="main-image">
-                                <img *ngIf="selectedProduct.imageLinks.length > 0" [src]="selectedProduct.imageLinks[0]"
-                                    [alt]="selectedProduct.fullName" />
-                                <div *ngIf="!selectedProduct.imageLinks?.length" class="image-placeholder-large">
-                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <div *ngIf="selectedProduct.imageLinks.length > 1" class="thumbnail-list">
-                                <div *ngFor="let image of selectedProduct.imageLinks.slice(1, 5)" class="thumbnail">
-                                    <img [src]="image" [alt]="selectedProduct.fullName">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Основная информация -->
-                        <div class="details-info">
-                            <div class="info-section">
-                                <h3>Основная информация</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <span class="info-label">Артикул:</span>
-                                        <span class="info-value">{{ selectedProduct.article }}</span>
-                                    </div>
-
-                                    <div class="info-item">
-                                        <span class="info-label">Цена:</span>
-                                        <span class="info-value price">{{ selectedProduct.price }} ₽</span>
-                                    </div>
-
-                                    <div class="info-item">
-                                        <span class="info-label">Общее количество:</span>
-                                        <span class="info-value">{{ getTotalStock(selectedProduct) }} шт.</span>
-                                    </div>
-
-                                    <div class="info-item">
-                                        <span class="info-label">Категории:</span>
-                                        <span class="info-value">{{ getProductCategories(selectedProduct) }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Описание -->
-                            <div *ngIf="selectedProduct.description" class="info-section">
-                                <h3>Описание</h3>
-                                <p class="description">{{ selectedProduct.description }}</p>
-                            </div>
-
-                            <!-- Остатки на складах -->
-                            <div class="info-section">
-                                <h3>Остатки на складах</h3>
-                                <div class="remains-list">
-                                    <div *ngFor="let remain of selectedProduct.remains | keyvalue" class="remain-item">
-                                        <span class="remain-location">{{ remain.key }}</span>
-                                        <span class="remain-count">{{ remain.value }} шт.</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Свойства -->
-                            <div *ngIf="selectedProduct.properties" class="info-section">
-                                <h3>Характеристики</h3>
-                                <div class="properties-list">
-                                    <div *ngFor="let prop of selectedProduct.properties | keyvalue"
-                                        class="property-item">
-                                        <span class="property-key">{{ prop.key }}:</span>
-                                        <span class="property-value">{{ prop.value }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn-primary" (click)="startEdit(selectedProduct)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                        </svg>
-                        Редактировать
-                    </button>
-                    <button class="btn-danger" (click)="showDeleteConfirm = true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                        </svg>
-                        Удалить
-                    </button>
-                    <button class="btn-secondary" (click)="closeDetails()">
-                        Закрыть
-                    </button>
-                </div>
-            </div>
-        </div>
+<!-- DELETE CONFIRM -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="showDeleteConfirm = false">
+  <div class="modal modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Подтверждение удаления</h3>
+      <button class="modal-close" (click)="showDeleteConfirm = false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
-
-    <!-- Подтверждение удаления -->
-    <div *ngIf="showDeleteConfirm" class="modal-overlay active">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>Подтверждение удаления</h3>
-                <button class="modal-close" (click)="showDeleteConfirm = false">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="modal-content">
-                <div class="warning-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                    </svg>
-                </div>
-
-                <p>Вы уверены, что хотите удалить товар <strong>{{ selectedProduct?.fullName }}</strong>?</p>
-
-                <div class="warning-list">
-                    <p>Это действие приведет к:</p>
-                    <ul>
-                        <li>Полному удалению товара из системы</li>
-                        <li>Удалению всех связанных изображений</li>
-                        <li>Удалению истории изменений цен</li>
-                        <li>Невозможности восстановления</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn-danger" (click)="deleteProduct()" [disabled]="isLoading">
-                    <span *ngIf="!isLoading">Удалить</span>
-                    <span *ngIf="isLoading" class="loading">
-                        <div class="spinner-small"></div>
-                        Удаление...
-                    </span>
-                </button>
-                <button class="btn-secondary" (click)="showDeleteConfirm = false" [disabled]="isLoading">
-                    Отмена
-                </button>
-            </div>
-        </div>
+    <div class="modal-body confirm-body">
+      <svg class="warn-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <p>Удалить товар <strong>{{ selectedProduct?.fullName }}</strong>?</p>
+      <p class="warn-sub">Это действие необратимо.</p>
     </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showDeleteConfirm = false">Отмена</button>
+      <button class="btn-danger" (click)="deleteProduct()" [disabled]="isLoading">
+        {{ isLoading ? 'Удаление...' : 'Удалить' }}
+      </button>
+    </div>
+  </div>
 </div>

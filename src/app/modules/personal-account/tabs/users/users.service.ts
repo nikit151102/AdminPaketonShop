@@ -11,10 +11,10 @@ export class UsersService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(filters: any[] = [], page: number = 0, pageSize: number = 30): Observable<any> {
+  getAll(filters: any[] = [], sorts: any, page: number = 0, pageSize: number = 30): Observable<any> {
     return this.http.post(`${this.apiUrl}/Filter`, {
       filters,
-      sorts: [],
+      sorts,
       page,
       pageSize
     });

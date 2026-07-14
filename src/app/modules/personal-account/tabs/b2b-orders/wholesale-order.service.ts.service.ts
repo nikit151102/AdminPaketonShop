@@ -76,6 +76,16 @@ export class WholesaleOrderService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.production}/api/Entities/WholesaleOrder`;
 
+    /**
+   * Создание новой заявки на оптовые цены
+   * POST /api/Entities/WholesaleOrder
+   * @param orderData - данные для создания заявки
+   * @returns Observable с созданной заявкой
+   */
+  createOrder(orderData: any): Observable<any> {
+    return this.http.post<any>(this.baseUrl, orderData);
+  }
+
   private getHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({

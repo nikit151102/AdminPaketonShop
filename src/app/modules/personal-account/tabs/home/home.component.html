@@ -1,79 +1,413 @@
 <div class="dashboard">
+  <div class="dashboard-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        Дашборд
+      </h1>
+      <p class="page-subtitle">Аналитика и ключевые показатели</p>
+    </div>
 
-  <!-- ===========================
-       Верхний блок: KPI-плитки
-  =========================== -->
-  <div class="kpi-tiles">
-    <div class="tile" *ngFor="let tile of tiles">
-      <div class="tile-title">
-        <!-- <div class="tile-icon" [style.background]="tile.bgColor" [innerHTML]="tile.icon"></div> -->
-
-        <h4>{{ tile.title }}</h4>
+    <div class="header-filters">
+      <div class="filter-item">
+        <label>Период</label>
+        <div class="date-range">
+          <input type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()">
+          <span>—</span>
+          <input type="date" [(ngModel)]="dateTo" (change)="onFilterChange()">
+        </div>
       </div>
-      <div class="tile-content">
 
-        <p>{{ tile.value }}</p>
-        <small>{{ tile.subtitle }}</small>
+      <div class="filter-item">
+        <label>Сравнение</label>
+        <select [(ngModel)]="compareMode" (change)="onFilterChange()">
+          <option value="none">Нет</option>
+          <option value="prev_period">Прошлый период</option>
+          <option value="prev_year">Прошлый год</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label>Клиенты</label>
+        <select [(ngModel)]="clientType" (change)="onFilterChange()">
+          <option [value]="0">Все</option>
+          <option [value]="1">B2C</option>
+          <option [value]="2">B2B</option>
+        </select>
+      </div>
+
+      <button class="btn-refresh" (click)="loadStatistics()" [disabled]="isLoading">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [class.spinning]="isLoading">
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Загрузка данных...</p>
+  </div>
+
+  <div class="kpi-tiles" *ngIf="!isLoading && kpiTiles.length">
+    <div class="kpi-tile" *ngFor="let tile of kpiTiles" [style.--tile-color]="tile.color">
+      <div class="kpi-body">
+        <div class="kpi-title">{{ tile.title }}</div>
+        <div class="kpi-value">{{ tile.value }}</div>
+        <div class="kpi-footer">
+          <span class="kpi-subtitle">{{ tile.subtitle }}</span>
+          <span class="kpi-trend" [ngClass]="getTrendClass(tile.trend)" *ngIf="tile.trend !== 0">
+            {{ tile.trend > 0 ? '▲' : '▼' }} {{ tile.trendLabel }}
+          </span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===========================
-       Основные карточки
-  =========================== -->
-  <div class="cards">
-    <div class="card" *ngFor="let stat of stats">
-      <div class="card-header">
-        <div class="header-left">
-          <!-- <span class="icon" [style.background]="stat.iconBg">{{ stat.icon }}</span> -->
-          <span class="title">{{ stat.header }}</span>
+  <div class="charts-section" *ngIf="!isLoading && stats">
+
+    <div class="chart-card wide" *ngIf="statusCountChartData.datasets.length > 0">
+      <div class="chart-header">
+        <h3>Динамика статусов заказов</h3>
+        <div class="chart-controls">
+          <!-- Переключатель режима отображения -->
+          <div class="view-mode-group">
+            <button class="mode-btn" [class.active]="statusViewMode === 'count'"
+              (click)="toggleStatusViewMode('count')">
+              Количество
+            </button>
+            <button class="mode-btn" [class.active]="statusViewMode === 'sum'" (click)="toggleStatusViewMode('sum')">
+              Сумма ₽
+            </button>
+            <button class="mode-btn" [class.active]="statusViewMode === 'avg'" (click)="toggleStatusViewMode('avg')">
+              Ср. чек
+            </button>
+          </div>
+
+          <!-- Переключатель типа графика -->
+          <button class="chart-toggle" (click)="toggleChartType()">
+            <svg *ngIf="mainChartType === 'bar'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <svg *ngIf="mainChartType === 'line'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+            {{ mainChartType === 'bar' ? 'Линии' : 'Столбцы' }}
+          </button>
         </div>
-        <span class="trend" [ngClass]="stat.trend > 0 ? 'up' : 'down'">
-          {{ stat.trend > 0 ? '▲' : '▼' }} {{ stat.trend }}%
-        </span>
       </div>
-      <div class="card-body">
-        <div class="value">
-          <h3>{{ stat.value }}</h3>
-          <small>{{ stat.description }}</small>
-        </div>
 
-        <div class="extra-metrics">
-          <div><span>Сегодня:</span> <strong>{{ stat.today }}</strong></div>
-          <div><span>Вчера:</span> <strong>{{ stat.yesterday }}</strong></div>
-          <div><span>Среднее:</span> <strong>{{ stat.avg }}</strong></div>
-        </div>
-
-        <div class="progress-container" *ngIf="stat.goal">
-          <div class="progress-bar" [style.width.%]="stat.progress"></div>
-          <small>{{ stat.progress }}% к цели {{ stat.goal }}</small>
-        </div>
-
-        <canvas *ngIf="stat.sparklineData" baseChart [data]="{
-            labels: stat.sparklineLabels,
-            datasets: [{ data: stat.sparklineData, borderColor: '#6A82FB', backgroundColor: 'transparent', tension: 0.4 }]
-          }" [options]="sparklineOptions" [type]="'line'">
+      <div class="chart-body tall">
+        <canvas baseChart [data]="currentStatusChartData"
+          [options]="mainChartType === 'bar' ? stackedBarOptions : lineOptions" [type]="mainChartType">
         </canvas>
       </div>
     </div>
+
+    <div class="charts-grid">
+      <div class="chart-card" *ngIf="revenueChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>Выручка по дням</h3>
+          <button class="view-toggle" (click)="toggleViewMode('revenue')">
+            {{ viewModes['revenue'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['revenue'] === 'chart'">
+          <canvas baseChart [data]="revenueChartData" [options]="lineOptions" [type]="'line'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['revenue'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Выручка</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of dailyTableData">
+                <td>{{ row.date }}</td>
+                <td>{{ fmtMoney(row.sum) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card" *ngIf="avgCheckChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>Средний чек по дням</h3>
+          <button class="view-toggle" (click)="toggleViewMode('avgCheck')">
+            {{ viewModes['avgCheck'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['avgCheck'] === 'chart'">
+          <canvas baseChart [data]="avgCheckChartData" [options]="lineOptions" [type]="'line'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['avgCheck'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Ср. чек</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of dailyTableData">
+                <td>{{ row.date }}</td>
+                <td>{{ fmtMoney(row.avgCheck) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card" *ngIf="completionChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>Выполнено / Отменено</h3>
+          <button class="view-toggle" (click)="toggleViewMode('completion')">
+            {{ viewModes['completion'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['completion'] === 'chart'">
+          <canvas baseChart [data]="completionChartData" [options]="stackedBarOptions" [type]="'bar'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['completion'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Выполнено</th>
+                <th>Отменено</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of dailyTableData">
+                <td>{{ row.date }}</td>
+                <td class="text-success">{{ row.completed }}</td>
+                <td class="text-danger">{{ row.canceled }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card" *ngIf="usersChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>Динамика пользователей</h3>
+          <button class="view-toggle" (click)="toggleViewMode('users')">
+            {{ viewModes['users'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['users'] === 'chart'">
+          <canvas baseChart [data]="usersChartData" [options]="lineOptions" [type]="'line'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['users'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Новые</th>
+                <th>Активные</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of dailyTableData">
+                <td>{{ row.date }}</td>
+                <td>{{ row.newUsers }}</td>
+                <td>{{ row.activeUsers }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-grid four-cols">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Статусы (итог)</h3>
+          <button class="view-toggle" (click)="toggleViewMode('statusesPie')">
+            {{ viewModes['statusesPie'] === 'chart' ? 'Таблица' : 'Диаграмма' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['statusesPie'] === 'chart'">
+          <canvas baseChart [data]="statusChartData" [options]="pieOptions" [type]="'doughnut'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['statusesPie'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Статус</th>
+                <th>Заказы</th>
+                <th>Доля</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of statusTableData">
+                <td>{{ row.status }}</td>
+                <td>{{ row.orders }}</td>
+                <td>{{ row.share }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Способы оплаты</h3>
+          <button class="view-toggle" (click)="toggleViewMode('paymentPie')">
+            {{ viewModes['paymentPie'] === 'chart' ? 'Таблица' : 'Диаграмма' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['paymentPie'] === 'chart'">
+          <canvas baseChart [data]="paymentChartData" [options]="pieOptions" [type]="'doughnut'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['paymentPie'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Тип</th>
+                <th>Заказы</th>
+                <th>Доля</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of paymentTableData">
+                <td>{{ row.type }}</td>
+                <td>{{ row.orders }}</td>
+                <td>{{ row.share }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Типы доставки</h3>
+          <button class="view-toggle" (click)="toggleViewMode('deliveryPie')">
+            {{ viewModes['deliveryPie'] === 'chart' ? 'Таблица' : 'Диаграмма' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['deliveryPie'] === 'chart'">
+          <canvas baseChart [data]="deliveryChartData" [options]="pieOptions" [type]="'doughnut'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['deliveryPie'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Тип</th>
+                <th>Заказы</th>
+                <th>Доля</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of deliveryTableData">
+                <td>{{ row.type }}</td>
+                <td>{{ row.orders }}</td>
+                <td>{{ row.share }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>B2B / B2C</h3>
+          <button class="view-toggle" (click)="toggleViewMode('b2bPie')">
+            {{ viewModes['b2bPie'] === 'chart' ? 'Таблица' : 'Диаграмма' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['b2bPie'] === 'chart'">
+          <canvas baseChart [data]="b2bB2cChartData" [options]="pieOptions" [type]="'doughnut'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['b2bPie'] === 'table'">
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Тип</th>
+                <th>Заказы</th>
+                <th>Сумма</th>
+                <th>Доля</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of b2bTableData">
+                <td>{{ row.type }}</td>
+                <td>{{ row.orders }}</td>
+                <td>{{ fmtMoney(row.sum) }}</td>
+                <td>{{ row.share }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- ===========================
-       Графики
-  =========================== -->
-  <div class="charts">
-    <div class="chart-card">
-      <canvas baseChart
-        [data]="{ labels: orderStatsLabels, datasets: [{ data: orderStatsData, label: 'Orders', borderColor: '#8E54E9', backgroundColor: 'transparent' }] }"
-        [options]="chartOptions" [type]="'line'">
-      </canvas>
+  <div class="bottom-row" *ngIf="!isLoading && stats">
+    <div class="info-card">
+      <div class="card-header-row">
+        <h3>Топ клиентов (Заказы)</h3>
+      </div>
+      <div class="top-list" *ngIf="stats.userMetrics.topByOrders?.length; else noData">
+        <div class="top-item" *ngFor="let client of stats.userMetrics.topByOrders.slice(0, 7); let i = index">
+          <span class="top-rank">{{ i + 1 }}</span>
+          <span class="top-name">{{ client.clientName?.trim() || 'Без имени' }}</span>
+          <span class="top-val">{{ client.ordersCount }} зак.</span>
+        </div>
+      </div>
+      <ng-template #noData>
+        <p class="no-data">Нет данных</p>
+      </ng-template>
     </div>
-    <div class="chart-card" style="max-width: 29%;">
-      <canvas baseChart
-        [data]="{ labels: productStatsLabels, datasets: [{ data: productStatsData, label: 'Products', backgroundColor: ['#42A5F5','#66BB6A','#FFA726','#FF6384','#36A2EB'] }] }"
-        [options]="chartOptions" [type]="'doughnut'">
-      </canvas>
+
+    <div class="info-card">
+      <div class="card-header-row">
+        <h3>Топ клиентов (Сумма)</h3>
+      </div>
+      <div class="top-list" *ngIf="stats.userMetrics.topBySum?.length; else noDataSum">
+        <div class="top-item" *ngFor="let client of stats.userMetrics.topBySum.slice(0, 7); let i = index">
+          <span class="top-rank">{{ i + 1 }}</span>
+          <span class="top-name">{{ client.clientName?.trim() || 'Без имени' }}</span>
+          <span class="top-val">{{ fmtMoney(client.ordersSum) }}</span>
+        </div>
+      </div>
+      <ng-template #noDataSum>
+        <p class="no-data">Нет данных</p>
+      </ng-template>
+    </div>
+
+    <div class="info-card">
+      <div class="card-header-row">
+        <h3>Топ магазинов</h3>
+      </div>
+      <div class="top-list" *ngIf="stats.orderMetrics.byStores?.length; else noDataStores">
+        <div class="top-item" *ngFor="let store of stats.orderMetrics.byStores.slice(0, 7); let i = index">
+          <span class="top-rank">{{ i + 1 }}</span>
+          <span class="top-name">{{ store.name || 'Не указано' }}</span>
+          <span class="top-val">{{ store.ordersCount }} зак.</span>
+        </div>
+      </div>
+      <ng-template #noDataStores>
+        <p class="no-data">Нет данных</p>
+      </ng-template>
     </div>
   </div>
-
 </div>

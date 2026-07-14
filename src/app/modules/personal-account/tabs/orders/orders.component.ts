@@ -103,12 +103,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
       filterable: true,
       filterType: FilterType.EnumIn,
       enumOptions: [
-        { value: 0, label: 'Новый' },
+        { value: 0, label: 'Черновик' },
         { value: 1, label: 'В обработке' },
-        { value: 2, label: 'Собран' },
-        { value: 3, label: 'Отправлен' },
-        { value: 4, label: 'Доставлен' },
-        { value: 5, label: 'Отменён' }
+        { value: 2, label: 'Подтвержден' },
+        { value: 3, label: 'В сборке' },
+        { value: 4, label: 'Передан в доставку' },
+        { value: 8, label: 'Готов к выдаче' },
+        { value: 9, label: 'Выдан' },
+        { value: 10, label: 'Отложен' },
+        { value: 11, label: 'Отменен пользователем' },
+        { value: 12, label: 'Отменен администратором' },
       ]
     },
     {
@@ -173,13 +177,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
   visibleColumns: ColumnConfig[] = [...this.columnOptions];
 
   orderStatuses = [
-    { value: 0, label: 'Новый' },
+    { value: 0, label: 'Черновик' },
     { value: 1, label: 'В обработке' },
-    { value: 2, label: 'Собран' },
-    { value: 3, label: 'Отправлен' },
-    { value: 4, label: 'Доставлен' },
-    { value: 5, label: 'Отменён' },
-        { value: 9, label: 'Выдан' }
+    { value: 2, label: 'Подтвержден' },
+    { value: 3, label: 'В сборке' },
+    { value: 4, label: 'Передан в доставку' },
+    { value: 8, label: 'Готов к выдаче' },
+    { value: 9, label: 'Выдан' },
+    { value: 10, label: 'Отложен' },
+    { value: 11, label: 'Отменен пользователем' },
+    { value: 12, label: 'Отменен администратором' },
   ];
 
   paymentTypes = [
@@ -496,8 +503,12 @@ export class OrdersComponent implements OnInit, OnDestroy {
       this.currentOrder.orderStatus = Number(this.currentOrder.orderStatus)
       this.ordersService.update(this.selectedOrderId, this.currentOrder).subscribe({
         next: () => {
-          this.showModal = false;
-          this.loadOrders(true);
+          this.ordersService.changeStatus(this.selectedOrderId, this.currentOrder.orderStatus).subscribe(
+            (value: any) => {
+              this.showModal = false;
+              this.loadOrders(true);
+            }
+          )
         },
         error: (error) => {
           console.error('Ошибка обновления заказа:', error);
@@ -549,12 +560,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   getOrderStatusClass(status: any): string {
     switch (status) {
-      case 0: return 'status-new';
+      case 0: return 'status-draft';
       case 1: return 'status-processing';
-      case 2: return 'status-assembled';
-      case 3: return 'status-sent';
-      case 4: return 'status-delivered';
-      case 5: return 'status-cancelled';
+      case 2: return 'status-confirmed';
+      case 3: return 'status-assembling';
+      case 4: return 'status-shipped';
+      case 8: return 'status-ready';
+      case 9: return 'status-delivered';
+      case 10: return 'status-postponed';
+      case 11: return 'status-cancelled-user';
+      case 12: return 'status-cancelled-admin';
       default: return '';
     }
   }
