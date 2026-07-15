@@ -174,6 +174,121 @@
       </div>
     </div>
 
+        <!-- === НОВЫЕ СЕКЦИИ АНАЛИТИКИ === -->
+
+    <!-- География заказов -->
+    <div class="charts-grid">
+      <div class="chart-card wide" *ngIf="citiesChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>📍 География заказов</h3>
+          <button class="view-toggle" (click)="toggleViewMode('cities')">
+            {{ viewModes['cities'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body tall" *ngIf="viewModes['cities'] === 'chart'">
+          <canvas baseChart [data]="citiesChartData" [options]="groupedBarOptions" [type]="'bar'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['cities'] === 'table'">
+          <table class="data-table compact">
+            <thead><tr><th>Город</th><th>Заказы</th><th>Сумма</th><th>Ср. чек</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of citiesTableData">
+                <td>{{ row.city }}</td>
+                <td>{{ row.orders }}</td>
+                <td>{{ fmtMoney(row.sum) }}</td>
+                <td>{{ fmtMoney(row.avgCheck) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Воронка заказов -->
+      <div class="chart-card wide" *ngIf="funnelChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>🔽 Воронка выполнения заказов</h3>
+          <button class="view-toggle" (click)="toggleViewMode('funnel')">
+            {{ viewModes['funnel'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body tall" *ngIf="viewModes['funnel'] === 'chart'">
+          <canvas baseChart [data]="funnelChartData" [options]="horizontalBarOptions" [type]="'bar'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['funnel'] === 'table'">
+          <table class="data-table compact">
+            <thead><tr><th>Этап</th><th>Заказы</th><th>Сумма</th><th>Конверсия</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of funnelTableData">
+                <td>{{ row.step }}</td>
+                <td>{{ row.count }}</td>
+                <td>{{ fmtMoney(row.sum) }}</td>
+                <td><span class="conversion-badge">{{ row.conversion }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Качество данных + B2B/B2C -->
+    <div class="charts-grid">
+      <div class="chart-card" *ngIf="dataQualityChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>📊 Качество данных</h3>
+          <button class="view-toggle" (click)="toggleViewMode('dataQuality')">
+            {{ viewModes['dataQuality'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['dataQuality'] === 'chart'">
+          <canvas baseChart [data]="dataQualityChartData" [options]="horizontalBarOptions" [type]="'bar'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['dataQuality'] === 'table'">
+          <table class="data-table compact">
+            <thead><tr><th>Поле</th><th>Заполнено</th><th>Всего</th><th>%</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of dataQualityTableData">
+                <td>{{ row.field }}</td>
+                <td>{{ row.filled }}</td>
+                <td>{{ row.total }}</td>
+                <td>{{ row.pct }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card" *ngIf="b2bCompareChartData.datasets.length > 0">
+        <div class="chart-header">
+          <h3>⚖️ B2B vs B2C</h3>
+          <button class="view-toggle" (click)="toggleViewMode('b2bCompare')">
+            {{ viewModes['b2bCompare'] === 'chart' ? 'Таблица' : 'График' }}
+          </button>
+        </div>
+        <div class="chart-body" *ngIf="viewModes['b2bCompare'] === 'chart'">
+          <canvas baseChart [data]="b2bCompareChartData" [options]="groupedBarOptions" [type]="'bar'"></canvas>
+        </div>
+        <div class="table-wrapper" *ngIf="viewModes['b2bCompare'] === 'table'">
+          <table class="data-table compact">
+            <thead><tr><th>Тип</th><th>Заказы</th><th>Ср. чек</th><th>Выручка</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>B2C</td>
+                <td>{{ b2cOrdersCount }}</td>
+                <td>{{ fmtMoney(b2cAvgCheck) }}</td>
+                <td>{{ fmtMoney(b2cSum) }}</td>
+              </tr>
+              <tr>
+                <td>B2B</td>
+                <td>{{ b2bOrdersCount }}</td>
+                <td>{{ fmtMoney(b2bAvgCheck) }}</td>
+                <td>{{ fmtMoney(b2bSum) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
     <div class="charts-grid">
       <div class="chart-card" *ngIf="completionChartData.datasets.length > 0">
         <div class="chart-header">
