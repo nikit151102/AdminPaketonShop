@@ -917,3 +917,17 @@
         font-size: 11px;
     }
 }
+
+.conversion-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.chart-card.wide {
+    grid-column: 1 / -1;
+}
