@@ -6,6 +6,8 @@ import { ProductInstance, Filter } from '../../../../../models/category-manageme
 import { CreateProductDto, UpdateProductDto } from '../../../../../models/product.interface';
 import { Category, CategoryService } from '../../../../core/services/category.service';
 import { ProductService } from '../../../../core/services/product.service';
+import { environment } from '../../../../../environment';
+import { HttpEventType } from '@angular/common/http';
 
 @Component({
   selector: 'app-products',
@@ -187,7 +189,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     const productData: UpdateProductDto = {
       ...this.editProduct,
       productCategories: this.getSelectedCategoryIds(),
-      imageInstances: this.prepareImageInstances()
+      // imageInstances: this.prepareImageInstances()
     };
 
     this.productService.updateProduct(this.editProduct.id, productData).subscribe({
@@ -366,4 +368,121 @@ export class ProductsComponent implements OnInit, OnDestroy {
     if (current < total - 3) { pages.push('...'); pages.push(total); }
     return pages;
   }
+
+
+
+
+
+    // === ZIP UPLOAD STATE ===
+  showZipUpload = false;
+  selectedZipFile: File | null = null;
+  isUploadingZip = false;
+  zipUploadProgress = 0;
+  zipUploadError: string | null = null;
+  zipUploadSuccess = false;
+  isDragOverZip = false;
+
+  private readonly MAX_ZIP_SIZE = 200 * 1024 * 1024; // 200 MB
+
+  openZipUploadModal(): void {
+    this.showZipUpload = true;
+    this.selectedZipFile = null;
+    this.zipUploadProgress = 0;
+    this.zipUploadError = null;
+    this.zipUploadSuccess = false;
+    this.isUploadingZip = false;
+  }
+
+  closeZipUploadModal(): void {
+    if (this.isUploadingZip) return;
+    this.showZipUpload = false;
+    this.selectedZipFile = null;
+  }
+
+  onZipDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOverZip = true;
+  }
+
+  onZipDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOverZip = false;
+
+    const files = event.dataTransfer?.files;
+    if (files?.length) this.validateAndSetZipFile(files[0]);
+  }
+
+  onZipFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) this.validateAndSetZipFile(input.files[0]);
+    input.value = '';
+  }
+
+  private validateAndSetZipFile(file: File): void {
+    this.zipUploadError = null;
+    this.zipUploadSuccess = false;
+
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      this.zipUploadError = 'Допускается только формат .zip';
+      this.selectedZipFile = null;
+      return;
+    }
+
+    if (file.size > this.MAX_ZIP_SIZE) {
+      this.zipUploadError = `Файл слишком большой (${this.formatFileSize(file.size)}). Максимум 200 МБ.`;
+      this.selectedZipFile = null;
+      return;
+    }
+
+    this.selectedZipFile = file;
+  }
+
+  removeZipFile(): void {
+    this.selectedZipFile = null;
+    this.zipUploadError = null;
+    this.zipUploadSuccess = false;
+  }
+
+uploadZipArchive(): void {
+    if (!this.selectedZipFile) return;
+
+    this.isUploadingZip = true;
+    this.zipUploadError = null;
+    this.zipUploadSuccess = false;
+    this.zipUploadProgress = 0;
+
+    this.productService.uploadZipArchive(this.selectedZipFile).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          this.zipUploadProgress = Math.round((event.loaded / event.total) * 100);
+        }
+
+        if (event.type === HttpEventType.Response) {
+          this.isUploadingZip = false;
+          this.zipUploadSuccess = true;
+          this.selectedZipFile = null;
+          setTimeout(() => {
+            this.closeZipUploadModal();
+            this.loadProducts();
+          }, 1500);
+        }
+      },
+      error: (err) => {
+        this.isUploadingZip = false;
+        this.zipUploadError = err.error?.message || `Ошибка сервера (${err.status || 'неизвестно'})`;
+      }
+    });
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Б';
+    const k = 1024;
+    const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
 }
+
+

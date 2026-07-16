@@ -78,7 +78,8 @@ export class CategoryService {
   // Получение товаров категории с пагинацией
   getCategoryProducts(categoryId: string, page: number = 0, pageSize: number = 20): Observable<CategoryProductsResponse> {
     const request = {
-      filters: [{ field: 'categoryId', values: [categoryId], type: 0 }],
+      filters: [{ field: 'Text', values: [], type: 0 },
+      { field: 'ProductCategories.Id', values: [categoryId], type: 11 }],
       sorts: [],
       page,
       pageSize
@@ -220,15 +221,12 @@ removeSubCategoriesFromCategory(categoryId: string, subCategoryIds: string[]): O
 
   // Обновим существующие методы для работы с товарами
   addProductsToCategory(categoryId: string, productIds: string[]): Observable<any> {
-    const request = { guids: productIds };
-    return this.http.put(`${this.baseUrl}/AddProductsToCategory/${categoryId}`, request);
+    const request = { productIds };
+    return this.http.put(`${this.baseUrl}/AddProductsToCategory/${categoryId}`, productIds);
   }
 
   removeProductsFromCategory(categoryId: string, productIds: string[]): Observable<any> {
-    const request = { guids: productIds };
-    return this.http.delete(`${this.baseUrl}/RemoveProductsFromCategory/${categoryId}`, {
-      body: request
-    });
+    return this.http.put(`${this.baseUrl}/RemoveProductsFromCategory/${categoryId}`, productIds);
   }
 
 

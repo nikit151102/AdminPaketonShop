@@ -448,7 +448,7 @@
                     </div>
                   </div>
 
-                  <div *ngIf="product.imageLinks.length > 0" class="product-image">
+                  <div *ngIf="product.imageLinks" class="product-image">
                     <img [src]="product.imageLinks[0]" [alt]="product.fullName">
                   </div>
 

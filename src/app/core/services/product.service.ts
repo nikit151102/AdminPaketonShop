@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment';
 import { SearchRequest } from '../../../models/category-management.interface';
@@ -78,4 +78,20 @@ export class ProductService {
       }, 1000);
     });
   }
+
+
+    uploadZipArchive(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('archive', file);
+
+    const request = new HttpRequest(
+      'POST',
+      `${environment.production}/project/upload_product_images_archive`,
+      formData,
+      { reportProgress: true }
+    );
+
+    return this.http.request(request);
+  }
+  
 }

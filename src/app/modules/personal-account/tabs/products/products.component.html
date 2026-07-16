@@ -4,7 +4,8 @@
     <div class="header-content">
       <h1 class="page-title">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
         </svg>
         Управление товарами
       </h1>
@@ -13,21 +14,54 @@
     <div class="header-actions">
       <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
         Добавить товар
+      </button>
+      <button (click)="openZipUploadModal()" style="
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 22px;
+          background: var(--white);
+          color: var(--text);
+          border: 2px solid var(--border);
+          border-radius: var(--r);
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          transition: var(--tr);
+      ">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        Импорт изображений (ZIP)
       </button>
       <div class="header-dropdown">
         <button class="btn-secondary dropdown-toggle">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           Экспорт
         </button>
         <div class="dropdown-menu">
           <button (click)="exportToCSV()">CSV</button>
           <button (click)="importFromCSV()">Импорт из CSV</button>
+
+          <div class="dropdown-divider"></div>
+          <button (click)="openZipUploadModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Импорт изображений (ZIP)
+          </button>
         </div>
       </div>
     </div>
@@ -37,14 +71,17 @@
   <div class="control-panel">
     <div class="control-section">
       <div class="search-container">
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
         </svg>
         <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchQueryChange($event)"
-          placeholder="Поиск по названию или артикулу..."/>
+          placeholder="Поиск по названию или артикулу..." />
         <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; loadProducts()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </div>
@@ -67,7 +104,7 @@
           <button class="sort-direction" (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'"
             [class.desc]="sortDirection === 'desc'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14M5 12l7-7 7 7"/>
+              <path d="M12 5v14M5 12l7-7 7 7" />
             </svg>
           </button>
         </div>
@@ -76,19 +113,26 @@
       <div class="quick-actions">
         <button class="btn-view-mode" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
           </svg>
         </button>
         <button class="btn-view-mode" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="4" y1="6" x2="4.01" y2="6"/><line x1="4" y1="12" x2="4.01" y2="12"/><line x1="4" y1="18" x2="4.01" y2="18"/>
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="4" y1="6" x2="4.01" y2="6" />
+            <line x1="4" y1="12" x2="4.01" y2="12" />
+            <line x1="4" y1="18" x2="4.01" y2="18" />
           </svg>
         </button>
         <button class="btn-clear-filters" (click)="clearFilters()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
           </svg>
           Сбросить
         </button>
@@ -122,15 +166,16 @@
             [class.selected]="selectedProducts.includes(product.id)">
             <div class="card-checkbox">
               <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
-                (change)="toggleProductSelection(product.id)"/>
+                (change)="toggleProductSelection(product.id)" />
             </div>
 
             <div class="card-image" (click)="selectProduct(product)">
-              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName"/>
+              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName" />
               <div *ngIf="!getProductImage(product)" class="image-placeholder">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
                 </svg>
               </div>
               <div *ngIf="getTotalStock(product) === 0" class="stock-badge out">Нет в наличии</div>
@@ -153,13 +198,15 @@
               <div class="card-actions">
                 <button class="btn-action edit" (click)="startEdit(product)" title="Редактировать">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
                 </button>
-                <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true" title="Удалить">
+                <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true"
+                  title="Удалить">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                   </svg>
                 </button>
               </div>
@@ -182,33 +229,36 @@
             [class.selected]="selectedProducts.includes(product.id)" (click)="selectProduct(product)">
             <div class="lc-check" (click)="$event.stopPropagation()">
               <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
-                (change)="toggleProductSelection(product.id)"/>
+                (change)="toggleProductSelection(product.id)" />
             </div>
             <div class="lc-img">
-              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName"/>
+              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName" />
               <div *ngIf="!getProductImage(product)" class="img-ph-sm">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
                 </svg>
               </div>
             </div>
             <div class="lc-name"><span class="name-text">{{ product.fullName }}</span></div>
             <div class="lc-article"><span class="article-tag">{{ product.article }}</span></div>
-            <div class="lc-price"><span class="price-value">{{ getProductPrice(product) | number:'1.2-2' }} ₽</span></div>
+            <div class="lc-price"><span class="price-value">{{ getProductPrice(product) | number:'1.2-2' }} ₽</span>
+            </div>
             <div class="lc-stock">
               <span [class.out]="getTotalStock(product) === 0">{{ getTotalStock(product) }} шт.</span>
             </div>
             <div class="lc-actions" (click)="$event.stopPropagation()">
               <button class="btn-action edit" (click)="startEdit(product)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
               <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </button>
             </div>
@@ -219,7 +269,8 @@
       <ng-template #emptyTpl>
         <div class="empty-state">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
           <h3>Товары не найдены</h3>
           <p>Попробуйте изменить условия поиска</p>
@@ -239,18 +290,18 @@
     <div *ngIf="products.length > 0 && totalPages > 1" class="pagination">
       <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 0">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6"/>
+          <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
       <div class="page-numbers">
-        <button *ngFor="let p of generatePageNumbers()" class="page-num"
-          [class.active]="p === currentPage + 1" (click)="goToPage(p)" [disabled]="p === '...'">
+        <button *ngFor="let p of generatePageNumbers()" class="page-num" [class.active]="p === currentPage + 1"
+          (click)="goToPage(p)" [disabled]="p === '...'">
           {{ p }}
         </button>
       </div>
       <button class="page-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"/>
+          <polyline points="9 18 15 12 9 6" />
         </svg>
       </button>
       <span class="page-info">{{ products.length }} из {{ totalProducts }}</span>
@@ -265,7 +316,8 @@
       <h2>Новый товар</h2>
       <button class="modal-close" (click)="cancelCreate()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
@@ -275,15 +327,15 @@
         <div class="form-grid">
           <div class="form-group">
             <label>Артикул <span class="req">*</span></label>
-            <input [(ngModel)]="newProduct.article" name="article" required/>
+            <input [(ngModel)]="newProduct.article" name="article" required />
           </div>
           <div class="form-group">
             <label>Название <span class="req">*</span></label>
-            <input [(ngModel)]="newProduct.fullName" name="fullName" required/>
+            <input [(ngModel)]="newProduct.fullName" name="fullName" required />
           </div>
           <div class="form-group">
             <label>Короткое название</label>
-            <input [(ngModel)]="newProduct.shortName" name="shortName"/>
+            <input [(ngModel)]="newProduct.shortName" name="shortName" />
           </div>
         </div>
         <div class="form-group full">
@@ -296,11 +348,11 @@
         <div class="form-grid">
           <div class="form-group">
             <label>Розничная цена <span class="req">*</span></label>
-            <input type="number" [(ngModel)]="newProduct.retailPrice" name="retailPrice" required step="0.01"/>
+            <input type="number" [(ngModel)]="newProduct.retailPrice" name="retailPrice" required step="0.01" />
           </div>
           <div class="form-group">
             <label>Оптовая цена</label>
-            <input type="number" [(ngModel)]="newProduct.wholesalePrice" name="wholesalePrice" step="0.01"/>
+            <input type="number" [(ngModel)]="newProduct.wholesalePrice" name="wholesalePrice" step="0.01" />
           </div>
         </div>
       </div>
@@ -309,7 +361,7 @@
         <div class="categories-selector">
           <label *ngFor="let cat of categories" class="cat-checkbox">
             <input type="checkbox" [value]="cat.id" [(ngModel)]="newProduct.productCategories"
-              [ngModelOptions]="{standalone: true}"/>
+              [ngModelOptions]="{standalone: true}" />
             <span class="cat-check-mark"></span>
             <span>{{ cat.name }}</span>
           </label>
@@ -318,16 +370,17 @@
       <div class="form-section">
         <h3>Изображения</h3>
         <div class="upload-dropzone" (click)="imageUpload.click()">
-          <input #imageUpload type="file" accept="image/*" (change)="onImageUpload($event)" hidden/>
+          <input #imageUpload type="file" accept="image/*" (change)="onImageUpload($event)" hidden />
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
           <p>Нажмите для загрузки изображений</p>
         </div>
         <div *ngIf="uploadedImages.length" class="uploaded-grid">
           <div *ngFor="let img of uploadedImages; let i = index" class="uploaded-thumb">
-            <img [src]="img.url" alt="img"/>
+            <img [src]="img.url" alt="img" />
             <button type="button" class="remove-img" (click)="removeImage(i)">✕</button>
           </div>
         </div>
@@ -338,8 +391,8 @@
           <button type="button" class="btn-small" (click)="addProperty()">+ Свойство</button>
         </div>
         <div *ngFor="let prop of productProperties; let i = index" class="prop-row">
-          <input [(ngModel)]="prop.key" [name]="'pk'+i" placeholder="Ключ"/>
-          <input [(ngModel)]="prop.value" [name]="'pv'+i" placeholder="Значение"/>
+          <input [(ngModel)]="prop.key" [name]="'pk'+i" placeholder="Ключ" />
+          <input [(ngModel)]="prop.value" [name]="'pv'+i" placeholder="Значение" />
           <button type="button" class="btn-remove-prop" (click)="removeProperty(i)"
             [disabled]="productProperties.length === 1">✕</button>
         </div>
@@ -361,7 +414,8 @@
       <h2>Редактирование товара</h2>
       <button class="modal-close" (click)="cancelEdit()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
@@ -371,15 +425,15 @@
         <div class="form-grid">
           <div class="form-group">
             <label>Артикул <span class="req">*</span></label>
-            <input [(ngModel)]="editProduct.article" name="editArticle" required/>
+            <input [(ngModel)]="editProduct.article" name="editArticle" required />
           </div>
           <div class="form-group">
             <label>Название <span class="req">*</span></label>
-            <input [(ngModel)]="editProduct.fullName" name="editFullName" required/>
+            <input [(ngModel)]="editProduct.fullName" name="editFullName" required />
           </div>
           <div class="form-group">
             <label>Короткое название</label>
-            <input [(ngModel)]="editProduct.shortName" name="editShortName"/>
+            <input [(ngModel)]="editProduct.shortName" name="editShortName" />
           </div>
         </div>
         <div class="form-group full">
@@ -392,11 +446,11 @@
         <div class="form-grid">
           <div class="form-group">
             <label>Розничная цена <span class="req">*</span></label>
-            <input type="number" [(ngModel)]="editProduct.retailPrice" name="editRetailPrice" required step="0.01"/>
+            <input type="number" [(ngModel)]="editProduct.retailPrice" name="editRetailPrice" required step="0.01" />
           </div>
           <div class="form-group">
             <label>Оптовая цена</label>
-            <input type="number" [(ngModel)]="editProduct.wholesalePrice" name="editWholesalePrice" step="0.01"/>
+            <input type="number" [(ngModel)]="editProduct.wholesalePrice" name="editWholesalePrice" step="0.01" />
           </div>
         </div>
       </div>
@@ -417,26 +471,33 @@
       <h2>{{ selectedProduct.fullName }}</h2>
       <button class="modal-close" (click)="closeDetails()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
     <div class="modal-body details-body">
       <div class="details-top">
         <div class="details-image">
-          <img *ngIf="getProductImage(selectedProduct)" [src]="getProductImage(selectedProduct)" [alt]="selectedProduct.fullName"/>
+          <img *ngIf="getProductImage(selectedProduct)" [src]="getProductImage(selectedProduct)"
+            [alt]="selectedProduct.fullName" />
           <div *ngIf="!getProductImage(selectedProduct)" class="img-ph-lg">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
             </svg>
           </div>
         </div>
         <div class="details-main">
-          <div class="detail-row"><span class="dl">Артикул:</span><span class="dv mono">{{ selectedProduct.article }}</span></div>
-          <div class="detail-row"><span class="dl">Цена:</span><span class="dv price">{{ getProductPrice(selectedProduct) | number:'1.2-2' }} ₽</span></div>
-          <div class="detail-row"><span class="dl">Остаток:</span><span class="dv">{{ getTotalStock(selectedProduct) }} шт.</span></div>
-          <div class="detail-row"><span class="dl">Категории:</span><span class="dv">{{ getProductCategories(selectedProduct) }}</span></div>
+          <div class="detail-row"><span class="dl">Артикул:</span><span class="dv mono">{{ selectedProduct.article
+              }}</span></div>
+          <div class="detail-row"><span class="dl">Цена:</span><span class="dv price">{{
+              getProductPrice(selectedProduct) | number:'1.2-2' }} ₽</span></div>
+          <div class="detail-row"><span class="dl">Остаток:</span><span class="dv">{{ getTotalStock(selectedProduct) }}
+              шт.</span></div>
+          <div class="detail-row"><span class="dl">Категории:</span><span class="dv">{{
+              getProductCategories(selectedProduct) }}</span></div>
         </div>
       </div>
 
@@ -470,8 +531,8 @@
       <button class="btn-secondary" (click)="closeDetails()">Закрыть</button>
       <button class="btn-primary" (click)="closeDetails(); startEdit(selectedProduct!)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
         Редактировать
       </button>
@@ -487,14 +548,17 @@
       <h3>Подтверждение удаления</h3>
       <button class="modal-close" (click)="showDeleteConfirm = false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
     <div class="modal-body confirm-body">
-      <svg class="warn-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      <svg class="warn-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
       <p>Удалить товар <strong>{{ selectedProduct?.fullName }}</strong>?</p>
       <p class="warn-sub">Это действие необратимо.</p>
@@ -503,6 +567,85 @@
       <button class="btn-secondary" (click)="showDeleteConfirm = false">Отмена</button>
       <button class="btn-danger" (click)="deleteProduct()" [disabled]="isLoading">
         {{ isLoading ? 'Удаление...' : 'Удалить' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ZIP UPLOAD MODAL -->
+<div class="modal-overlay" *ngIf="showZipUpload" (click)="closeZipUploadModal()">
+  <div class="modal modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Импорт изображений товаров</h3>
+      <button class="modal-close" (click)="closeZipUploadModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="zip-upload-area">
+        <div class="zip-dropzone" [class.dragover]="isDragOverZip" [class.has-file]="selectedZipFile"
+          (dragover)="onZipDragOver($event)" (dragleave)="isDragOverZip = false" (drop)="onZipDrop($event)"
+          (click)="zipFileInput.click()">
+          <input #zipFileInput type="file" accept=".zip" (change)="onZipFileSelected($event)" hidden />
+
+          <ng-container *ngIf="!selectedZipFile && !isUploadingZip">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <p class="drop-title">Перетащите ZIP-архив сюда</p>
+            <p class="drop-hint">или нажмите для выбора файла</p>
+            <p class="drop-limit">Максимум 200 МБ, формат .zip</p>
+          </ng-container>
+
+          <ng-container *ngIf="selectedZipFile && !isUploadingZip">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <p class="file-name">{{ selectedZipFile.name }}</p>
+            <p class="file-size">{{ formatFileSize(selectedZipFile.size) }}</p>
+            <button class="remove-zip" (click)="removeZipFile(); $event.stopPropagation()">Удалить файл</button>
+          </ng-container>
+
+          <ng-container *ngIf="isUploadingZip">
+            <div class="upload-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="zipUploadProgress"></div>
+              </div>
+              <p class="progress-text">{{ zipUploadProgress }}%</p>
+            </div>
+          </ng-container>
+        </div>
+
+        <div *ngIf="zipUploadError" class="upload-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {{ zipUploadError }}
+        </div>
+
+        <div *ngIf="zipUploadSuccess" class="upload-success">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          Изображения успешно загружены!
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeZipUploadModal()" [disabled]="isUploadingZip">Закрыть</button>
+      <button class="btn-primary" (click)="uploadZipArchive()" [disabled]="!selectedZipFile || isUploadingZip">
+        <ng-container *ngIf="!isUploadingZip">Загрузить архив</ng-container>
+        <ng-container *ngIf="isUploadingZip">Загрузка...</ng-container>
       </button>
     </div>
   </div>
