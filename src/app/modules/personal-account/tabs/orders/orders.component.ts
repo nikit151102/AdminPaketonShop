@@ -147,6 +147,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
       filterable: true,
       filterType: FilterType.Contains
     },
+        {
+      field: 'userInstance.email',
+      header: 'Почта',
+      type: 'string',
+      sortable: false,
+      filterable: true,
+      filterType: FilterType.Contains
+    },
     {
       field: 'userInstance.phoneNumber',
       header: 'Телефон',

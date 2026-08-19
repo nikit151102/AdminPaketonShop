@@ -7,8 +7,7 @@ import {
   CreateCategoryDto,
   UpdateCategoryDto,
   ProductInstance,
-  SubCategory,
-  CategoryProductsResponse
+  SubCategory
 } from '../../../../../models/category-management.interface';
 import { CategoryService } from '../../../../core/services/category.service';
 
@@ -20,17 +19,20 @@ import { CategoryService } from '../../../../core/services/category.service';
   styleUrl: './product-category-manager.component.scss'
 })
 export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
+  // Основные данные
   categories: ProductCategory[] = [];
   selectedCategory: ProductCategory | null = null;
   subCategories: SubCategory[] = [];
   breadcrumbs: ProductCategory[] = [];
 
+  // Товары
   categoryProducts: ProductInstance[] = [];
   totalProducts = 0;
   productsPage = 0;
   productsPageSize = 50;
   productsTotalPages = 0;
 
+  // Состояния
   isLoading = false;
   isCreating = false;
   isEditing = false;
@@ -38,10 +40,12 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   showDeleteConfirm = false;
   isProductsLoading = false;
 
+  // Подкатегории
   availableCategoriesForAddition: ProductCategory[] = [];
   selectedCategoriesForAddition: string[] = [];
   isAddingSubCategories = false;
 
+  // Формы
   newCategory: CreateCategoryDto = {
     code: '', shortCode: 0, name: '', description: '',
     superCategoryId: undefined, subCategories: [], products: []
@@ -54,10 +58,11 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
 
   moveData = { subCategoryId: '', targetCategoryId: '', originalCategoryId: '' };
 
+  // === ГЛОБАЛЬНЫЙ БУФЕР ТОВАРОВ ===
   productSearchQuery = '';
   searchResults: ProductInstance[] = [];
   isSearching = false;
-  selectedProducts: string[] = [];
+  selectedProducts: string[] = []; // Глобальный список ID
 
   currentPage = 0;
   pageSize = 10;
@@ -109,27 +114,16 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     this.updateBreadcrumbs(category);
   }
 
-  /**
-   * КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Загружаем полные данные подкатегории
-   * и устанавливаем её как selectedCategory для отображения справа
-   */
   navigateToSubCategory(subCategory: SubCategory): void {
     this.isLoading = true;
     this.selectedSubCategoryId = subCategory.id;
 
-    // Загружаем полные данные подкатегории как отдельную категорию
     this.categoryService.getCategoryById(subCategory.id).subscribe({
       next: (response: any) => {
         const fullCategory: ProductCategory = response.data || response;
-
-        // Устанавливаем выбранную категорию — это включает правую панель
         this.selectedCategory = fullCategory;
         this.viewMode = 'details';
-
-        // Строим хлебные крошки
         this.updateBreadcrumbs(fullCategory);
-
-        // Загружаем подкатегории текущей категории
         this.loadSubCategories(fullCategory.id);
         this.resetForms();
         this.isLoading = false;
@@ -139,20 +133,6 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
-  }
-
-  navigateBack(category: ProductCategory): void {
-    if (category.superCategoryId) {
-      const parentCategory = this.categories.find(c => c.id === category.superCategoryId);
-      if (parentCategory) {
-        this.selectCategory(parentCategory);
-      }
-    } else {
-      this.selectedCategory = null;
-      this.selectedSubCategoryId = null;
-      this.breadcrumbs = [];
-      this.subCategories = [];
-    }
   }
 
   private updateBreadcrumbs(category: ProductCategory): void {
@@ -169,7 +149,6 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
         currentCategory = null;
       }
     }
-
     this.breadcrumbs = breadcrumbStack;
   }
 
@@ -238,6 +217,67 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     });
   }
 
+  // === ГЛОБАЛЬНОЕ ДОБАВЛЕНИЕ ТОВАРОВ ===
+  onSearchQueryChange(query: string): void {
+    this.searchSubject.next(query);
+  }
+
+  searchProducts(query: string): void {
+    if (!query.trim()) { this.searchResults = []; return; }
+    this.isSearching = true;
+    this.categoryService.searchProducts(query).subscribe({
+      next: (response: any) => {
+        this.searchResults = response.data || [];
+        this.isSearching = false;
+      },
+      error: () => { this.isSearching = false; }
+    });
+  }
+
+  toggleProductSelection(productId: string): void {
+    const idx = this.selectedProducts.indexOf(productId);
+    if (idx > -1) {
+      this.selectedProducts.splice(idx, 1);
+    } else {
+      this.selectedProducts.push(productId);
+    }
+  }
+
+  isSelected(productId: string): boolean {
+    return this.selectedProducts.includes(productId);
+  }
+
+  addSelectedProductsToCategory(): void {
+    if (!this.selectedCategory || this.selectedProducts.length === 0) return;
+    this.isLoading = true;
+    this.categoryService.addProductsToCategory(this.selectedCategory.id, this.selectedProducts).subscribe({
+      next: () => {
+        if (this.selectedCategory) {
+          this.selectedCategory.productCount = (this.selectedCategory.productCount || 0) + this.selectedProducts.length;
+        }
+        // Очищаем буфер после успешного добавления
+        this.selectedProducts = [];
+        this.searchResults = [];
+        this.productSearchQuery = '';
+        if (this.viewMode === 'products' && this.selectedCategory) {
+          this.loadCategoryProducts(this.selectedCategory.id);
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Ошибка добавления товаров:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  clearSelectedProducts(): void {
+    this.selectedProducts = [];
+    this.searchResults = [];
+    this.productSearchQuery = '';
+  }
+
+  // CRUD категорий
   startCreate(): void {
     this.isCreating = true;
     this.resetForms();
@@ -373,51 +413,6 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSearchQueryChange(query: string): void {
-    this.searchSubject.next(query);
-  }
-
-  searchProducts(query: string): void {
-    if (!query.trim()) { this.searchResults = []; return; }
-    this.isSearching = true;
-    this.categoryService.searchProducts(query).subscribe({
-      next: (response: any) => {
-        this.searchResults = response.data || [];
-        this.isSearching = false;
-      },
-      error: () => { this.isSearching = false; }
-    });
-  }
-
-  addSelectedProductsToCategory(): void {
-    if (!this.selectedCategory || this.selectedProducts.length === 0) return;
-    this.isLoading = true;
-    this.categoryService.addProductsToCategory(this.selectedCategory.id, this.selectedProducts).subscribe({
-      next: () => {
-        if (this.selectedCategory) {
-          this.selectedCategory.productCount = (this.selectedCategory.productCount || 0) + this.selectedProducts.length;
-        }
-        this.selectedProducts = [];
-        this.searchResults = [];
-        this.productSearchQuery = '';
-        if (this.viewMode === 'products' && this.selectedCategory) {
-          this.loadCategoryProducts(this.selectedCategory.id);
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Ошибка добавления товаров:', error);
-        this.isLoading = false;
-      }
-    });
-  }
-
-  toggleProductSelection(productId: string): void {
-    const idx = this.selectedProducts.indexOf(productId);
-    if (idx > -1) this.selectedProducts.splice(idx, 1);
-    else this.selectedProducts.push(productId);
-  }
-
   onDragStart(event: DragEvent, subCategory: SubCategory): void {
     this.draggedSubCategory = subCategory;
     event.dataTransfer?.setData('text/plain', subCategory.id);
@@ -439,8 +434,8 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   }
 
   private validateCategory(c: CreateCategoryDto | UpdateCategoryDto): boolean {
-    if (!c.name?.trim()) { alert('Название категории обязательно'); return false; }
-    if (!c.code?.trim()) { alert('Код категории обязателен'); return false; }
+    if (!c.name?.trim()) { alert('Название обязательно'); return false; }
+    if (!c.code?.trim()) { alert('Код обязателен'); return false; }
     return true;
   }
 
@@ -485,7 +480,6 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   clearSearch(): void {
     this.productSearchQuery = '';
     this.searchResults = [];
-    this.selectedProducts = [];
   }
 
   startAddSubCategories(): void {

@@ -104,6 +104,19 @@ export class StorageUtils {
     }
   }
 
+  
+  /**
+   * Удаляет данные из localStorage
+   * @param key Ключ
+   */
+  static deleteLocalStorageCache<T>(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.error('LocalStorage error:', e);
+    }
+  }
+
   // ======================== SessionStorage ======================== //
 
   /**
@@ -130,6 +143,18 @@ export class StorageUtils {
     } catch (e) {
       console.error('SessionStorage error:', e);
       return null;
+    }
+  }
+  
+  /**
+   * Удаляет данные из sessionStorage
+   * @param key Ключ
+   */
+  static deleteSessionStorage<T>(key: string): void {
+    try {
+      sessionStorage.removeItem(key);
+    } catch (e) {
+      console.error('SessionStorage error:', e);
     }
   }
 

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
-import { environment } from '../../../environment';
+import { environment, sessionStorageEnvironment } from '../../../environment';
 import { StorageUtils } from '../../../utils/storage.utils';
 
 
@@ -72,6 +72,17 @@ export class AuthService {
             StorageUtils.setLocalStorageCache(this.USER_KEY, response.data, 3600);
 
             this.authTokenSubject.next(response.data.token);
+          }
+        })
+      );
+  }
+
+  getUserData(): Observable<any> {
+    return this.http.get<any>(`${environment.production}/api/Profile`)
+      .pipe(
+        tap(response => {
+          if (response.data) {
+           StorageUtils.setSessionStorage(sessionStorageEnvironment.user.key, response.data);
           }
         })
       );

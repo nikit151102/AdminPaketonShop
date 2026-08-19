@@ -1,0 +1,306 @@
+<div class="barcode-manager">
+
+    <!-- Заголовок -->
+    <div class="manager-header">
+        <h2>Управление штрихкодами</h2>
+        <p class="subtitle">Поиск товара и управление его штрихкодами</p>
+    </div>
+
+    <!-- Поиск товара -->
+    <div class="search-section">
+        <div class="search-form">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input #searchInput type="text" class="search-input"
+                    placeholder="Введите Наименование, артикул товара..." [(ngModel)]="searchQuery"
+                    (keyup.enter)="searchProduct()" (input)="onSearchInput()">
+                <button class="search-clear" *ngIf="searchQuery" (click)="clearSearch()" title="Очистить">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <button class="btn-search" (click)="searchProduct()" [disabled]="!searchQuery?.trim() || isLoadingSearch">
+                {{ isLoadingSearch ? 'Поиск...' : 'Найти товар' }}
+            </button>
+        </div>
+
+        <!-- Результаты поиска товара -->
+        <div class="search-results" *ngIf="productSearchResults.length && !selectedProduct">
+            <div class="results-header">
+                <span>Найдено товаров: {{ totalProductResults }}</span>
+                <span class="results-hint">Кликните на товар для управления штрихкодами</span>
+            </div>
+
+            <div class="results-list">
+                <div class="result-item" *ngFor="let product of productSearchResults" (click)="selectProduct(product)">
+                    <!-- [class.selected]="selectedProduct && selectedProduct.id === product.id" -->
+                    <div class="product-image">
+                        <img *ngIf="product.productImageLink" [src]="product.productImageLink" [alt]="product.fullName"
+                            (error)="handleImageError($event)">
+                        <div class="image-placeholder" *ngIf="!product.productImageLink">
+                            {{ product.article?.charAt(0) || '📦' }}
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h4 class="product-name">{{ product.fullName }}</h4>
+                        <div class="product-meta">
+                            <span class="meta-item">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M4 4L20 4M4 12L20 12M4 20L20 20" />
+                                </svg>
+                                Арт: {{ product.article }}
+                            </span>
+                            <span class="meta-item" *ngIf="product.baseMeasurementUnit">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                {{ product.baseMeasurementUnit.shortName }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="product-action">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Пагинация поиска товаров -->
+            <div class="pagination" *ngIf="totalProductPages > 1">
+                <button class="pagination-btn" (click)="changeProductPage(currentProductPage - 1)"
+                    [disabled]="currentProductPage === 0">
+                    ← Назад
+                </button>
+                <span class="pagination-info">
+                    Стр. {{ currentProductPage + 1 }} из {{ totalProductPages }}
+                </span>
+                <button class="pagination-btn" (click)="changeProductPage(currentProductPage + 1)"
+                    [disabled]="currentProductPage >= totalProductPages - 1">
+                    Вперёд →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Управление штрихкодами выбранного товара -->
+    <div class="barcode-section" *ngIf="selectedProduct">
+
+        <!-- Информация о товаре -->
+        <div class="selected-product">
+            <div class="product-card">
+                <div class="product-card__image">
+                    <img *ngIf="selectedProduct.productImageLink" [src]="selectedProduct.productImageLink"
+                        [alt]="selectedProduct.fullName" (error)="handleImageError($event)">
+                    <div class="image-placeholder" *ngIf="!selectedProduct.productImageLink">
+                        {{ selectedProduct.article?.charAt(0) || '📦' }}
+                    </div>
+                </div>
+                <div class="product-card__info">
+                    <h3>{{ selectedProduct.fullName }}</h3>
+                    <div class="product-details">
+                        <span><strong>Артикул:</strong> {{ selectedProduct.article }}</span>
+                        <span *ngIf="selectedProduct.baseMeasurementUnit">
+                            <strong>Ед. изм.:</strong> {{ selectedProduct.baseMeasurementUnit.name }} ({{
+                            selectedProduct.baseMeasurementUnit.shortName }})
+                        </span>
+                    </div>
+                </div>
+                <button class="btn-close" (click)="deselectProduct()" title="Закрыть">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Форма добавления нового штрихкода -->
+        <div class="add-barcode-form" [class.expanded]="showAddForm">
+            <button class="btn-toggle-form" (click)="toggleAddForm()" [class.active]="showAddForm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                {{ showAddForm ? 'Скрыть форму' : 'Добавить штрихкод' }}
+            </button>
+
+            <div class="form-content" *ngIf="showAddForm">
+                <form [formGroup]="addBarcodeForm" (ngSubmit)="addBarcode()" class="barcode-form">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Штрихкод <span class="required">*</span></label>
+                            <input type="text" formControlName="barCode" placeholder="Введите штрихкод"
+                                [class.error]="addBarcodeForm.get('barCode')?.invalid && addBarcodeForm.get('barCode')?.touched">
+                            <div class="error-message"
+                                *ngIf="addBarcodeForm.get('barCode')?.invalid && addBarcodeForm.get('barCode')?.touched">
+                                Штрихкод обязателен
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Представление из 1С</label>
+                            <input type="text" formControlName="representationFrom1C"
+                                placeholder="Например: 4601234567890">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Коэффициент <span class="required">*</span></label>
+                            <input type="number" formControlName="coefficient" min="0.001" step="0.001"
+                                placeholder="1.0"
+                                [class.error]="addBarcodeForm.get('coefficient')?.invalid && addBarcodeForm.get('coefficient')?.touched">
+                            <div class="error-message"
+                                *ngIf="addBarcodeForm.get('coefficient')?.invalid && addBarcodeForm.get('coefficient')?.touched">
+                                Укажите коэффициент > 0
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Единица измерения <span class="required">*</span></label>
+                            <select formControlName="measurementUnitId"
+                                [class.error]="addBarcodeForm.get('measurementUnitId')?.invalid && addBarcodeForm.get('measurementUnitId')?.touched">
+                                <option value="">Выберите...</option>
+                                <option *ngFor="let unit of measurementUnits" [value]="unit.id">
+                                    {{ unit.name }} ({{ unit.shortName }})
+                                </option>
+                            </select>
+                            <div class="error-message"
+                                *ngIf="addBarcodeForm.get('measurementUnitId')?.invalid && addBarcodeForm.get('measurementUnitId')?.touched">
+                                Выберите единицу измерения
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" (click)="toggleAddForm()">Отмена</button>
+                        <button type="submit" class="btn-primary" [disabled]="addBarcodeForm.invalid || isSaving">
+                            {{ isSaving ? 'Сохранение...' : 'Добавить штрихкод' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Таблица штрихкодов -->
+        <div class="barcodes-table-container" *ngIf="barcodes.length">
+            <table class="barcodes-table">
+                <thead>
+                    <tr>
+                        <th>Штрихкод</th>
+                        <th>Из 1С</th>
+                        <th>Коэфф.</th>
+                        <th>Ед. изм.</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let barcode of barcodes" [class.editing]="editingBarcode?.id === barcode.id">
+
+                        <!-- Режим просмотра -->
+                        <ng-container *ngIf="editingBarcode?.id !== barcode.id">
+                            <td class="barcode-value">{{ barcode.barCode }}</td>
+                            <td>{{ barcode.representationFrom1C || '—' }}</td>
+                            <td>{{ barcode.coefficient }}</td>
+                            <td>{{ getMeasurementUnitName(barcode.measurementUnitId) }}</td>
+                            <td class="actions">
+                                <button class="action-btn edit" (click)="startEdit(barcode)" title="Редактировать">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                </button>
+                                <button class="action-btn delete" (click)="deleteBarcode(barcode)" title="Удалить">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path
+                                            d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </ng-container>
+
+                        <!-- Режим редактирования -->
+                        <ng-container *ngIf="editingBarcode && editingBarcode?.id === barcode.id">
+                            <td>
+                                <input type="text" [(ngModel)]="editingBarcode.barCode" class="edit-input"
+                                    [disabled]="true">
+                            </td>
+                            <td>
+                                <input type="text" [(ngModel)]="editingBarcode.representationFrom1C" class="edit-input"
+                                    placeholder="Не указано">
+                            </td>
+                            <td>
+                                <input type="number" [(ngModel)]="editingBarcode.coefficient" class="edit-input"
+                                    min="0.001" step="0.001">
+                            </td>
+                            <td>
+                                <select [(ngModel)]="editingBarcode.measurementUnitId" class="edit-select">
+                                    <option *ngFor="let unit of measurementUnits" [value]="unit.id">
+                                        {{ unit.shortName }}
+                                    </option>
+                                </select>
+                            </td>
+                            <td class="actions">
+                                <button class="action-btn save" (click)="saveBarcodeEdit()" title="Сохранить">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                </button>
+                                <button class="action-btn cancel" (click)="cancelEdit()" title="Отмена">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M18 6L6 18M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </ng-container>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Пагинация штрихкодов -->
+            <div class="pagination" *ngIf="totalBarcodePages > 1">
+                <button class="pagination-btn" (click)="changeBarcodePage(currentBarcodePage - 1)"
+                    [disabled]="currentBarcodePage === 0">
+                    ← Назад
+                </button>
+                <span class="pagination-info">
+                    Стр. {{ currentBarcodePage + 1 }} из {{ totalBarcodePages }}
+                </span>
+                <button class="pagination-btn" (click)="changeBarcodePage(currentBarcodePage + 1)"
+                    [disabled]="currentBarcodePage >= totalBarcodePages - 1">
+                    Вперёд →
+                </button>
+            </div>
+        </div>
+
+        <!-- Пустое состояние -->
+        <div class="empty-state" *ngIf="!barcodes.length && !isLoadingBarcodes">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <p>У этого товара пока нет штрихкодов</p>
+            <button class="btn-primary" (click)="toggleAddForm()">Добавить первый</button>
+        </div>
+
+        <!-- Загрузка -->
+        <div class="loading-state" *ngIf="isLoadingBarcodes">
+            <div class="spinner"></div>
+            <p>Загрузка штрихкодов...</p>
+        </div>
+
+    </div>
+
+    <!-- Сообщения -->
+    <div class="toast" *ngIf="toastMessage" [class.success]="toastType === 'success'"
+        [class.error]="toastType === 'error'">
+        {{ toastMessage }}
+    </div>
+
+</div>

@@ -52,8 +52,8 @@
             </svg>
           </div>
           <div class="user-info">
-            <span class="user-name">Администратор</span>
-            <span class="user-role">Admin</span>
+              <div class="menu-user-name">{{userData.lastName}} {{userData.firstName}}</div>
+              <div class="menu-user-email">{{userData.email}}</div>
           </div>
           <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 12 15 18 9"/>
@@ -70,15 +70,15 @@
               </svg>
             </div>
             <div class="menu-user-info">
-              <div class="menu-user-name">Администратор</div>
-              <div class="menu-user-email">admin&#64;example.com</div>
+              <div class="menu-user-name">{{userData.lastName}} {{userData.firstName}}</div>
+              <div class="menu-user-email">{{userData.email}}</div>
             </div>
           </div>
 
           <div class="menu-divider"></div>
 
           <button role="menuitem" tabindex="0" (click)="onNavigate.emit({id:'profile', label:'Профиль'})">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="n one" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
@@ -94,7 +94,7 @@
 
           <div class="menu-divider"></div>
 
-          <button role="menuitem" tabindex="0" class="logout" (click)="onNavigate.emit({id:'logout', label:'Выход'})">
+          <button role="menuitem" tabindex="0" class="logout" (click)="toggleExitProfile()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>

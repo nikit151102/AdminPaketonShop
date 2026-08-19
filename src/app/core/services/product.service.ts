@@ -3,7 +3,7 @@ import { HttpClient, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment';
 import { SearchRequest } from '../../../models/category-management.interface';
-import { SearchResponse, CreateProductDto, UpdateProductDto } from '../../../models/product.interface';
+import { SearchResponse, CreateProductDto, UpdateProductDto, ProductBarCodeDto } from '../../../models/product.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -12,15 +12,15 @@ export class ProductService {
   private baseUrl = environment.production + '/api/Entities/ProductInstance';
   private searchUrl = environment.production + '/api/Entities/ProductInstanceSearch/Filter';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
 
   // Получение товара по ID
   getProductById(id: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/${id}`);
   }
-  
-    // Поиск товаров через новый эндпоинт
+
+  // Поиск товаров через новый эндпоинт
   searchProducts(request: any): Observable<SearchResponse> {
     return this.http.post<SearchResponse>(
       `${this.searchUrl}`,
@@ -42,7 +42,7 @@ export class ProductService {
       page: 0,
       pageSize: ids.length
     };
-    
+
     return this.http.post(`${environment.production}/api/Entities/ProductInstance/Filter`, filters);
   }
 
@@ -61,11 +61,15 @@ export class ProductService {
     return this.http.delete(`${this.baseUrl}/${id}`);
   }
 
+  createProductBarCode(dto: ProductBarCodeDto): Observable<any> {
+    return this.http.post(`${environment.production}/api/Entities/ProductBarCode`, dto);
+  }
+
   // Загрузка изображений (симуляция)
   uploadImage(file: File): Observable<{ id: string; url: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     // В реальном приложении здесь будет вызов API загрузки
     return new Observable(observer => {
       setTimeout(() => {
@@ -80,7 +84,7 @@ export class ProductService {
   }
 
 
-    uploadZipArchive(file: File): Observable<any> {
+  uploadZipArchive(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('archive', file);
 
@@ -93,5 +97,5 @@ export class ProductService {
 
     return this.http.request(request);
   }
-  
+
 }

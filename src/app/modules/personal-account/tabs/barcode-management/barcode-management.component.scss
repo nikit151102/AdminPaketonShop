@@ -1,0 +1,733 @@
+// 🔹 barcode-management.component.scss
+$primary: #3c8a27;
+$primary-dark: #2d6c1d;
+$primary-light: #e6f4ea;
+$danger: #ef4444;
+$danger-light: #fef2f2;
+$warning: #f59e0b;
+$text: #1e293b;
+$text-secondary: #475569;
+$text-muted: #64748b;
+$border: #e2e8f0;
+$bg: #ffffff;
+$bg-light: #f8fafc;
+$radius: 16px;
+$radius-sm: 10px;
+$shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+$success: hsla(107, 56%, 35%, 0.623);
+
+.barcode-manager {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.manager-header {
+  margin-bottom: 32px;
+  
+  h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 700;
+    color: $text;
+  }
+  
+  .subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: $text-secondary;
+  }
+}
+
+// 🔹 Поиск
+.search-section {
+  margin-bottom: 32px;
+  background: $bg;
+  border-radius: $radius;
+  padding: 24px;
+  border: 1px solid $border;
+  box-shadow: $shadow;
+}
+
+.search-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  
+  .search-input-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 600px;
+    
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $text-muted;
+    }
+    
+    .search-input {
+      width: -webkit-fill-available;
+      padding: 12px 16px 12px 44px;
+      border: 2px solid $border;
+      border-radius: $radius-sm;
+      font-size: 15px;
+      transition: border-color 0.2s ease;
+      
+      &:focus {
+        outline: none;
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+      }
+    }
+    
+    .search-clear {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $text-muted;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      
+      &:hover {
+        background: $bg-light;
+        color: $danger;
+      }
+    }
+  }
+  
+  .btn-search {
+    padding: 12px 24px;
+    background: $primary;
+    color: white;
+    border: none;
+    border-radius: $radius-sm;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover:not(:disabled) {
+      background: $primary-dark;
+      transform: translateY(-2px);
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// 🔹 Результаты поиска
+.search-results {
+  margin-top: 20px;
+  
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid $border;
+    margin-bottom: 16px;
+    
+    span {
+      font-size: 14px;
+      color: $text-secondary;
+    }
+    
+    .results-hint {
+      font-size: 12px;
+      color: $text-muted;
+      font-style: italic;
+    }
+  }
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: $bg-light;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  
+  &:hover {
+    background: $primary-light;
+    border-color: $primary;
+    transform: translateX(4px);
+  }
+  
+  &.selected {
+    border-color: $primary;
+    background: $primary-light;
+  }
+}
+
+.product-image {
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  background: linear-gradient(135deg, $bg-light, $border);
+  flex-shrink: 0;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: $text-muted;
+  }
+}
+
+.product-info {
+  flex: 1;
+  min-width: 0;
+  
+  .product-name {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .product-meta {
+    display: flex;
+    gap: 12px;
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: $text-muted;
+      
+      svg {
+        opacity: 0.6;
+      }
+    }
+  }
+}
+
+.product-action {
+  color: $text-muted;
+  flex-shrink: 0;
+}
+
+// 🔹 Выбранный товар
+.selected-product {
+  margin-bottom: 24px;
+}
+
+.product-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, $primary-light, $bg);
+  border-radius: $radius-sm;
+  border: 1px solid rgba($primary, 0.2);
+  
+  &__image {
+    width: 72px;
+    height: 72px;
+    border-radius: $radius-sm;
+    overflow: hidden;
+    background: white;
+    flex-shrink: 0;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: $text-muted;
+      background: $bg-light;
+    }
+  }
+  
+  &__info {
+    flex: 1;
+    
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 700;
+      color: $text;
+    }
+    
+    .product-details {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: $text-secondary;
+      
+      strong {
+        color: $text;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.btn-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba($primary, 0.1);
+  color: $primary;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba($primary, 0.2);
+    transform: rotate(90deg);
+  }
+}
+
+// 🔹 Форма добавления
+.add-barcode-form {
+  margin-bottom: 24px;
+  background: $bg;
+  border-radius: $radius;
+  border: 1px solid $border;
+  overflow: hidden;
+}
+
+.btn-toggle-form {
+  width: 100%;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: $bg-light;
+  border: none;
+  border-bottom: 1px solid $border;
+  color: $text-secondary;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: $primary-light;
+    color: $primary;
+  }
+  
+  &.active {
+    background: $primary;
+    color: white;
+    border-bottom-color: $primary;
+    
+    &:hover {
+      background: $primary-dark;
+    }
+  }
+}
+
+.form-content {
+  padding: 20px;
+}
+
+.barcode-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text;
+    
+    .required {
+      color: $danger;
+      margin-left: 2px;
+    }
+  }
+  
+  input, select {
+    width: -webkit-fill-available;
+    padding: 10px 14px;
+    border: 2px solid $border;
+    border-radius: $radius-sm;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: $primary;
+    }
+    
+    &.error {
+      border-color: $danger;
+    }
+  }
+  
+  .error-message {
+    margin-top: 4px;
+    font-size: 11px;
+    color: $danger;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+  
+  .btn-cancel {
+    padding: 10px 20px;
+    background: $bg-light;
+    color: $text-secondary;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    
+    &:hover {
+      background: $border;
+    }
+  }
+  
+  .btn-primary {
+    padding: 10px 20px;
+    background: $primary;
+    color: white;
+    border: none;
+    border-radius: $radius-sm;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    
+    &:hover:not(:disabled) {
+      background: $primary-dark;
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// 🔹 Таблица штрихкодов
+.barcodes-table-container {
+  background: $bg;
+  border-radius: $radius;
+  border: 1px solid $border;
+  overflow: hidden;
+  box-shadow: $shadow;
+}
+
+.barcodes-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: $bg-light;
+    border-bottom: 1px solid $border;
+  }
+  
+  td {
+    padding: 14px 16px;
+    font-size: 14px;
+    color: $text;
+    border-bottom: 1px solid $border;
+    
+    &.barcode-value {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-weight: 600;
+      color: $primary;
+    }
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  tr:hover {
+    background: $bg-light;
+  }
+  
+  tr.editing {
+    background: $primary-light;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $radius-sm;
+    background: $bg-light;
+    color: $text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &.edit:hover {
+      background: $primary-light;
+      color: $primary;
+    }
+    
+    &.delete:hover {
+      background: $danger-light;
+      color: $danger;
+    }
+    
+    &.save:hover {
+      background: rgba($success, 0.1);
+      color: $success;
+    }
+    
+    &.cancel:hover {
+      background: $bg-light;
+      color: $text-muted;
+    }
+  }
+}
+
+.edit-input, .edit-select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
+
+// 🔹 Пагинация
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  background: $bg-light;
+  border-top: 1px solid $border;
+  
+  .pagination-btn {
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 13px;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover:not(:disabled) {
+      background: $primary-light;
+      border-color: $primary;
+      color: $primary;
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+  
+  .pagination-info {
+    font-size: 13px;
+    color: $text-muted;
+  }
+}
+
+// 🔹 Пустое состояние
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: $text-muted;
+  
+  svg {
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+  
+  p {
+    margin: 0 0 16px;
+    font-size: 15px;
+  }
+}
+
+// 🔹 Загрузка
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: $text-muted;
+  
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid $border;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// 🔹 Toast уведомления
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  z-index: 2000;
+  animation: slideIn 0.3s ease;
+  
+  &.success {
+    background: $primary;
+    color: white;
+  }
+  
+  &.error {
+    background: $danger;
+    color: white;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// 🔹 Адаптив
+@media (max-width: 768px) {
+  .barcode-manager {
+    padding: 16px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    
+    .search-input-wrapper {
+      max-width: 100%;
+    }
+    
+    .btn-search {
+      width: 100%;
+    }
+  }
+  
+  .barcodes-table {
+    font-size: 13px;
+    
+    th, td {
+      padding: 10px 12px;
+    }
+    
+    .actions {
+      flex-direction: column;
+      gap: 4px;
+      
+      .action-btn {
+        width: 28px;
+        height: 28px;
+      }
+    }
+  }
+  
+  .pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

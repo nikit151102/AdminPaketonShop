@@ -12,6 +12,8 @@ import {
 } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { StorageUtils } from '../../../../utils/storage.utils';
+import { localStorageEnvironment, sessionStorageEnvironment } from '../../../../environment';
 
 export interface MenuItem {
   id: string;
@@ -35,13 +37,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Output() onNavigate = new EventEmitter<MenuItem>();
   @Output() collapsedChange = new EventEmitter<boolean>();
 
+  userData: any;
   openIds = new Set<string>();
   sidebarCollapsed = false;
   theme: 'light' | 'dark' = 'light';
 
   private subs: Subscription[] = [];
 
-  constructor(private elRef: ElementRef, private router: Router) {}
+  constructor(private elRef: ElementRef, private router: Router) { }
 
   ngOnInit(): void {
     const s = this.router.events.subscribe((ev) => {
@@ -56,6 +59,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (savedTheme) {
       this.theme = savedTheme;
     }
+
+    this.userData = StorageUtils.getSessionStorage(sessionStorageEnvironment.user.key);
+    console.log('userData',this.userData)
   }
 
   ngOnDestroy(): void {
@@ -96,6 +102,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   toggleMenu(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
     this.collapsedChange.emit(this.sidebarCollapsed);
+  }
+
+  toggleExitProfile() {
+    StorageUtils.deleteLocalStorageCache(localStorageEnvironment.auth.key);
+    StorageUtils.deleteSessionStorage(sessionStorageEnvironment.auth.key);
+    this.router.navigate(['/'])
   }
 
   @HostListener('document:click', ['$event'])

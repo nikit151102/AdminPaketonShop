@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
-import { ProductInstance, Filter } from '../../../../../models/category-management.interface';
-import { CreateProductDto, UpdateProductDto } from '../../../../../models/product.interface';
+import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, takeUntil } from 'rxjs';
+import { ProductInstance, Filter, MeasurementUnit } from '../../../../../models/category-management.interface';
+import { CreateProductDto, ProductBarCodeDto, UpdateProductDto } from '../../../../../models/product.interface';
 import { Category, CategoryService } from '../../../../core/services/category.service';
 import { ProductService } from '../../../../core/services/product.service';
 import { environment } from '../../../../../environment';
-import { HttpEventType } from '@angular/common/http';
+import { HttpClient, HttpEventType } from '@angular/common/http';
 
 @Component({
   selector: 'app-products',
@@ -39,10 +39,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
   sortField = 'fullName';
   sortDirection: 'asc' | 'desc' = 'asc';
 
+  measurementUnits: MeasurementUnit[] = [];
+  newBarcodes: ProductBarCodeDto[] = [];
+
   newProduct: CreateProductDto = {
     article: '', shortName: '', fullName: '', description: '',
     retailPrice: 0, retailPriceDest: 0, wholesalePrice: 0, wholesalePriceDest: 0,
-    productCategories: [], productProperties: [], imageInstances: []
+    idFrom1c: '', productCategories: []
   };
 
   editProduct: UpdateProductDto = {
@@ -63,12 +66,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   constructor(
     private productService: ProductService,
-    private categoryService: CategoryService
-  ) {}
+    private categoryService: CategoryService,
+    private http: HttpClient
+  ) { }
 
   ngOnInit(): void {
     this.loadProducts();
     this.loadCategories();
+    this.loadMeasurementUnits();
 
     this.searchSubject.pipe(
       debounceTime(400),
@@ -85,6 +90,34 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  private loadMeasurementUnits(): void {
+    // Запрос к API для получения единиц измерения
+    this.http.post<{ data: MeasurementUnit[] }>(
+      `${environment.production}/api/Entities/MeasurementUnit/Filter`,
+      { filters: [], sorts: [], page: 0, pageSize: 1000 }
+    ).subscribe({
+      next: (res) => { this.measurementUnits = res.data || []; },
+      error: (err) => console.error('Ошибка загрузки единиц измерения:', err)
+    });
+  }
+
+
+  // Методы для работы со штрихкодами:
+  addBarcode(): void {
+    this.newBarcodes.push({
+      barCode: '',
+      representationFrom1C: '',
+      coefficient: 1,
+      productInstanceId: '', // Будет заполнен после создания товара
+      measurementUnitId: ''
+    });
+  }
+
+  removeBarcode(index: number): void {
+    this.newBarcodes.splice(index, 1);
+  }
+
 
   loadProducts(): void {
     this.isLoading = true;
@@ -112,13 +145,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
         console.error('Ошибка загрузки товаров:', error);
         this.isLoading = false;
       }
-    });
-  }
-
-  loadCategories(): void {
-    this.categoryService.getAllCategories().subscribe({
-      next: (response: any) => { this.categories = response.data || []; },
-      error: (error) => console.error('Ошибка загрузки категорий:', error)
     });
   }
 
@@ -168,20 +194,66 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }));
   }
 
-  createProduct(): void {
+  async createProduct(): Promise<void> {
     if (!this.validateProduct(this.newProduct)) return;
-    this.isLoading = true;
-    const productData: CreateProductDto = {
-      ...this.newProduct,
-      productCategories: this.getSelectedCategoryIds(),
-      imageInstances: this.prepareImageInstances()
-    };
 
-    this.productService.createProduct(productData).subscribe({
-      next: () => { this.loadProducts(); this.isCreating = false; this.resetForms(); this.isLoading = false; },
-      error: (error) => { console.error('Ошибка создания:', error); this.isLoading = false; }
-    });
+    this.isLoading = true;
+
+
+    try {
+      // 1️⃣ Создаём товар
+      const productData: CreateProductDto = {
+        ...this.newProduct,
+        productCategories: this.newProduct.productCategories, // Путь от корня к листу
+      };
+
+      const createdProduct = await firstValueFrom(
+        this.productService.createProduct(productData)
+      );
+      const productId = createdProduct.data?.id || createdProduct.id;
+
+      if (!productId) {
+        throw new Error('Не удалось получить ID созданного товара');
+      }
+
+      // 2️⃣ Создаём штрихкоды (если есть)
+      if (this.newBarcodes.length > 0) {
+        for (const barcode of this.newBarcodes) {
+          const barcodeData: ProductBarCodeDto = {
+            ...barcode,
+            productInstanceId: productId
+          };
+
+          await firstValueFrom(
+            this.productService.createProductBarCode(barcodeData)
+          );
+        }
+      }
+
+      // 3️⃣ 🔄 Здесь можно добавить вызов обновления цен (заготовлено)
+      // await this.updateProductPrices(productId);
+
+      // ✅ Успех
+      this.loadProducts();
+      this.isCreating = false;
+      this.resetForms();
+
+    } catch (error) {
+      console.error('Ошибка при создании товара:', error);
+      alert('Не удалось создать товар. Проверьте данные и попробуйте снова.');
+    } finally {
+      this.isLoading = false;
+    }
   }
+
+  // 🔄 Заготовка для обновления цен (вызывать после создания при необходимости)
+  private async updateProductPrices(productId: string): Promise<void> {
+    // Пример: this.productService.updatePrices(productId, priceData).toPromise();
+    console.log('Обновление цен для товара:', productId);
+  }
+
+
+
 
   updateProduct(): void {
     if (!this.validateProduct(this.editProduct)) return;
@@ -298,8 +370,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private resetForms(): void {
     this.newProduct = {
       article: '', shortName: '', fullName: '', description: '',
-      retailPrice: 0, retailPriceDest: 0, wholesalePrice: 0, wholesalePriceDest: 0,
-      productCategories: [], productProperties: [], imageInstances: []
+      retailPrice: 0, retailPriceDest: 0, wholesalePrice: 0, wholesalePriceDest: 0, idFrom1c: '', productCategories: []
     };
     this.editProduct = {
       id: '', article: '', shortName: '', fullName: '', description: '',
@@ -308,11 +379,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
     };
     this.uploadedImages = [];
     this.productProperties = [{ key: '', value: '' }];
+    this.newBarcodes = [];
   }
 
-  private getSelectedCategoryIds(): string[] {
-    return this.newProduct.productCategories || this.editProduct.productCategories || [];
-  }
 
   private prepareImageInstances(): any[] {
     return this.uploadedImages.map(img => ({
@@ -373,7 +442,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
 
 
-    // === ZIP UPLOAD STATE ===
+  // === ZIP UPLOAD STATE ===
   showZipUpload = false;
   selectedZipFile: File | null = null;
   isUploadingZip = false;
@@ -445,7 +514,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.zipUploadSuccess = false;
   }
 
-uploadZipArchive(): void {
+  uploadZipArchive(): void {
     if (!this.selectedZipFile) return;
 
     this.isUploadingZip = true;
@@ -483,6 +552,188 @@ uploadZipArchive(): void {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
+
+
+  // === НОВЫЕ СВОЙСТВА ДЛЯ ВЫБОРА КАТЕГОРИЙ ===
+  showCategorySelector = false;
+  categorySearchQuery = '';
+  filteredCategories: any[] = [];
+  categoryBreadcrumbs: { id: string; name: string }[] = [];
+  selectedCategoryPath: string[] = []; // Путь выбранных категорий (от корня к листу)
+  isCategoriesLoading = false;
+  private allCategoriesFlat: any[] = []; // Плоский список всех категорий для поиска
+
+  // === МЕТОДЫ ДЛЯ РАБОТЫ С КАТЕГОРИЯМИ ===
+
+  // Открыть модальное окно выбора категорий
+  openCategorySelector(): void {
+    this.showCategorySelector = true;
+    this.categorySearchQuery = '';
+    this.categoryBreadcrumbs = [];
+    this.filteredCategories = [...this.categories]; // Показываем корневые категории
+    this.allCategoriesFlat = this.flattenCategories(this.categories);
+  }
+
+  // Закрыть модальное окно
+  closeCategorySelector(): void {
+    this.showCategorySelector = false;
+    this.categorySearchQuery = '';
+    this.categoryBreadcrumbs = [];
+  }
+
+  // Подтвердить выбор категорий
+  confirmCategorySelection(): void {
+    if (this.selectedCategoryPath.length > 0) {
+      // newProduct.productCategories уже обновляется в selectCategoryWithParents
+    }
+    this.closeCategorySelector();
+  }
+
+  // Очистить выбранные категории
+  clearSelectedCategories(): void {
+    this.selectedCategoryPath = [];
+    this.newProduct.productCategories = [];
+  }
+
+  // Получить название категории по ID
+  getCategoryName(categoryId: string): string {
+    const category = this.allCategoriesFlat.find(c => c.id === categoryId);
+    return category?.name || categoryId;
+  }
+
+  // Проверить, есть ли категория в выбранном пути
+  isCategoryInPath(categoryId: string): boolean {
+    return this.selectedCategoryPath.includes(categoryId);
+  }
+
+  // Сплющить дерево категорий в плоский список для поиска
+  private flattenCategories(categories: any[], parentId: string | null = null): any[] {
+    let result: any[] = [];
+
+    for (const category of categories) {
+      result.push({
+        ...category,
+        parentId,
+        hasChildren: category.subCategories?.length > 0
+      });
+
+      if (category.subCategories?.length) {
+        result = result.concat(this.flattenCategories(category.subCategories, category.id));
+      }
+    }
+
+    return result;
+  }
+
+  // Поиск категорий
+  onCategorySearchChange(query: string): void {
+    if (!query.trim()) {
+      this.filteredCategories = this.categoryBreadcrumbs.length > 0
+        ? this.getCurrentLevelCategories()
+        : this.categories;
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    this.filteredCategories = this.allCategoriesFlat.filter(cat =>
+      cat.name.toLowerCase().includes(lowerQuery) ||
+      cat.code.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  // Очистить поиск
+  clearCategorySearch(): void {
+    this.categorySearchQuery = '';
+    this.filteredCategories = this.categoryBreadcrumbs.length > 0
+      ? this.getCurrentLevelCategories()
+      : this.categories;
+  }
+
+  // Получить категории текущего уровня (для навигации)
+  private getCurrentLevelCategories(): any[] {
+    if (this.categoryBreadcrumbs.length === 0) {
+      return this.categories;
+    }
+
+    const currentCategoryId = this.categoryBreadcrumbs[this.categoryBreadcrumbs.length - 1].id;
+    const currentCategory = this.allCategoriesFlat.find(c => c.id === currentCategoryId);
+
+    return currentCategory?.subCategories || [];
+  }
+
+  // Навигация к корню
+  navigateToRoot(): void {
+    this.categoryBreadcrumbs = [];
+    this.filteredCategories = [...this.categories];
+    this.categorySearchQuery = '';
+  }
+
+  // Навигация к категории
+  navigateToCategory(categoryId: string): void {
+    // Найти индекс категории в breadcrumbs
+    const index = this.categoryBreadcrumbs.findIndex(c => c.id === categoryId);
+
+    if (index >= 0) {
+      // Обрезать breadcrumbs до выбранной категории
+      this.categoryBreadcrumbs = this.categoryBreadcrumbs.slice(0, index + 1);
+
+      // Загрузить подкатегории
+      const category = this.allCategoriesFlat.find(c => c.id === categoryId);
+      this.filteredCategories = category?.subCategories || [];
+    }
+
+    this.categorySearchQuery = '';
+  }
+
+  // Выбрать категорию с автоматическим добавлением родителей
+  selectCategoryWithParents(categoryId: string): void {
+    // Найти категорию в плоском списке
+    const category = this.allCategoriesFlat.find(c => c.id === categoryId);
+    if (!category) return;
+
+    // Собрать путь от корня до выбранной категории
+    const path: string[] = [];
+    let currentId: string | null = categoryId;
+
+    while (currentId) {
+      path.unshift(currentId); // Добавляем в начало массива
+      const cat = this.allCategoriesFlat.find(c => c.id === currentId);
+      currentId = cat?.parentId || null;
+    }
+
+    // Обновить выбранный путь (максимум 3 уровня)
+    this.selectedCategoryPath = path.slice(-3);
+
+    // Обновить productCategories в newProduct
+    this.newProduct.productCategories = [...this.selectedCategoryPath];
+
+    // Если у категории есть дети, показать их
+    if (category.hasChildren) {
+      this.categoryBreadcrumbs = [
+        ...this.categoryBreadcrumbs,
+        { id: category.id, name: category.name }
+      ];
+      this.filteredCategories = category.subCategories || [];
+    }
+  }
+
+  // Обновить загрузку категорий для сохранения плоского списка
+  loadCategories(): void {
+    this.categoryService.getAllCategories().subscribe({
+      next: (response: any) => {
+        this.categories = response.data || [];
+        this.allCategoriesFlat = this.flattenCategories(this.categories);
+      },
+      error: (error) => console.error('Ошибка загрузки категорий:', error)
+    });
+  }
+
+  // Обновить getSelectedCategoryIds() (если используется)
+  private getSelectedCategoryIds(): string[] {
+    // Возвращаем путь выбранных категорий (уже обновляется в selectCategoryWithParents)
+    return this.newProduct.productCategories || [];
+  }
+
 }
 
 

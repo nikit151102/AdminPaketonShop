@@ -65,6 +65,7 @@ export interface PriceChange {
   productId: string;
 }
 
+
 export interface CreateProductDto {
   article: string;
   shortName: string;
@@ -74,12 +75,30 @@ export interface CreateProductDto {
   retailPriceDest: number;
   wholesalePrice: number;
   wholesalePriceDest: number;
-  measurementUnitId?: string;
-  saleTypeId?: string;
-  productProperties?: string[];
-  imageInstances?: ImageInstanceDto[];
+  baseMeasurementUnitId?: string;
+  idFrom1c:string;
   productCategories: string[];
-  productKeyNames?: string[];
+}
+
+export interface ProductBarCodeDto {
+  barCode: string;
+  representationFrom1C?: string;
+  coefficient: number;
+  productInstanceId: string;
+  measurementUnitId?: string;
+}
+
+export interface MeasurementUnit {
+  id: string;
+  code: number;
+  name: string;
+  shortName: string;
+  coef: number;
+  numerator?: number;
+  denominator?: number;
+  code1c?: string;
+  internationalCode?: string;
+  isDeleted?: boolean;
 }
 
 export interface UpdateProductDto {
@@ -139,3 +158,4 @@ export interface Category {
   id: string;
   name: string;
 }
+

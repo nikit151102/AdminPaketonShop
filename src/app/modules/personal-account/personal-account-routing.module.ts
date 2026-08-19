@@ -27,11 +27,14 @@ const routes: Routes = [
         path: 'orders',
         loadComponent: () => import('./tabs/orders/orders.component').then(m => m.OrdersComponent)
       },
-            {
+      {
         path: 'B2Borders',
         loadComponent: () => import('./tabs/b2b-orders/b2b-orders.component').then(m => m.B2bOrdersComponent)
       },
-      
+      {
+        path: 'barcode',
+        loadComponent: () => import('./tabs/barcode-management/barcode-management.component').then(m => m.BarcodeManagementComponent)
+      },
       {
         path: 'stores',
         loadComponent: () => import('./tabs/stores/stores.component').then(m => m.StoresComponent)

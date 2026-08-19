@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from './auth.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { localStorageEnvironment } from '../../../environment';
+import { localStorageEnvironment, sessionStorageEnvironment } from '../../../environment';
 import { StorageUtils } from '../../../utils/storage.utils';
 import { Router } from '@angular/router';
 
@@ -41,8 +41,11 @@ export class AuthComponent implements OnInit {
     this.authService.login(data.userName, data.email, data.password).subscribe({
       next: (response) => {
         console.log('Login successful', response);
-        // this.userService.setUser(response.data, 'session', true)
-        StorageUtils.setLocalStorageCache(localStorageEnvironment.auth.key, response.data.token, localStorageEnvironment.auth.ttl)
+        this.authService.getUserData().subscribe((value:any)=>{
+          console.log(value)
+          StorageUtils.setSessionStorage(sessionStorageEnvironment.user.key, response.data.token);
+        })
+        StorageUtils.setLocalStorageCache(localStorageEnvironment.auth.key, response.data.token, localStorageEnvironment.auth.ttl);
         this.router.navigate(['/user']);
       },
       error: (error) => {
@@ -52,3 +55,4 @@ export class AuthComponent implements OnInit {
   }
 
 }
+ 

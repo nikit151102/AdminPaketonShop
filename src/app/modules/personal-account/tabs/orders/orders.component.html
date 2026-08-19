@@ -144,6 +144,8 @@
                             getUserName(order.userInstance) }}</span>
                         <span *ngIf="col.field === 'userInstance.phoneNumber'" class="phone-value">{{
                             order.userInstance?.phoneNumber || '-' }}</span>
+                        <span *ngIf="col.field === 'userInstance.email'" class="phone-value">{{
+                            order.userInstance?.email || '-' }}</span>
                         <span *ngIf="col.field === 'address.city'" class="city-value">{{ order.address?.city || '-'
                             }}</span>
                         <span *ngIf="col.field === 'deliveryType.shortName'" class="delivery-type">{{
