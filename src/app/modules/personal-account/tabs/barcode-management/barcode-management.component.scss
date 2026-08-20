@@ -25,14 +25,14 @@ $success: hsla(107, 56%, 35%, 0.623);
 
 .manager-header {
   margin-bottom: 32px;
-  
+
   h2 {
     margin: 0 0 8px;
     font-size: 24px;
     font-weight: 700;
     color: $text;
   }
-  
+
   .subtitle {
     margin: 0;
     font-size: 14px;
@@ -54,12 +54,12 @@ $success: hsla(107, 56%, 35%, 0.623);
   display: flex;
   gap: 12px;
   align-items: center;
-  
+
   .search-input-wrapper {
     position: relative;
     flex: 1;
     max-width: 600px;
-    
+
     .search-icon {
       position: absolute;
       left: 16px;
@@ -67,7 +67,7 @@ $success: hsla(107, 56%, 35%, 0.623);
       transform: translateY(-50%);
       color: $text-muted;
     }
-    
+
     .search-input {
       width: -webkit-fill-available;
       padding: 12px 16px 12px 44px;
@@ -75,14 +75,14 @@ $success: hsla(107, 56%, 35%, 0.623);
       border-radius: $radius-sm;
       font-size: 15px;
       transition: border-color 0.2s ease;
-      
+
       &:focus {
         outline: none;
         border-color: $primary;
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
       }
     }
-    
+
     .search-clear {
       position: absolute;
       right: 12px;
@@ -94,14 +94,14 @@ $success: hsla(107, 56%, 35%, 0.623);
       cursor: pointer;
       padding: 4px;
       border-radius: 50%;
-      
+
       &:hover {
         background: $bg-light;
         color: $danger;
       }
     }
   }
-  
+
   .btn-search {
     padding: 12px 24px;
     background: $primary;
@@ -112,12 +112,12 @@ $success: hsla(107, 56%, 35%, 0.623);
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
-    
+
     &:hover:not(:disabled) {
       background: $primary-dark;
       transform: translateY(-2px);
     }
-    
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -128,7 +128,7 @@ $success: hsla(107, 56%, 35%, 0.623);
 // 🔹 Результаты поиска
 .search-results {
   margin-top: 20px;
-  
+
   .results-header {
     display: flex;
     justify-content: space-between;
@@ -136,12 +136,12 @@ $success: hsla(107, 56%, 35%, 0.623);
     padding: 12px 0;
     border-bottom: 1px solid $border;
     margin-bottom: 16px;
-    
+
     span {
       font-size: 14px;
       color: $text-secondary;
     }
-    
+
     .results-hint {
       font-size: 12px;
       color: $text-muted;
@@ -168,13 +168,13 @@ $success: hsla(107, 56%, 35%, 0.623);
   cursor: pointer;
   transition: all 0.2s ease;
   border: 2px solid transparent;
-  
+
   &:hover {
     background: $primary-light;
     border-color: $primary;
     transform: translateX(4px);
   }
-  
+
   &.selected {
     border-color: $primary;
     background: $primary-light;
@@ -188,13 +188,13 @@ $success: hsla(107, 56%, 35%, 0.623);
   overflow: hidden;
   background: linear-gradient(135deg, $bg-light, $border);
   flex-shrink: 0;
-  
+
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  
+
   .image-placeholder {
     width: 100%;
     height: 100%;
@@ -209,7 +209,7 @@ $success: hsla(107, 56%, 35%, 0.623);
 .product-info {
   flex: 1;
   min-width: 0;
-  
+
   .product-name {
     margin: 0 0 4px;
     font-size: 15px;
@@ -219,18 +219,18 @@ $success: hsla(107, 56%, 35%, 0.623);
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   .product-meta {
     display: flex;
     gap: 12px;
-    
+
     .meta-item {
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 12px;
       color: $text-muted;
-      
+
       svg {
         opacity: 0.6;
       }
@@ -256,7 +256,7 @@ $success: hsla(107, 56%, 35%, 0.623);
   background: linear-gradient(135deg, $primary-light, $bg);
   border-radius: $radius-sm;
   border: 1px solid rgba($primary, 0.2);
-  
+
   &__image {
     width: 72px;
     height: 72px;
@@ -264,13 +264,13 @@ $success: hsla(107, 56%, 35%, 0.623);
     overflow: hidden;
     background: white;
     flex-shrink: 0;
-    
+
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    
+
     .image-placeholder {
       width: 100%;
       height: 100%;
@@ -282,23 +282,23 @@ $success: hsla(107, 56%, 35%, 0.623);
       background: $bg-light;
     }
   }
-  
+
   &__info {
     flex: 1;
-    
+
     h3 {
       margin: 0 0 8px;
       font-size: 18px;
       font-weight: 700;
       color: $text;
     }
-    
+
     .product-details {
       display: flex;
       gap: 16px;
       font-size: 13px;
       color: $text-secondary;
-      
+
       strong {
         color: $text;
         font-weight: 600;
@@ -319,7 +319,7 @@ $success: hsla(107, 56%, 35%, 0.623);
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: rgba($primary, 0.2);
     transform: rotate(90deg);
@@ -350,17 +350,17 @@ $success: hsla(107, 56%, 35%, 0.623);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: $primary-light;
     color: $primary;
   }
-  
+
   &.active {
     background: $primary;
     color: white;
     border-bottom-color: $primary;
-    
+
     &:hover {
       background: $primary-dark;
     }
@@ -381,7 +381,7 @@ $success: hsla(107, 56%, 35%, 0.623);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
@@ -394,31 +394,32 @@ $success: hsla(107, 56%, 35%, 0.623);
     font-size: 13px;
     font-weight: 500;
     color: $text;
-    
+
     .required {
       color: $danger;
       margin-left: 2px;
     }
   }
-  
-  input, select {
+
+  input,
+  select {
     width: -webkit-fill-available;
     padding: 10px 14px;
     border: 2px solid $border;
     border-radius: $radius-sm;
     font-size: 14px;
     transition: border-color 0.2s ease;
-    
+
     &:focus {
       outline: none;
       border-color: $primary;
     }
-    
+
     &.error {
       border-color: $danger;
     }
   }
-  
+
   .error-message {
     margin-top: 4px;
     font-size: 11px;
@@ -431,7 +432,7 @@ $success: hsla(107, 56%, 35%, 0.623);
   justify-content: flex-end;
   gap: 12px;
   padding-top: 8px;
-  
+
   .btn-cancel {
     padding: 10px 20px;
     background: $bg-light;
@@ -441,12 +442,12 @@ $success: hsla(107, 56%, 35%, 0.623);
     font-weight: 500;
     font-size: 14px;
     cursor: pointer;
-    
+
     &:hover {
       background: $border;
     }
   }
-  
+
   .btn-primary {
     padding: 10px 20px;
     background: $primary;
@@ -456,11 +457,11 @@ $success: hsla(107, 56%, 35%, 0.623);
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    
+
     &:hover:not(:disabled) {
       background: $primary-dark;
     }
-    
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -480,7 +481,7 @@ $success: hsla(107, 56%, 35%, 0.623);
 .barcodes-table {
   width: 100%;
   border-collapse: collapse;
-  
+
   th {
     padding: 14px 16px;
     text-align: left;
@@ -492,28 +493,28 @@ $success: hsla(107, 56%, 35%, 0.623);
     background: $bg-light;
     border-bottom: 1px solid $border;
   }
-  
+
   td {
     padding: 14px 16px;
     font-size: 14px;
     color: $text;
     border-bottom: 1px solid $border;
-    
+
     &.barcode-value {
       font-family: 'SF Mono', 'Monaco', monospace;
       font-weight: 600;
       color: $primary;
     }
   }
-  
+
   tr:last-child td {
     border-bottom: none;
   }
-  
+
   tr:hover {
     background: $bg-light;
   }
-  
+
   tr.editing {
     background: $primary-light;
   }
@@ -522,7 +523,7 @@ $success: hsla(107, 56%, 35%, 0.623);
 .actions {
   display: flex;
   gap: 8px;
-  
+
   .action-btn {
     width: 32px;
     height: 32px;
@@ -535,26 +536,26 @@ $success: hsla(107, 56%, 35%, 0.623);
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    
+
     &:hover {
       transform: translateY(-2px);
     }
-    
+
     &.edit:hover {
       background: $primary-light;
       color: $primary;
     }
-    
+
     &.delete:hover {
       background: $danger-light;
       color: $danger;
     }
-    
+
     &.save:hover {
       background: rgba($success, 0.1);
       color: $success;
     }
-    
+
     &.cancel:hover {
       background: $bg-light;
       color: $text-muted;
@@ -562,14 +563,15 @@ $success: hsla(107, 56%, 35%, 0.623);
   }
 }
 
-.edit-input, .edit-select {
+.edit-input,
+.edit-select {
   width: 100%;
   padding: 6px 10px;
   border: 1px solid $border;
   border-radius: 6px;
   font-size: 13px;
   background: white;
-  
+
   &:focus {
     outline: none;
     border-color: $primary;
@@ -585,7 +587,7 @@ $success: hsla(107, 56%, 35%, 0.623);
   padding: 16px;
   background: $bg-light;
   border-top: 1px solid $border;
-  
+
   .pagination-btn {
     padding: 8px 16px;
     background: white;
@@ -595,19 +597,19 @@ $success: hsla(107, 56%, 35%, 0.623);
     color: $text-secondary;
     cursor: pointer;
     transition: all 0.2s ease;
-    
+
     &:hover:not(:disabled) {
       background: $primary-light;
       border-color: $primary;
       color: $primary;
     }
-    
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
   }
-  
+
   .pagination-info {
     font-size: 13px;
     color: $text-muted;
@@ -619,12 +621,12 @@ $success: hsla(107, 56%, 35%, 0.623);
   text-align: center;
   padding: 48px 24px;
   color: $text-muted;
-  
+
   svg {
     margin-bottom: 16px;
     opacity: 0.3;
   }
-  
+
   p {
     margin: 0 0 16px;
     font-size: 15px;
@@ -639,7 +641,7 @@ $success: hsla(107, 56%, 35%, 0.623);
   justify-content: center;
   padding: 48px;
   color: $text-muted;
-  
+
   .spinner {
     width: 32px;
     height: 32px;
@@ -652,7 +654,9 @@ $success: hsla(107, 56%, 35%, 0.623);
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // 🔹 Toast уведомления
@@ -667,12 +671,12 @@ $success: hsla(107, 56%, 35%, 0.623);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   z-index: 2000;
   animation: slideIn 0.3s ease;
-  
+
   &.success {
     background: $primary;
     color: white;
   }
-  
+
   &.error {
     background: $danger;
     color: white;
@@ -684,6 +688,7 @@ $success: hsla(107, 56%, 35%, 0.623);
     opacity: 0;
     transform: translateX(100px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -695,39 +700,113 @@ $success: hsla(107, 56%, 35%, 0.623);
   .barcode-manager {
     padding: 16px;
   }
-  
+
   .search-form {
     flex-direction: column;
-    
+
     .search-input-wrapper {
       max-width: 100%;
     }
-    
+
     .btn-search {
       width: 100%;
     }
   }
-  
+
   .barcodes-table {
     font-size: 13px;
-    
-    th, td {
+
+    th,
+    td {
       padding: 10px 12px;
     }
-    
+
     .actions {
       flex-direction: column;
       gap: 4px;
-      
+
       .action-btn {
         width: 28px;
         height: 28px;
       }
     }
   }
-  
+
   .pagination {
     flex-wrap: wrap;
     gap: 8px;
+  }
+}
+
+
+// 🔹 barcode-management.component.scss
+
+// 🔹 Строка удалённого штрихкода
+tr.deleted-row {
+  opacity: 0.6;
+  background: rgba($danger, 0.03);
+
+  td {
+    color: $text-muted;
+  }
+
+  .barcode-value {
+    color: $text-muted !important;
+    text-decoration: line-through;
+  }
+
+  .action-btn.edit {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+// 🔹 Бейдж "удалён"
+.deleted-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: $danger-light;
+  color: $danger;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// 🔹 Кнопка восстановления
+.action-btn.restore {
+  background: rgba($success, 0.1);
+  color: $success;
+
+  &:hover {
+    background: rgba($success, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+// 🔹 Анимация изменения статуса
+tr {
+  transition: all 0.2s ease;
+
+  &.deleted-row {
+    animation: fadeOut 0.3s ease;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    background: transparent;
+  }
+
+  to {
+    opacity: 0.6;
+    background: rgba($danger, 0.03);
   }
 }

@@ -10,6 +10,7 @@ export interface ProductBarcode {
   barCode: string;
   representationFrom1C?: string;
   coefficient: number;
+  comment?: string;
   productInstanceId: string;
   measurementUnitId: string;
   isDeleted?: boolean;
@@ -24,6 +25,7 @@ export interface ProductSearchResult {
   shortName?: string;
   productImageLink?: string;
   baseMeasurementUnit?: MeasurementUnit;
+  productInstanceId: string;
 }
 
 export interface FilterRequest {

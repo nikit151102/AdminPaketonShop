@@ -9,7 +9,7 @@ import { FilterResponse, ProductSearchResult, FilterRequest, ProductBarcode, Mea
   providedIn: 'root'
 })
 export class BarcodeManagementService {
-  private readonly baseUrl = 'https://песочница.пакетон.рф/api/api/Entities';
+  private readonly baseUrl = 'https://пакетон.рф/api/api/Entities';
 
   constructor(private http: HttpClient) { }
 
@@ -21,7 +21,6 @@ export class BarcodeManagementService {
         values: [query],
         type: 0
       }],
-      sorts: [],
       page,
       pageSize
     };
@@ -53,9 +52,15 @@ export class BarcodeManagementService {
 
   // 🔹 Создание штрихкода
   createBarcode(barcode: Omit<ProductBarcode, 'id'>): Observable<FilterResponse<ProductBarcode>> {
+
+    const payload = {
+      ...barcode,
+      comment: barcode.comment || 'сайт пакетон'
+    };
+
     return this.http.post<FilterResponse<ProductBarcode>>(
       `${this.baseUrl}/ProductBarCode`,
-      barcode
+      payload
     );
   }
 
@@ -65,7 +70,7 @@ export class BarcodeManagementService {
     const payload = Object.fromEntries(
       Object.entries(changes).filter(([_, v]) => v !== undefined && v !== null)
     );
-    
+
     return this.http.put<FilterResponse<ProductBarcode>>(
       `${this.baseUrl}/ProductBarCode/${id}`,
       { id, ...payload }
@@ -73,9 +78,17 @@ export class BarcodeManagementService {
   }
 
   // 🔹 Удаление штрихкода
-  deleteBarcode(id: string): Observable<FilterResponse<ProductBarcode>> {
-    return this.http.delete<FilterResponse<ProductBarcode>>(
-      `${this.baseUrl}/ProductBarCode/${id}`
+  // deleteBarcode(id: string): Observable<FilterResponse<ProductBarcode>> {
+  //   return this.http.delete<FilterResponse<ProductBarcode>>(
+  //     `${this.baseUrl}/ProductBarCode/${id}`
+  //   );
+  // }
+
+  softDeleteBarcode(id: string): Observable<FilterResponse<ProductBarcode>> {
+    // 🔹 Отправляем только isDeleted: true через PUT/PATCH
+    return this.http.put<FilterResponse<ProductBarcode>>(
+      `${this.baseUrl}/ProductBarCode/${id}`,
+      { id, isDeleted: true } // 🔹 Только изменённое поле
     );
   }
 
