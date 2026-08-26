@@ -203,11 +203,12 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     }
   }
 
-  removeProductFromCategory(productId: string): void {
+  removeProductFromCategory(productId: any): void {
+    console.log('productId',productId)
     if (!this.selectedCategory || !confirm('Удалить товар из категории?')) return;
-    this.categoryService.removeProductsFromCategory(this.selectedCategory.id, [productId]).subscribe({
+    this.categoryService.removeProductsFromCategory(this.selectedCategory.id, [productId.productBarCode.id]).subscribe({
       next: () => {
-        this.categoryProducts = this.categoryProducts.filter(p => p.id !== productId);
+        this.categoryProducts = this.categoryProducts.filter(p => p.id !== productId.productBarCode.id);
         this.totalProducts = Math.max(0, this.totalProducts - 1);
         if (this.selectedCategory) {
           this.selectedCategory.productCount = Math.max(0, (this.selectedCategory.productCount || 1) - 1);

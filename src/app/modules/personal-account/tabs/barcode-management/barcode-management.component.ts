@@ -158,6 +158,7 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
 
   // 🔹 Выбор товара
   selectProduct(product: ProductSearchResult): void {
+    console.log('product',product)
     this.selectedProduct = product;
     this.productSearchResults = [];
     this.searchQuery = '';
@@ -229,7 +230,7 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     const formValue = this.addBarcodeForm.value;
 
-    const newBarcode: Omit<ProductBarcode, 'id'> = {
+    const newBarcode: Omit<any, 'id'> = {
       barCode: formValue.barCode,
       representationFrom1C: formValue.representationFrom1C || undefined,
       coefficient: formValue.coefficient,
@@ -266,9 +267,16 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
 
   // 🔹 Редактирование штрихкода
   startEdit(barcode: ProductBarcode): void {
+    // 🔹 Создаём копию, чтобы не мутировать оригинал до сохранения
     this.originalBarcode = { ...barcode };
-    this.editingBarcode = { ...barcode };
+    this.editingBarcode = {
+      ...barcode,
+      // 🔹 Гарантируем, что nullable поля имеют значения по умолчанию
+      representationFrom1C: barcode.representationFrom1C ?? '',
+      comment: barcode.comment ?? ''
+    };
   }
+
 
   cancelEdit(): void {
     this.editingBarcode = null;
@@ -276,13 +284,14 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
   }
 
   saveBarcodeEdit(): void {
+    // 🔹 Проверка на null
     if (!this.editingBarcode?.id || !this.originalBarcode) return;
 
-    // 🔹 Сравниваем с оригиналом — отправляем только изменённые поля
     const changes: Partial<ProductBarcode> = {};
 
+    // 🔹 Сравниваем, учитывая null/undefined
     if (this.editingBarcode.representationFrom1C !== this.originalBarcode.representationFrom1C) {
-      changes.representationFrom1C = this.editingBarcode.representationFrom1C;
+      changes.representationFrom1C = this.editingBarcode.representationFrom1C ?? null;
     }
     if (this.editingBarcode.coefficient !== this.originalBarcode.coefficient) {
       changes.coefficient = this.editingBarcode.coefficient;
@@ -291,7 +300,6 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
       changes.measurementUnitId = this.editingBarcode.measurementUnitId;
     }
 
-    // 🔹 Если ничего не изменилось — просто закрываем редактирование
     if (Object.keys(changes).length === 0) {
       this.cancelEdit();
       return;
@@ -306,9 +314,8 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
         this.loadBarcodesForProduct(this.selectedProduct!.productInstanceId, this.currentBarcodePage);
       },
       error: (err) => {
-        console.error('Ошибка обновления штрихкода:', err);
-        this.showToast('Не удалось обновить штрихкод', 'error');
-        // 🔹 Восстанавливаем оригинальные значения
+        console.error('Ошибка обновления:', err);
+        this.showToast('Не удалось обновить', 'error');
         this.editingBarcode = { ...this.originalBarcode! };
       }
     });
@@ -327,7 +334,7 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
     // 🔹 Если уже удалён — восстанавливаем, иначе — удаляем
     const newIsDeletedValue = !barcode.isDeleted;
 
-    this.barcodeService.softDeleteBarcode(barcode.id).pipe(
+    this.barcodeService.softDeleteBarcode(barcode.id, newIsDeletedValue).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: () => {

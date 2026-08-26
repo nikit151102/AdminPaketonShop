@@ -1,18 +1,26 @@
 export interface MeasurementUnit {
   id: string;
-  name: string;
+  name: string | null;
   shortName: string;
   code: number;
+  coef?: number;
+  isDeleted?: boolean;
 }
-
 export interface ProductBarcode {
   id?: string;
   barCode: string;
-  representationFrom1C?: string;
+  representationFrom1C?: string | null;
   coefficient: number;
   comment?: string;
   productInstanceId: string;
   measurementUnitId: string;
+  measurementUnit: any;
+  productInstance?: {
+    id: string;
+    article: string;
+    fullName: string;
+    productImageLink?: string;
+  };
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -51,3 +59,4 @@ export interface FilterResponse<T> {
   pageSize: number;
   data: T[];
 }
+

@@ -84,11 +84,11 @@ export class BarcodeManagementService {
   //   );
   // }
 
-  softDeleteBarcode(id: string): Observable<FilterResponse<ProductBarcode>> {
+  softDeleteBarcode(id: string, isDeleted: boolean): Observable<FilterResponse<ProductBarcode>> {
     // 🔹 Отправляем только isDeleted: true через PUT/PATCH
     return this.http.put<FilterResponse<ProductBarcode>>(
       `${this.baseUrl}/ProductBarCode/${id}`,
-      { id, isDeleted: true } // 🔹 Только изменённое поле
+      { id, isDeleted: isDeleted } // 🔹 Только изменённое поле
     );
   }
 

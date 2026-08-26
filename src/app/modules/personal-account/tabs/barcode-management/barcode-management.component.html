@@ -89,7 +89,6 @@
 
     <!-- Управление штрихкодами выбранного товара -->
     <div class="barcode-section" *ngIf="selectedProduct">
-
         <!-- Информация о товаре -->
         <div class="selected-product">
             <div class="product-card">
@@ -193,48 +192,68 @@
                     <tr>
                         <th>Штрихкод</th>
                         <th>Из 1С</th>
-                        <th>Коэфф.</th>
+                        <th>Фасовка</th>
                         <th>Ед. изм.</th>
+                        <th>Коэфф.</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let barcode of barcodes" [class.editing]="editingBarcode?.id === barcode.id">
+                    <tr *ngFor="let barcode of barcodes" [class.editing]="editingBarcode?.id === barcode.id"
+                        [class.deleted-row]="barcode.isDeleted">
 
-                        <!-- Режим просмотра -->
-                        <ng-container *ngIf="editingBarcode?.id !== barcode.id">
-                            <td class="barcode-value">{{ barcode.barCode }}</td>
-                            <td>{{ barcode.representationFrom1C || '—' }}</td>
-                            <td>{{ barcode.coefficient }}</td>
-                            <td>{{ getMeasurementUnitName(barcode.measurementUnitId) }}</td>
-                            <!-- 🔹 В таблице, в колонке "Действия" -->
-                            <td class="barcode-value">
-                                {{ barcode.barCode }}
-                                <span class="deleted-badge" *ngIf="barcode.isDeleted">
-                                    удалён
+                        <ng-container *ngIf="!editingBarcode || editingBarcode.id !== barcode.id">
+
+                            <!-- Штрихкод -->
+                            <td class="barcode-cell">
+                                <code class="barcode-code">{{ barcode.barCode }}</code>
+                                <span class="deleted-badge" *ngIf="barcode.isDeleted">удалён</span>
+                            </td>
+
+                            <!-- Представление из 1С -->
+                            <td class="representation-cell">
+                                {{ barcode.representationFrom1C || '—' }}
+                            </td>
+
+                            <!-- Фасовка (коэффициент) -->
+                            <td class="pack-cell">
+                                <span class="pack-badge">
+                                    {{ barcode.coefficient | number:'1.0-0' }} шт
                                 </span>
                             </td>
-                            <td class="actions">
-                                <!-- 🔹 Кнопка редактирования -->
-                                <button class="action-btn edit" (click)="startEdit(barcode)" title="Редактировать"
-                                    [disabled]="barcode.isDeleted">
+
+                            <!-- Единица измерения -->
+                            <td class="unit-cell">
+                                <span class="unit-badge" [title]="barcode.measurementUnit?.name || ''">
+                                    {{ barcode.measurementUnit?.shortName || '—' }}
+                                </span>
+                            </td>
+
+                            <!-- Статус -->
+                            <td class="status-cell">
+                                <span class="status-badge" [class.active]="!barcode.isDeleted"
+                                    [class.inactive]="barcode.isDeleted">
+                                    {{ barcode.isDeleted ? 'Неактивен' : 'Активен' }}
+                                </span>
+                            </td>
+
+                            <!-- Кнопки действий -->
+                            <td class="actions-cell">
+                                <button class="action-btn edit" (click)="startEdit(barcode)"
+                                    [disabled]="barcode.isDeleted" title="Редактировать">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                     </svg>
                                 </button>
 
-                                <!-- 🔹 Кнопка удаления/восстановления -->
-                                <button class="action-btn" [class.delete]="!barcode.isDeleted"
-                                    [class.restore]="barcode.isDeleted" (click)="deleteBarcode(barcode)"
+                                <button class="action-btn delete" (click)="deleteBarcode(barcode)"
                                     [title]="barcode.isDeleted ? 'Восстановить' : 'Удалить'">
-                                    <!-- Иконка удаления -->
                                     <svg *ngIf="!barcode.isDeleted" width="14" height="14" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor">
                                         <path
                                             d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                     </svg>
-                                    <!-- Иконка восстановления -->
                                     <svg *ngIf="barcode.isDeleted" width="14" height="14" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor">
                                         <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0" />
@@ -244,28 +263,32 @@
                             </td>
                         </ng-container>
 
-                        <!-- Режим редактирования -->
-                        <ng-container *ngIf="editingBarcode && editingBarcode?.id === barcode.id">
-                            <td>
-                                <input type="text" [(ngModel)]="editingBarcode.barCode" class="edit-input"
-                                    [disabled]="true">
-                            </td>
+                        <!-- Режим редактирования  -->
+                        <ng-container *ngIf="editingBarcode && editingBarcode.id === barcode.id">
+                            <td><code class="barcode-code">{{ barcode.barCode }}</code></td>
                             <td>
                                 <input type="text" [(ngModel)]="editingBarcode.representationFrom1C" class="edit-input"
-                                    placeholder="Не указано">
+                                    placeholder="уп (10 шт)">
                             </td>
                             <td>
-                                <input type="number" [(ngModel)]="editingBarcode.coefficient" class="edit-input"
-                                    min="0.001" step="0.001">
+                                <input type="number" [(ngModel)]="editingBarcode.coefficient"
+                                    class="edit-input pack-input" min="0.001" step="0.001">
                             </td>
                             <td>
                                 <select [(ngModel)]="editingBarcode.measurementUnitId" class="edit-select">
+                                    <option value="">Выберите...</option>
                                     <option *ngFor="let unit of measurementUnits" [value]="unit.id">
-                                        {{ unit.shortName }}
+                                        {{ unit.name || unit.shortName }}
                                     </option>
                                 </select>
                             </td>
-                            <td class="actions">
+                            <td>
+                                <span class="status-badge" [class.active]="!barcode.isDeleted"
+                                    [class.inactive]="barcode.isDeleted">
+                                    {{ barcode.isDeleted ? 'Неактивен' : 'Активен' }}
+                                </span>
+                            </td>
+                            <td class="actions-cell">
                                 <button class="action-btn save" (click)="saveBarcodeEdit()" title="Сохранить">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <polyline points="20 6 9 17 4 12" />
