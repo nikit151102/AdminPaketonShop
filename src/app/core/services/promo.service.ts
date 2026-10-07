@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment';
 
-
 export interface PromoOrderGroup {
   id?: string;
   beginDateTime: string;
@@ -29,25 +28,52 @@ export interface PromoOrder {
   id?: string;
   salePercent: number;
   isRecountNeed: boolean;
+  isPriceUpdateBlocked?: boolean;
+  tagColor?: string;
+  tagAbb?: string;
+  productCountSailLimit?: number;
+  productCountAlreadySailed?: number;
+  retailPrice?: number;
+  retailPriceDest?: number;
+  wholesalePrice?: number;
+  wholesalePriceDest?: number;
   productId: string;
+  productBarCodeId: string;
   promoOrderGroupId: string;
   product?: any;
   promoOrderGroup?: PromoOrderGroup;
 }
 
-export interface Product {
-  id: string;
-  article: string;
-  shortName: string;
+export interface ProductSearchItem {
+  id: string; // Это ID штрихкода (productBarCodeId)
+  productInstanceId: string; // Это ID товара (productId)
   fullName: string;
+  article: string;
   description: string;
+  barCode: string;
+  productBarCode?: {
+    id: string;
+    barCode: string;
+    representationFrom1C: string;
+  };
   retailPrice: number;
   retailPriceDest: number;
   wholesalePrice: number;
   wholesalePriceDest: number;
-  measurementUnitId: string;
-  saleTypeId: string;
-  productImageLink: string;
+  productImageLinks?: string[];
+}
+
+export interface ProductBarCodeItem {
+  id: string;
+  barCode: string;
+  representationFrom1C: string;
+  coefficient: number;
+  productInstance?: {
+    id: string;
+    article: string;
+    fullName: string;
+    productImageLink: string;
+  };
 }
 
 export interface QueryDto {
@@ -118,10 +144,6 @@ export class PromoService {
   }
 
   // PromoOrder endpoints
-  createPromoOrder(data: PromoOrder): Observable<ApiResponse<PromoOrder>> {
-    return this.http.post<ApiResponse<PromoOrder>>(`${this.apiUrl}/api/Entities/PromoOrder`, data);
-  }
-
   getPromoOrdersFiltered(query: QueryDto): Observable<ApiResponse<PromoOrder[]>> {
     return this.http.post<ApiResponse<PromoOrder[]>>(`${this.apiUrl}/api/Entities/PromoOrder/Filter`, query);
   }
@@ -134,17 +156,23 @@ export class PromoService {
     return this.http.delete<ApiResponse<PromoOrder>>(`${this.apiUrl}/api/Entities/PromoOrder/${id}`);
   }
 
-  addProductsPromoOrder(data: any): Observable<ApiResponse<PromoOrder>> {
-    return this.http.put<ApiResponse<PromoOrder>>(`${this.apiUrl}/api/Entities/PromoOrder/addProductToPromoOrder`, [data]);
+  addProductsPromoOrder(data: any[]): Observable<ApiResponse<PromoOrder[]>> {
+    return this.http.put<ApiResponse<PromoOrder[]>>(`${this.apiUrl}/api/Entities/PromoOrder/addProductToPromoOrder`, data);
   }
 
-  deleteProductsPromoOrder(data: any): Observable<ApiResponse<PromoOrder>> {
-    return this.http.put<ApiResponse<PromoOrder>>(`${this.apiUrl}/api/Entities/PromoOrder/RemoveProductsToPromoOrder`, data);
+  // Product Search endpoint
+  searchProducts(query: QueryDto): Observable<ApiResponse<ProductSearchItem[]>> {
+    return this.http.post<ApiResponse<ProductSearchItem[]>>(`${this.apiUrl}/api/Entities/ProductInstanceSearch/Filter`, query);
   }
 
-
-  // Product endpoints
-  getProductsFiltered(query: QueryDto): Observable<ApiResponse<any[]>> {
-    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/api/Entities/ProductInstance/Filter`, query);
+  // Product BarCodes endpoint
+  getProductBarCodes(productInstanceId: string): Observable<ApiResponse<ProductBarCodeItem[]>> {
+    const query: QueryDto = {
+      filters: [{ field: 'ProductInstanceId', values: [productInstanceId], type: 10 }],
+      sorts: [],
+      page: 0,
+      pageSize: 50
+    };
+    return this.http.post<ApiResponse<ProductBarCodeItem[]>>(`${this.apiUrl}/api/Entities/ProductBarCode/Filter`, query);
   }
 }

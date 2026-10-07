@@ -1,0 +1,185 @@
+.icons {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  .icon-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: #5a5a5a;
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+
+    &:hover {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      color: #2d3748;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover svg {
+      transform: scale(1.1);
+    }
+
+    // Специфичные стили для иконок
+    &.favorites-link {
+      color: #ef4444;
+
+      &:hover {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #dc2626;
+      }
+    }
+
+    &.cart-link {
+      color: #059669;
+
+      &:hover {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #047857;
+      }
+    }
+
+    &.search-link {
+      color: #3b82f6;
+
+      &:hover {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #2563eb;
+      }
+    }
+
+    &.home-link {
+      color: #8b5cf6;
+
+      &:hover {
+        background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+        color: #7c3aed;
+      }
+    }
+
+    &.settings-link {
+      color: #6366f1;
+
+      &:hover {
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        color: #4f46e5;
+      }
+    }
+
+    .badge {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      height: 20px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 1;
+      color: white;
+      background: linear-gradient(135deg, #306d1fbd, #2b611dc9);
+      border-radius: 20px;
+      border: 1px solid white;
+      box-shadow: 0 4px 8px -2px #306d1fbd, 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+      animation: _ngcontent-ng-c1054315046_badgePulse 2s ease-in-out infinite;
+      transform-origin: center;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+      letter-spacing: 0.3px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+      // Если контента нет - скрываем
+      &:empty {
+        display: none;
+      }
+    }
+
+    // Улучшенная анимация пульсации
+    @keyframes badgePulse {
+      0% {
+        box-shadow: 0 4px 8px -2px rgba(220, 38, 38, 0.3);
+        transform: scale(1);
+      }
+
+      50% {
+        box-shadow:
+          0 8px 16px -4px rgba(220, 38, 38, 0.6),
+          0 4px 8px -2px rgba(0, 0, 0, 0.2);
+        transform: scale(1.05);
+      }
+
+      100% {
+        box-shadow: 0 4px 8px -2px rgba(220, 38, 38, 0.3);
+        transform: scale(1);
+      }
+    }
+
+    // Дополнительные вариации бейджа (опционально)
+    .badge {
+
+      // Для маленьких чисел (1-9)
+      &[data-count="1"],
+      &[data-count="2"],
+      &[data-count="3"],
+      &[data-count="4"],
+      &[data-count="5"],
+      &[data-count="6"],
+      &[data-count="7"],
+      &[data-count="8"],
+      &[data-count="9"] {
+        width: 20px;
+        padding: 0;
+      }
+
+      // Для двузначных чисел
+      &[data-count="10"],
+      &[data-count="11"],
+      &[data-count="12"] {
+        min-width: 26px;
+        font-size: 10px;
+      }
+
+      // Для чисел > 99
+      &[data-count="100"],
+      &[data-count^="1"][data-count$="0"]:not([data-count="10"]) {
+        min-width: 32px;
+        font-size: 9px;
+      }
+    }
+  }
+
+  // Анимация пульсации для бейджа
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    70% {
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+  }
+}

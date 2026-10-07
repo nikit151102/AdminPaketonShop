@@ -309,251 +309,9 @@
   </div>
 </div>
 
-<!-- CREATE MODAL -->
-<div class="modal-overlay" *ngIf="isCreating" (click)="cancelCreate()">
-  <div class="modal modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Новый товар</h2>
-      <button class="modal-close" (click)="cancelCreate()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-    </div>
 
-    <form class="modal-body" (ngSubmit)="createProduct()">
 
-      <!-- Основная информация -->
-      <div class="form-section">
-        <h3>Основная информация</h3>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Идентификатор 1С <span class="req">*</span></label>
-            <input [(ngModel)]="newProduct.idFrom1c" name="idFrom1c" required placeholder="Уникальный ID из 1С" />
-          </div>
-          <div class="form-group">
-            <label>Артикул <span class="req">*</span></label>
-            <input [(ngModel)]="newProduct.article" name="article" required placeholder="Артикул товара" />
-          </div>
-          <div class="form-group full">
-            <label>Полное наименование <span class="req">*</span></label>
-            <input [(ngModel)]="newProduct.fullName" name="fullName" required placeholder="Полное название товара" />
-          </div>
-          <div class="form-group">
-            <label>Краткое наименование</label>
-            <input [(ngModel)]="newProduct.shortName" name="shortName" placeholder="Сокращённое название" />
-          </div>
-        </div>
-        <div class="form-group full">
-          <label>Описание</label>
-          <textarea [(ngModel)]="newProduct.description" name="description" rows="3"
-            placeholder="Описание товара"></textarea>
-        </div>
-      </div>
 
-      <!-- Цены -->
-      <div class="form-section">
-        <h3>Цены</h3>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Розничная цена (город)</label>
-            <input type="number" [(ngModel)]="newProduct.retailPrice" name="retailPrice" step="0.01" min="0" />
-          </div>
-          <div class="form-group">
-            <label>Розничная цена (межгород)</label>
-            <input type="number" [(ngModel)]="newProduct.retailPriceDest" name="retailPriceDest" step="0.01" min="0" />
-          </div>
-          <div class="form-group">
-            <label>Оптовая цена (город)</label>
-            <input type="number" [(ngModel)]="newProduct.wholesalePrice" name="wholesalePrice" step="0.01" min="0" />
-          </div>
-          <div class="form-group">
-            <label>Оптовая цена (межгород)</label>
-            <input type="number" [(ngModel)]="newProduct.wholesalePriceDest" name="wholesalePriceDest" step="0.01"
-              min="0" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Категории -->
-      <div class="form-section">
-        <div class="section-header">
-          <h3>Категории <span class="req">*</span></h3>
-          <button type="button" class="btn-sm" (click)="openCategorySelector()">+ Выбрать категории</button>
-        </div>
-
-        <!-- Выбранные категории (путь) -->
-        <div *ngIf="selectedCategoryPath.length > 0" class="selected-categories-path">
-          <div class="path-breadcrumbs">
-            <span *ngFor="let catId of selectedCategoryPath; let last = last" class="path-item">
-              <span class="path-name">{{ getCategoryName(catId) }}</span>
-              <span *ngIf="!last" class="path-separator">›</span>
-            </span>
-          </div>
-          <button type="button" class="btn-clear-path" (click)="clearSelectedCategories()" title="Очистить выбор">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-
-        <div *ngIf="selectedCategoryPath.length === 0" class="empty-categories">
-          <p>Категории не выбраны. Нажмите "Выбрать категории"</p>
-        </div>
-      </div>
-
-      <!-- MODAL: Выбор категорий с иерархией -->
-      <div class="modal-overlay" *ngIf="showCategorySelector" (click)="closeCategorySelector()">
-        <div class="modal modal-md" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h3>Выбор категорий</h3>
-            <button class="modal-close" (click)="closeCategorySelector()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="modal-body">
-            <!-- Поиск категорий -->
-            <div class="category-search">
-              <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
-              <input type="text" [(ngModel)]="categorySearchQuery" (ngModelChange)="onCategorySearchChange($event)"
-                placeholder="Поиск категории..." />
-              <button *ngIf="categorySearchQuery" class="clear-search" (click)="clearCategorySearch()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Breadcrumbs навигации -->
-            <div *ngIf="categoryBreadcrumbs.length > 0" class="category-breadcrumbs">
-              <button class="breadcrumb-home" (click)="navigateToRoot()" title="Вернуться к корню">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                </svg>
-              </button>
-              <ng-container *ngFor="let crumb of categoryBreadcrumbs; let last = last">
-                <span class="breadcrumb-separator">/</span>
-                <button class="breadcrumb-item" [class.active]="last" (click)="!last && navigateToCategory(crumb.id)">
-                  {{ crumb.name }}
-                </button>
-              </ng-container>
-            </div>
-
-            <!-- Список категорий -->
-            <div class="categories-tree" *ngIf="!isCategoriesLoading; else categoriesLoadingTpl">
-              <div *ngIf="filteredCategories.length > 0; else noCategoriesTpl">
-                <div *ngFor="let category of filteredCategories" class="category-tree-item"
-                  [class.has-children]="category.hasChildren" [class.selected]="isCategoryInPath(category.id)"
-                  (click)="selectCategoryWithParents(category.id)">
-                  <div class="category-tree-content">
-                    <span class="category-tree-name">{{ category.name }}</span>
-                    <span *ngIf="category.hasChildren" class="category-tree-arrow">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </span>
-                  </div>
-                  <div class="category-tree-meta">
-                    <span class="category-code">{{ category.code }}</span>
-                    <span *ngIf="category.productCount" class="category-count">{{ category.productCount }}
-                      товаров</span>
-                  </div>
-                </div>
-              </div>
-
-              <ng-template #noCategoriesTpl>
-                <div class="empty-categories-tree">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                  </svg>
-                  <p>Категории не найдены</p>
-                </div>
-              </ng-template>
-            </div>
-
-            <ng-template #categoriesLoadingTpl>
-              <div class="loading-categories">
-                <div class="spinner-small"></div>
-                <p>Загрузка категорий...</p>
-              </div>
-            </ng-template>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn-secondary" (click)="closeCategorySelector()">Отмена</button>
-            <button class="btn-primary" (click)="confirmCategorySelection()"
-              [disabled]="selectedCategoryPath.length === 0">
-              Применить ({{ selectedCategoryPath.length }})
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- Штрихкоды -->
-      <div class="form-section">
-        <div class="section-header">
-          <h3>Штрихкоды</h3>
-          <button type="button" class="btn-sm" (click)="addBarcode()">+ Добавить</button>
-        </div>
-
-        <div *ngIf="newBarcodes.length === 0" class="empty-barcodes">
-          <p>Штрихкоды не добавлены. Можно добавить позже.</p>
-        </div>
-
-        <div *ngFor="let barcode of newBarcodes; let i = index" class="barcode-row">
-          <div class="barcode-grid">
-            <div class="form-group">
-              <label>Штрихкод <span class="req">*</span></label>
-              <input [(ngModel)]="barcode.barCode" [name]="'barcode_' + i" required
-                placeholder="Например: 4601234567890" />
-            </div>
-            <div class="form-group">
-              <label>Представление из 1С</label>
-              <input [(ngModel)]="barcode.representationFrom1C" [name]="'repr_' + i" placeholder="Описание для 1С" />
-            </div>
-            <div class="form-group">
-              <label>Коэффициент</label>
-              <input type="number" [(ngModel)]="barcode.coefficient" [name]="'coeff_' + i" step="0.01" min="0.01"
-                value="1" />
-            </div>
-            <div class="form-group">
-              <label>Ед. измерения</label>
-              <select [(ngModel)]="barcode.measurementUnitId" [name]="'unit_' + i">
-                <option value="">Не выбрана</option>
-                <option *ngFor="let unit of measurementUnits" [value]="unit.id">{{ unit.shortName }}</option>
-              </select>
-            </div>
-          </div>
-          <button type="button" class="btn-remove" (click)="removeBarcode(i)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="cancelCreate()">Отмена</button>
-        <button type="submit" class="btn-primary" [disabled]="isLoading">
-          {{ isLoading ? 'Создание...' : 'Создать товар' }}
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <!-- EDIT MODAL -->
 <div class="modal-overlay" *ngIf="isEditing" (click)="cancelEdit()">
@@ -720,16 +478,220 @@
   </div>
 </div>
 
+<!-- CREATE MODAL — ОДИНОЧНОЕ И МАССОВОЕ -->
+<div class="modal-overlay" *ngIf="isCreating" (click)="cancelCreate()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        {{ creationMode === 'single' 
+          ? (creationStep === 1 ? 'Новый товар — Шаг 1' : 'Новый товар — Шаг 2')
+          : (creationStep === 1 ? 'Массовое создание' : creationStep === 2 ? 'Создание товаров...' : 'Обновление данных')
+        }}
+      </h2>
+      <button class="modal-close" (click)="cancelCreate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
 
-<!-- ZIP UPLOAD MODAL -->
+    <!-- 🔹 ШАГ 1: Форма товара -->
+    <form *ngIf="creationStep === 1" class="modal-body" (ngSubmit)="creationMode === 'single' ? goToStep2() : addProductToBulkQueue()">
+      <div class="form-section">
+        <h3>Основная информация</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Идентификатор 1С <span class="req">*</span></label>
+            <input [(ngModel)]="newProduct.idFrom1c" name="idFrom1c" required placeholder="UUID из 1С" />
+          </div>
+          <div class="form-group">
+            <label>Артикул <span class="req">*</span></label>
+            <input [(ngModel)]="newProduct.article" name="article" required placeholder="Артикул товара" />
+          </div>
+          <div class="form-group full">
+            <label>Полное наименование <span class="req">*</span></label>
+            <input [(ngModel)]="newProduct.fullName" name="fullName" required placeholder="Полное название" />
+          </div>
+          <div class="form-group">
+            <label>Краткое наименование</label>
+            <input [(ngModel)]="newProduct.shortName" name="shortName" placeholder="Сокращённое название" />
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Описание</label>
+          <textarea [(ngModel)]="newProduct.description" name="description" rows="3" placeholder="Описание"></textarea>
+        </div>
+      </div>
+
+      <!-- Категории -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3>Категории <span class="req">*</span></h3>
+          <button type="button" class="btn-sm" (click)="openCategorySelector()">+ Выбрать</button>
+        </div>
+        <div *ngIf="selectedCategoryPath.length > 0" class="selected-categories-path">
+          <div class="path-breadcrumbs">
+            <span *ngFor="let catId of selectedCategoryPath; let last = last" class="path-item">
+              <span class="path-name">{{ getCategoryName(catId) }}</span>
+              <span *ngIf="!last" class="path-separator">›</span>
+            </span>
+          </div>
+          <button type="button" class="btn-clear-path" (click)="clearSelectedCategories()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div *ngIf="selectedCategoryPath.length === 0" class="empty-categories">
+          <p>Категории не выбраны</p>
+        </div>
+      </div>
+
+      <!-- Штрихкоды -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3>Штрихкоды</h3>
+          <button type="button" class="btn-sm" (click)="addBarcode()">+ Добавить</button>
+        </div>
+        <div *ngIf="newBarcodes.length === 0" class="empty-barcodes">
+          <p>Штрихкоды не добавлены</p>
+        </div>
+        <div *ngFor="let barcode of newBarcodes; let i = index" class="barcode-row">
+          <div class="barcode-grid">
+            <div class="form-group"><label>Штрихкод <span class="req">*</span></label>
+              <input [(ngModel)]="barcode.barCode" [name]="'barcode_' + i" required placeholder="4601234567890" />
+            </div>
+            <div class="form-group"><label>Представление из 1С</label>
+              <input [(ngModel)]="barcode.representationFrom1C" [name]="'repr_' + i" placeholder="Описание" />
+            </div>
+            <div class="form-group"><label>Коэффициент</label>
+              <input type="number" [(ngModel)]="barcode.coefficient" [name]="'coeff_' + i" step="0.01" min="0.01" value="1" />
+            </div>
+            <div class="form-group"><label>Ед. измерения</label>
+              <select [(ngModel)]="barcode.measurementUnitId" [name]="'unit_' + i">
+                <option value="">Не выбрана</option>
+                <option *ngFor="let unit of measurementUnits" [value]="unit.id">{{ unit.shortName }}</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="btn-remove" (click)="removeBarcode(i)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔹 Очередь для массового создания -->
+      <div *ngIf="creationMode === 'bulk' && bulkProducts.length > 0" class="bulk-queue">
+        <h4>Очередь товаров ({{ bulkProducts.length }})</h4>
+        <div class="queue-list">
+          <div *ngFor="let item of bulkProducts; let i = index" class="queue-item">
+            <span class="queue-name">{{ item.fullName }}</span>
+            <span class="queue-article">{{ item.article }}</span>
+            <button type="button" class="btn-remove-queue" (click)="removeProductFromBulkQueue(i)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelCreate()">Отмена</button>
+        
+        <button *ngIf="creationMode === 'bulk'" type="button" class="btn-secondary" (click)="resetForms()">
+          + Ещё товар
+        </button>
+        
+        <button *ngIf="creationMode === 'single'" type="submit" class="btn-primary" [disabled]="isLoading">
+          {{ isLoading ? 'Создание...' : 'Создать товар (цены = 1 ₽)' }}
+        </button>
+        
+        <button *ngIf="creationMode === 'bulk'" type="button" class="btn-primary" 
+                (click)="goToStep2()" [disabled]="isLoading || bulkProducts.length === 0">
+          {{ isLoading ? 'Создание...' : 'Создать все товары (' + bulkProducts.length + ')' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- 🔹 ШАГ 2: Прогресс создания (для массового) -->
+    <div *ngIf="creationStep === 2 && creationMode === 'bulk'" class="modal-body">
+      <div class="progress-info">
+        <h3>Создание товаров...</h3>
+        <div class="progress-bar-container">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="(bulkCreationProgress.current / bulkCreationProgress.total) * 100"></div>
+          </div>
+          <span class="progress-text">
+            {{ bulkCreationProgress.current }} / {{ bulkCreationProgress.total }}
+            <span *ngIf="bulkCreationProgress.errors > 0" class="progress-errors">
+              (ошибок: {{ bulkCreationProgress.errors }})
+            </span>
+          </span>
+        </div>
+        <p class="hint">Цены установлены: 1 ₽. Штрихкоды добавлены.</p>
+      </div>
+    </div>
+
+    <!-- 🔹 ШАГ 2/3: Обновление цен из 1C + индексация -->
+    <div *ngIf="(creationStep === 2 && creationMode === 'single') || creationStep === 3" class="modal-body">
+      <div class="step-info">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+        <h3>{{ creationMode === 'single' ? 'Товар создан!' : 'Товары созданы!' }}</h3>
+        <p>Цены установлены: <strong>1 ₽</strong>. Обновите данные из 1С.</p>
+      </div>
+
+      <div class="update-section">
+        <button class="btn-primary" (click)="creationMode === 'single' ? updatePricesFrom1C() : updatePricesAndIndex()" 
+                [disabled]="updateRemainsLoading">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          {{ updateRemainsLoading ? 'Обновление...' : 'Обновить цены, остатки и проиндексировать' }}
+        </button>
+        <p class="hint">
+          {{ creationMode === 'single' 
+            ? 'Используется idFrom1c: ' + newProduct.idFrom1c
+            : 'Обновляется ' + idFrom1cList.length + ' товаров из 1C'
+          }}
+        </p>
+      </div>
+
+      <!-- 🔹 Предложение загрузить ZIP -->
+      <div *ngIf="zipUploadAfterUpdate" class="zip-suggestion">
+        <div class="zip-suggestion-header">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span>Загрузить изображения товаров?</span>
+        </div>
+        <p class="hint">ZIP-архив с изображениями, названными по артикулам</p>
+        <div class="zip-actions">
+          <button class="btn-secondary" (click)="skipZipUpload()">Пропустить</button>
+          <button class="btn-primary" (click)="openZipUploadModal()">Загрузить ZIP</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" *ngIf="(creationStep === 2 && creationMode === 'single') || (creationStep === 3 && !zipUploadAfterUpdate)">
+      <button class="btn-secondary" (click)="finishCreation()">Завершить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZIP UPLOAD MODAL (остальной код без изменений) -->
 <div class="modal-overlay" *ngIf="showZipUpload" (click)="closeZipUploadModal()">
   <div class="modal modal-md" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Импорт изображений товаров</h3>
       <button class="modal-close" (click)="closeZipUploadModal()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </div>
@@ -739,18 +701,15 @@
           (dragover)="onZipDragOver($event)" (dragleave)="isDragOverZip = false" (drop)="onZipDrop($event)"
           (click)="zipFileInput.click()">
           <input #zipFileInput type="file" accept=".zip" (change)="onZipFileSelected($event)" hidden />
-
           <ng-container *ngIf="!selectedZipFile && !isUploadingZip">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
+              <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             <p class="drop-title">Перетащите ZIP-архив сюда</p>
             <p class="drop-hint">или нажмите для выбора файла</p>
             <p class="drop-limit">Максимум 200 МБ, формат .zip</p>
           </ng-container>
-
           <ng-container *ngIf="selectedZipFile && !isUploadingZip">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -760,30 +719,22 @@
             <p class="file-size">{{ formatFileSize(selectedZipFile.size) }}</p>
             <button class="remove-zip" (click)="removeZipFile(); $event.stopPropagation()">Удалить файл</button>
           </ng-container>
-
           <ng-container *ngIf="isUploadingZip">
             <div class="upload-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="zipUploadProgress"></div>
-              </div>
+              <div class="progress-bar"><div class="progress-fill" [style.width.%]="zipUploadProgress"></div></div>
               <p class="progress-text">{{ zipUploadProgress }}%</p>
             </div>
           </ng-container>
         </div>
-
         <div *ngIf="zipUploadError" class="upload-error">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {{ zipUploadError }}
         </div>
-
         <div *ngIf="zipUploadSuccess" class="upload-success">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
           </svg>
           Изображения успешно загружены!
         </div>
@@ -792,8 +743,7 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeZipUploadModal()" [disabled]="isUploadingZip">Закрыть</button>
       <button class="btn-primary" (click)="uploadZipArchive()" [disabled]="!selectedZipFile || isUploadingZip">
-        <ng-container *ngIf="!isUploadingZip">Загрузить архив</ng-container>
-        <ng-container *ngIf="isUploadingZip">Загрузка...</ng-container>
+        {{ isUploadingZip ? 'Загрузка...' : 'Загрузить архив' }}
       </button>
     </div>
   </div>

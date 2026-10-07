@@ -1,0 +1,20 @@
+<nav class="nav">
+  <!-- <div class="menu-item">
+        <a (click)="toggleMegaMenu($event)">Каталог</a>
+        <div class="mega-menu" [class.active]="megaMenuOpen">
+            <app-mega-menu [niches]="niches" [selectedNiche]="selectedNiche"
+                (nicheSelected)="selectNiche($event)"></app-mega-menu>
+        </div>
+    </div> -->
+
+  <a [routerLink]="'/about'">О компании</a>
+  <a [routerLink]="'/news'">Новости и акции</a>
+  <a [routerLink]="'/stores'">Магазины</a>
+  <a [routerLink]="'/franchise'">Франшиза</a>
+    <a [routerLink]="'/loyalty-system'">Программа лояльности</a>
+  <a [routerLink]="'/contacts'">Контакты</a>
+  <!-- <a [routerLink]="'/business'">Для бизнеса</a> -->
+  <!-- <a href="https://xn--80aac6chp.xn--80akonecy.xn--p1ai/">Работа</a> -->
+  <a [routerLink]="'/documents'">Правовая информация</a>
+  
+</nav>

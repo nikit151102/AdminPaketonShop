@@ -1,0 +1,483 @@
+<div class="articles-shell">
+
+  <!-- ================= РЕЖИМ СПИСКА ================= -->
+  <section *ngIf="viewMode === 'list'" class="articles-list-view">
+    <div class="list-header">
+      <div class="header-title">
+        <h1>📰 Управление статьями</h1>
+        <p class="subtitle">Создание, публикация и полное редактирование контента</p>
+      </div>
+      <div class="header-actions">
+        <div class="search-box">
+          <span>⌕</span>
+          <input [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
+            placeholder="Поиск по заголовку, описанию...">
+          <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery=''; onSearchChange()">✕</button>
+        </div>
+        <select class="status-filter" [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
+          <option value="all">Все статусы</option>
+          <option value="active">Активные</option>
+          <option value="inactive">Неактивные</option>
+        </select>
+        <button class="btn-primary" (click)="createNewArticle()" [disabled]="isSaving">＋ Новая статья</button>
+      </div>
+    </div>
+
+    <div class="stats-row" *ngIf="!isLoading">
+      <div class="stat-card"><b>{{ articles.length }}</b><span>Всего статей</span></div>
+      <div class="stat-card"><b>{{ getActiveArticleCount() }}</b><span>Активных</span></div>
+      <div class="stat-card"><b>{{ filteredArticles.length }}</b><span>Показано</span></div>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Загрузка статей...</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!isLoading && !filteredArticles.length">
+      <div class="empty-icon">📰</div>
+      <h3>{{ articles.length ? 'Ничего не найдено' : 'Статей пока нет' }}</h3>
+      <p>{{ articles.length ? 'Измените параметры поиска.' : 'Создайте первую статью, чтобы начать.' }}</p>
+      <button class="btn-primary" (click)="createNewArticle()" *ngIf="!articles.length">＋ Создать статью</button>
+    </div>
+
+    <div class="articles-grid" *ngIf="!isLoading && filteredArticles.length">
+      <article class="article-card" *ngFor="let item of filteredArticles" (click)="openEditor(item)">
+        <div class="card-header">
+          <span class="status-badge" [class.active]="isActive(item)">{{ isActive(item) ? '🟢 Активна' : '⚪ Неактивна'
+            }}</span>
+          <div class="card-actions" (click)="$event.stopPropagation()">
+            <button class="icon-btn" (click)="openEditor(item)" title="Открыть редактор">✏️</button>
+            <button class="icon-btn danger" (click)="deleteArticle(item.id!, $event)" title="Удалить">🗑️</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3>{{ item.header || 'Без заголовка' }}</h3>
+          <p class="card-subtitle" *ngIf="item.subheader">{{ item.subheader }}</p>
+          <p class="card-description">{{ item.description || 'Без описания' | slice:0:180 }}{{ (item.description?.length
+            || 0) > 180 ? '...' : '' }}</p>
+        </div>
+        <div class="card-footer">
+          <span>📅 {{ formatDate(item.beginDateTime) }}</span>
+          <span>🧩 {{ item.sections?.length || 0 }} секций</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= РЕЖИМ РЕДАКТОРА ================= -->
+  <section *ngIf="viewMode === 'editor'" class="articles-editor-view">
+
+    <!-- Верхняя панель редактора -->
+    <div class="editor-header">
+      <div class="editor-nav">
+        <button class="btn-back" (click)="goBackToList()">← К списку</button>
+        <div class="editor-title" *ngIf="article">
+          <span class="eyebrow">РЕДАКТОР СТАТЬИ</span>
+          <h1>{{ article.header || 'Новая статья' }}</h1>
+        </div>
+      </div>
+      <div class="editor-actions" *ngIf="article">
+        <span class="status-badge" [class.active]="isActive(article)">{{ isActive(article) ? '🟢 Активна' : '⚪ Неактивна' }}</span>
+        <button class="btn-secondary" (click)="startEditArticleInfo()">⚙️ Свойства</button>
+
+        <button class="btn-primary" (click)="saveArticle()" [disabled]="isSaving">
+          💾 {{ isSaving ? 'Сохранение...' : (isNewArticle ? 'Создать статью' : 'Сохранить') }}
+        </button>
+
+        <button class="btn-danger" (click)="requestDeleteArticle()" *ngIf="!isNewArticle">Удалить</button>
+      </div>
+    </div>
+
+    <div class="loading-state editor-loading" *ngIf="isLoading && !article">
+      <div class="spinner"></div>
+      <p>Загрузка статьи...</p>
+    </div>
+
+    <!-- Основной макет: 2 колонки -->
+    <div class="editor-layout" *ngIf="article">
+
+      <!-- ЛЕВАЯ КОЛОНКА: Живой предпросмотр -->
+      <aside class="preview-column">
+        <div class="live-preview-panel">
+          <div class="live-panel-header">
+            <div>
+              <span class="eyebrow">ПРЕДПРОСМОТР</span>
+              <h2>Как будет выглядеть статья</h2>
+            </div>
+            <span class="live-badge">● Live</span>
+          </div>
+
+          <div class="article-preview-canvas">
+            <article class="full-article-preview">
+              <app-header></app-header>
+              <header class="article-preview-hero">
+                <span class="preview-kicker">СТАТЬЯ</span>
+                <h1>{{ article.header || 'Название статьи' }}</h1>
+                <p class="article-preview-subheader" *ngIf="article.subheader">{{ article.subheader }}</p>
+                <p class="article-preview-description" *ngIf="article.description">{{ article.description }}</p>
+              </header>
+
+              <div class="article-preview-content">
+                <section class="preview-section-block" *ngFor="let item of getLivePreviewSections(); let i = index"
+                  [class.is-active]="activeDraftId && previewSection && isPreviewSectionActive(item, previewSection)"
+                  [class]="getSectionClass(item)" (click)="selectPreviewSection(item)">
+
+                  <div class="preview-section-number">{{ i + 1 }}</div>
+                  <div class="preview-section-copy">
+                    <span class="preview-section-type">{{ getContentTypeLabel(item.contentType) }}</span>
+                    <h2>{{ item.header || 'Заголовок секции' }}</h2>
+                    <h3 *ngIf="item.subheader">{{ item.subheader }}</h3>
+
+                    <!-- Если это таблица, рендерим HTML -->
+                    <div *ngIf="item.contentType === 2" class="preview-section-table" [innerHTML]="getTableHtml(item)">
+                    </div>
+
+                    <!-- Если это текст, рендерим как раньше -->
+                    <div *ngIf="item.contentType !== 2" class="preview-section-text">
+                      {{ item.mainText || 'Текст секции появится здесь...' }}
+                    </div>
+                  </div>
+
+                  <div class="preview-section-images" *ngIf="item.images?.length || item.imageInstanceLinks?.length">
+                    <img *ngFor="let img of (item.images || item.imageInstanceLinks || [])" [src]="img.preview || img"
+                      alt="">
+                  </div>
+                </section>
+
+                <div class="preview-empty" *ngIf="!getLivePreviewSections().length">
+                  <p>Статья пока не содержит секций.</p>
+                  <small>Добавьте первую секцию в панели справа →</small>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ПРАВАЯ КОЛОНКА: Управление и формы -->
+      <main class="workspace-column">
+
+<!-- 2. Добавьте загрузку изображений в панель свойств статьи (article-properties) -->
+<div class="panel article-properties" *ngIf="isEditingArticleInfo">
+  <div class="panel-heading">
+    <div>
+      <span class="eyebrow">ПАРАМЕТРЫ</span>
+      <h2>{{ isNewArticle ? 'Создание новой статьи' : 'Информация о статье' }}</h2>
+    </div>
+    <button class="icon-btn" (click)="cancelEditArticleInfo()">✕</button>
+  </div>
+  
+  <div class="form-grid">
+    <label class="form-group full">
+      <span>Заголовок *</span>
+      <input [(ngModel)]="articleEditForm.header" placeholder="Введите заголовок статьи">
+    </label>
+    <label class="form-group full">
+      <span>Подзаголовок</span>
+      <input [(ngModel)]="articleEditForm.subheader" placeholder="Введите подзаголовок">
+    </label>
+    <label class="form-group full">
+      <span>Краткое описание</span>
+      <textarea rows="3" [(ngModel)]="articleEditForm.description" placeholder="Краткое описание для превью"></textarea>
+    </label>
+    
+    <!-- ДОБАВЛЕНА ЗОНА ЗАГРУЗКИ ИЗОБРАЖЕНИЙ СТАТЬИ -->
+    <div class="form-group full">
+      <span>Изображение статьи (обложка)</span>
+      <div class="upload-zone">
+        <input type="file" #articleImageInput multiple accept="image/*" (change)="onArticleImageSelect($event)" hidden>
+        <button class="btn-upload" type="button" (click)="articleImageInput.click()">＋ Выбрать изображения</button>
+        <div class="image-preview-list" *ngIf="articleImages.length">
+          <div class="preview-item" *ngFor="let img of articleImages; let i = index">
+            <img [src]="img.preview" alt="Preview">
+            <button type="button" (click)="articleImages.splice(i, 1)" title="Удалить">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <label class="form-group">
+      <span>Дата начала</span>
+      <input type="datetime-local" [(ngModel)]="articleEditForm.beginDateTime">
+    </label>
+    <label class="form-group">
+      <span>Дата окончания</span>
+      <input type="datetime-local" [(ngModel)]="articleEditForm.endDateTime">
+    </label>
+  </div>
+  
+  <div class="panel-actions">
+    <button class="btn-secondary" (click)="cancelEditArticleInfo()">Отмена</button>
+    <button class="btn-primary" (click)="saveArticleInfo()">💾 {{ isNewArticle ? 'Создать и продолжить' : 'Сохранить свойства' }}</button>
+  </div>
+</div>
+        <!-- 2. Добавление новой секции -->
+        <div class="panel new-section-panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">КОНСТРУКТОР</span>
+              <h2>Добавить секцию</h2>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label class="form-group"><span>Тип контента</span>
+              <select [(ngModel)]="newSectionForm.contentType">
+                <option *ngFor="let ct of contentTypes" [ngValue]="ct.value">{{ ct.icon }} {{ ct.label }}</option>
+              </select>
+            </label>
+            <label class="form-group"><span>Тип блока</span>
+              <select [(ngModel)]="newSectionForm.blockType">
+                <option *ngFor="let bt of blockTypes" [ngValue]="bt.value">{{ bt.label }} — {{ bt.desc }}</option>
+              </select>
+            </label>
+            <label class="form-group full"><span>Заголовок</span><input [(ngModel)]="newSectionForm.header"
+                placeholder="Заголовок секции"></label>
+
+            <!-- УСЛОВНЫЙ РЕНДЕРИНГ: Текст или Таблица -->
+            <ng-container *ngIf="newSectionForm.contentType !== 2">
+              <label class="form-group full"><span>Основной текст</span><textarea rows="4"
+                  [(ngModel)]="newSectionForm.mainText" placeholder="Текст секции..."></textarea></label>
+            </ng-container>
+
+            <ng-container *ngIf="newSectionForm.contentType === 2">
+              <div class="form-group full table-editor-container">
+                <div class="table-editor-header">
+                  <span>Редактор таблицы</span>
+                  <div class="table-editor-actions">
+                    <button type="button" class="btn-sm" (click)="addTableRowToNewForm()">＋ Строка</button>
+                    <button type="button" class="btn-sm" (click)="addTableColumnToNewForm()">＋ Столбец</button>
+                  </div>
+                </div>
+                <div class="table-editor-wrapper">
+                  <table class="editable-table">
+                    <thead>
+                      <tr>
+                        <th *ngFor="let header of newSectionForm.tableData.headers; let colIndex = index">
+                          <!-- ✅ ЗАМЕНЕНО на [value] и (input) -->
+                          <input type="text" [value]="newSectionForm.tableData.headers[colIndex]"
+                            (input)="newSectionForm.tableData.headers[colIndex] = $any($event.target).value"
+                            placeholder="Заголовок">
+                          <button type="button" class="btn-icon-danger" (click)="removeTableColumnFromNewForm(colIndex)"
+                            *ngIf="newSectionForm.tableData.headers.length > 1" title="Удалить столбец">✕</button>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let row of newSectionForm.tableData.rows; let rowIndex = index">
+                        <td *ngFor="let cell of row.cells; let colIndex = index">
+                          <!-- ✅ ЗАМЕНЕНО на [value] и (input) -->
+                          <input type="text" [value]="newSectionForm.tableData.rows[rowIndex].cells[colIndex]"
+                            (input)="newSectionForm.tableData.rows[rowIndex].cells[colIndex] = $any($event.target).value"
+                            placeholder="Ячейка">
+                        </td>
+                        <td class="row-actions">
+                          <button type="button" class="btn-icon-danger" (click)="removeTableRowFromNewForm(rowIndex)"
+                            *ngIf="newSectionForm.tableData.rows.length > 1" title="Удалить строку">✕</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </ng-container>
+
+            <div class="form-group full">
+              <span>Изображения</span>
+              <div class="upload-zone">
+                <input type="file" #newImageInput multiple accept="image/*" (change)="onNewSectionImageSelect($event)"
+                  hidden>
+                <button class="btn-upload" (click)="newImageInput.click()">＋ Выбрать изображения</button>
+                <div class="image-preview-list" *ngIf="newSectionForm.images.length">
+                  <div class="preview-item" *ngFor="let img of newSectionForm.images; let i = index">
+                    <img [src]="img.preview" alt="">
+                    <button (click)="newSectionForm.images.splice(i,1)">✕</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-primary" type="button" (click)="addSectionDraft()" [disabled]="isSaving || !articleId">＋
+              Добавить в черновики</button>
+          </div>
+        </div>
+
+        <!-- 3. Список секций -->
+        <div class="panel sections-list-panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">КОНТЕНТ</span>
+              <h2>Секции статьи <small>{{ sections.length }}</small></h2>
+            </div>
+            <button class="btn-secondary" *ngIf="sectionDrafts.length" (click)="saveAllDrafts()"
+              [disabled]="isSaving">💾 Сохранить все ({{ sectionDrafts.length }})</button>
+          </div>
+
+          <div class="empty-inline" *ngIf="!sections.length && !sectionDrafts.length">
+            Статья пока пустая. Добавьте первую секцию выше.
+          </div>
+
+          <div class="section-item" *ngFor="let section of sections; let i = index"
+            [class.editing]="isSectionBeingEdited(section.id!)">
+            <div class="section-header">
+              <div class="section-title">
+                <span class="position-badge">#{{ i + 1 }}</span>
+                <strong>{{ section.header || 'Без заголовка' }}</strong>
+                <span class="type-badge">{{ getContentTypeLabel(section.contentType) }}</span>
+              </div>
+              <div class="section-actions">
+                <button class="icon-btn" (click)="moveSection(section.id!, 'up')" [disabled]="i===0">↑</button>
+                <button class="icon-btn" (click)="moveSection(section.id!, 'down')"
+                  [disabled]="i===sections.length-1">↓</button>
+                <button class="icon-btn" (click)="editSection(section)"
+                  [disabled]="isSectionBeingEdited(section.id!)">✏️</button>
+                <button class="icon-btn danger" (click)="deleteSection(section.id!)">🗑️</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Черновики -->
+          <div class="drafts-list" *ngIf="sectionDrafts.length">
+            <div class="draft-label">📝 Черновики / изменения</div>
+            <div class="draft-item" *ngFor="let draft of sectionDrafts" [class.active]="activeDraftId === draft.tempId">
+              <div class="draft-header">
+                <div>
+                  <span class="draft-title">{{ draft.header || 'Без названия' }}</span>
+                  <small>{{ getContentTypeLabel(draft.contentType) }} · позиция {{ draft.position + 1 }}</small>
+                </div>
+                <div class="draft-actions">
+                  <button class="btn-sm" (click)="toggleDraft(draft)">{{ draft.isEditing ? 'Свернуть' : 'Изменить'
+                    }}</button>
+                  <button class="btn-sm primary" (click)="saveDraft(draft)" [disabled]="isSaving">💾</button>
+                  <button class="btn-sm danger" (click)="cancelSectionEdit(draft)">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Активная форма редактирования секции (Появляется при выборе) -->
+        <div class="panel live-form-panel" *ngIf="activeDraftId && previewSection as draft">
+          <div class="live-panel-header">
+            <div>
+              <span class="eyebrow">РЕДАКТИРОВАНИЕ</span>
+              <h2>Секция #{{ draft.position + 1 }}</h2>
+              <p class="panel-hint">Изменения сразу отражаются в предпросмотре слева.</p>
+            </div>
+            <button class="icon-btn" (click)="toggleDraft(draft)" title="Закрыть редактор">✕</button>
+          </div>
+
+          <div class="form-grid live-form">
+            <label class="form-group"><span>Тип контента</span>
+              <select [(ngModel)]="draft.contentType">
+                <option *ngFor="let ct of contentTypes" [ngValue]="ct.value">{{ct.icon}} {{ct.label}}</option>
+              </select>
+            </label>
+            <label class="form-group"><span>Тип блока</span>
+              <select [(ngModel)]="draft.blockType">
+                <option *ngFor="let bt of blockTypes" [ngValue]="bt.value">{{bt.label}}</option>
+              </select>
+            </label>
+            <label class="form-group full"><span>Заголовок</span><input [(ngModel)]="draft.header"
+                placeholder="Заголовок секции"></label>
+
+            <!-- Если выбран ТЕКСТ или ВИДЕО -->
+            <ng-container *ngIf="draft.contentType !== 2">
+              <label class="form-group full">
+                <span>Основной текст</span>
+                <textarea rows="6" [(ngModel)]="draft.mainText" placeholder="Текст секции..."></textarea>
+              </label>
+            </ng-container>
+
+            <!-- Если выбрана ТАБЛИЦА -->
+            <ng-container *ngIf="draft.contentType === 2">
+              <div class="form-group full table-editor-container" *ngIf="draft.tableData; else noTableDataTpl">
+                <div class="table-editor-header">
+                  <span>Редактор таблицы</span>
+                  <div class="table-editor-actions">
+                    <button type="button" class="btn-sm" (click)="addTableRow(draft)">＋ Строка</button>
+                    <button type="button" class="btn-sm" (click)="addTableColumn(draft)">＋ Столбец</button>
+                  </div>
+                </div>
+
+                <div class="table-editor-wrapper">
+                  <table class="editable-table">
+                    <thead>
+                      <tr>
+                        <th *ngFor="let header of draft.tableData.headers; let colIndex = index">
+                          <!-- ✅ ЗАМЕНЕНО -->
+                          <input type="text" [value]="draft.tableData.headers[colIndex]"
+                            (input)="draft.tableData.headers[colIndex] = $any($event.target).value"
+                            placeholder="Заголовок">
+                          <button type="button" class="btn-icon-danger" (click)="removeTableColumn(draft, colIndex)"
+                            *ngIf="draft.tableData.headers.length > 1" title="Удалить столбец">✕</button>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let row of draft.tableData.rows; let rowIndex = index">
+                        <td *ngFor="let cell of row.cells; let colIndex = index">
+                          <!-- ✅ ЗАМЕНЕНО -->
+                          <input type="text" [value]="row.cells[colIndex]"
+                            (input)="row.cells[colIndex] = $any($event.target).value" placeholder="Ячейка">
+                        </td>
+                        <td class="row-actions">
+                          <button type="button" class="btn-icon-danger" (click)="removeTableRow(draft, rowIndex)"
+                            *ngIf="draft.tableData.rows.length > 1" title="Удалить строку">✕</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <ng-template #noTableDataTpl>
+                <div class="form-group full table-editor-container">
+                  <p class="table-error" style="color: #ef4444; margin-bottom: 12px;">Данные таблицы не
+                    инициализированы.</p>
+                  <button class="btn-sm primary" (click)="initTableData(draft)">Создать таблицу</button>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <div class="form-group full">
+              <span>Изображения</span>
+              <input type="file" #liveDraftImageInput multiple accept="image/*"
+                (change)="onSectionImageSelect($event, draft.tempId)" hidden>
+              <button class="btn-upload" type="button" (click)="liveDraftImageInput.click()">＋ Добавить
+                изображения</button>
+              <div class="image-preview-list" *ngIf="draft.images.length">
+                <div class="preview-item" *ngFor="let img of draft.images; let i=index">
+                  <img [src]="img.preview" alt="">
+                  <button type="button" (click)="removeDraftImage(draft, i)">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="live-form-footer">
+            <span>💡 Предпросмотр обновляется автоматически</span>
+            <div>
+              <button class="btn-secondary" type="button" (click)="cancelSectionEdit(draft)">Отмена</button>
+              <button class="btn-primary" type="button" (click)="saveDraft(draft)" [disabled]="isSaving">💾 {{ isSaving
+                ? 'Сохранение...' : 'Сохранить' }}</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </section>
+
+  <!-- Модалка подтверждения удаления -->
+  <div class="confirm-overlay" *ngIf="showDeleteArticleConfirm" (click)="cancelDeleteArticle()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">🗑️</div>
+      <h3>Удалить статью?</h3>
+      <p>Статья и связанные с ней данные будут удалены. Это действие нельзя отменить.</p>
+      <div class="panel-actions">
+        <button class="btn-secondary" (click)="cancelDeleteArticle()">Отмена</button>
+        <button class="btn-danger" (click)="deleteCurrentArticle()" [disabled]="isSaving">Удалить</button>
+      </div>
+    </div>
+  </div>
+</div>

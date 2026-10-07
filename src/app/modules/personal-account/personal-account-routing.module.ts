@@ -20,6 +20,10 @@ const routes: Routes = [
         loadComponent: () => import('./tabs/products/products.component').then(m => m.ProductsComponent)
       },
       {
+        path: 'article',
+        loadComponent: () => import('./tabs/articles/articles.component').then(m => m.ArticlesComponent)
+      },
+      {
         path: 'users',
         loadComponent: () => import('./tabs/users/users.component').then(m => m.UsersComponent)
       },

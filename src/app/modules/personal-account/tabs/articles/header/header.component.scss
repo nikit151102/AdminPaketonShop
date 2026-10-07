@@ -1,0 +1,218 @@
+.header {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  transition: background 0.3s ease;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header__content__top {
+  padding: 5px 20px;
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Контейнеры для первой и второй строки
+.top-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  @media (max-width: 956px) {
+    width: 100%;
+    padding: 10 0;
+    justify-content: space-between;
+  }
+
+  app-logo {
+    display: none;
+
+    @media (max-width: 956px) {
+      display: block;
+    }
+  }
+
+  @media (max-width: 956px) {
+    app-menu {
+      display: none;
+    }
+  }
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  @media (max-width: 956px) {
+    display: none;
+  }
+}
+
+// Планшетная адаптация (пример для ширины <= 1024px)
+@media (max-width: 1024px) {
+  .header__content__top {
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0 10px;
+  }
+
+  .top-left,
+  .top-right {
+    justify-content: space-between;
+  }
+
+  .top-left {
+    margin: 5px 0;
+  }
+}
+
+.header__content__top__location {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.header__content__bottom {
+  padding: 5px 20px;
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  // backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 0 0 20px 20px;
+
+  @media (max-width: 956px) {
+    app-logo {
+      display: none;
+    }
+  }
+
+  &.sticked {
+    backdrop-filter: blur(12px);
+    border-radius: 0 0 20px 20px;
+  }
+
+  app-search {
+    width: 100%;
+  }
+
+  @media (max-width: 1024px) {
+    padding: 0;
+    gap: 5px;
+    padding-left: 10px;
+
+    app-catalog {
+      display: none;
+    }
+  }
+
+  @media (max-width: 400px) {
+    app-logo {
+      display: none;
+    }
+  }
+}
+
+/* Кнопка */
+.location-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #327220;
+  color: #327220;
+  padding: 5px 10px;
+  background: transparent;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+
+  @media (max-width: 1024px) {
+    font-size: 12px;
+    padding: 5px;
+  }
+}
+
+.location-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Маленькое окошко под кнопкой */
+.city-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  top: 55px;
+  z-index: 1000;
+  margin-top: 8px;
+  background: #f9f9ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+
+  span {
+    strong {
+      color: #67c948;
+      font-size: 16px;
+    }
+  }
+}
+
+.city-inline button {
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.city-inline .yes {
+  background: #2575fc;
+  color: #fff;
+}
+
+.city-inline .yes:hover {
+  background: #1e5fd8;
+}
+
+.city-inline .change {
+  background: #eee;
+  color: #333;
+}
+
+.city-inline .change:hover {
+  background: #ddd;
+}
+
+
+
+
+app-icons {
+  @media (max-width: 956px) {
+    display: none;
+  }
+}
