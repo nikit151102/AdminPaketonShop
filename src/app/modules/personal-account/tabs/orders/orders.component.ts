@@ -6,6 +6,8 @@ import { formatShortDate } from '../../../../../utils/date.utils';
 import { OrdersService } from './orders.service';
 import { FilterPopoverComponent, ColumnConfig } from '../../../../core/ui/filter-popover/filter-popover.component';
 import { FilterType } from '../../../../core/ui/filter-popover/filter-type.enum';
+import { routes } from '../../../../app.routes';
+import { AuthRoutingModule } from '../../../auth/auth-routing.module';
 
 export interface FilterRequest {
   field: string;
@@ -17,6 +19,8 @@ export interface SortRequest {
   field: string;
   sortType: 0 | 1;
 }
+
+export type OrderTab = 'all' | 'draft' | 'unprocessed' | 'in_progress' | 'completed' | 'cancelled';
 
 interface Order {
   id?: string;
@@ -48,7 +52,7 @@ interface Order {
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, FilterPopoverComponent],
+  imports: [CommonModule, FormsModule, FilterPopoverComponent, AuthRoutingModule],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
@@ -76,6 +80,24 @@ export class OrdersComponent implements OnInit, OnDestroy {
   sorts: SortRequest[] = [];
   activeFilters: { [field: string]: any } = {};
   activeDropdown: string | null = null;
+
+  // Вкладки
+  activeTab: OrderTab = 'all';
+  tabs: { id: OrderTab; label: string }[] = [
+    { id: 'all', label: 'Все' },
+    { id: 'draft', label: 'Черновики' },
+    { id: 'unprocessed', label: 'Неотработанные' },
+    { id: 'in_progress', label: 'В процессе' },
+    { id: 'completed', label: 'Завершенные' },
+    { id: 'cancelled', label: 'Отмененные' }
+  ];
+
+  // Раздельный поиск
+  searchOrderNumber = '';
+  searchPhone = '';
+  searchEmail = '';
+  searchDateFrom = '';
+  searchDateTo = '';
 
   // Колонки таблицы
   columnOptions: ColumnConfig[] = [
@@ -132,14 +154,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
       filterType: FilterType.Between
     },
     {
-      field: 'productCount',
-      header: 'Товаров',
-      type: 'number',
-      sortable: true,
-      filterable: true,
-      filterType: FilterType.Between
-    },
-    {
       field: 'userInstance.fullName',
       header: 'Клиент',
       type: 'string',
@@ -147,7 +161,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       filterable: true,
       filterType: FilterType.Contains
     },
-        {
+    {
       field: 'userInstance.email',
       header: 'Почта',
       type: 'string',
@@ -181,7 +195,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
     }
   ];
 
-  // Видимые колонки
   visibleColumns: ColumnConfig[] = [...this.columnOptions];
 
   orderStatuses = [
@@ -261,13 +274,77 @@ export class OrdersComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.dropdown')) {
+    if (!target.closest('.dropdown') && !target.closest('.search-panel')) {
       this.closeDropdown();
     }
   }
 
   private updateScreenSize(): void {
     this.isDesktop = window.innerWidth >= 1100;
+  }
+
+  // ===== ВКЛАДКИ =====
+  onTabChange(tabId: OrderTab): void {
+    this.activeTab = tabId;
+    
+    this.filters = this.filters.filter(f => this.normalizeField(f.field) !== 'OrderStatus');
+
+    let statusValues: number[] = [];
+    if (tabId === 'draft') statusValues = [0];
+    else if (tabId === 'unprocessed') statusValues = [1];
+    else if (tabId === 'in_progress') statusValues = [2, 3, 4, 10];
+    else if (tabId === 'completed') statusValues = [8, 9];
+    else if (tabId === 'cancelled') statusValues = [11, 12];
+
+    if (statusValues.length > 0) {
+      this.filters.push({
+        field: 'OrderStatus',
+        values: statusValues,
+        type: FilterType.EnumIn
+      });
+    }
+
+    this.loadOrders(true);
+  }
+
+  // ===== ПОИСК =====
+  applySearch(): void {
+    this.filters = this.filters.filter(f => 
+      this.normalizeField(f.field) !== 'OrderNumber' && 
+      this.normalizeField(f.field) !== 'UserInstance.PhoneNumber' && 
+      this.normalizeField(f.field) !== 'UserInstance.Email' && 
+      this.normalizeField(f.field) !== 'OrderDateTime'
+    );
+
+    if (this.searchOrderNumber.trim()) {
+      this.filters.push({ field: 'OrderNumber', values: [this.searchOrderNumber.trim()], type: FilterType.Contains });
+    }
+    if (this.searchPhone.trim()) {
+      this.filters.push({ field: 'UserInstance.PhoneNumber', values: [this.searchPhone.trim()], type: FilterType.Contains });
+    }
+    if (this.searchEmail.trim()) {
+      this.filters.push({ field: 'UserInstance.Email', values: [this.searchEmail.trim()], type: FilterType.Contains });
+    }
+
+    if (this.searchDateFrom || this.searchDateTo) {
+      const from = this.searchDateFrom ? this.formatDateToISO(this.searchDateFrom, false) : this.formatDateToISO('2000-01-01', false);
+      const to = this.searchDateTo ? this.formatDateToISO(this.searchDateTo, true) : this.formatDateToISO(new Date(), true);
+      
+      if (from && to) {
+        this.filters.push({ field: 'OrderDateTime', values: [from, to], type: FilterType.DateBetween });
+      }
+    }
+
+    this.loadOrders(true);
+  }
+
+  clearSearch(): void {
+    this.searchOrderNumber = '';
+    this.searchPhone = '';
+    this.searchEmail = '';
+    this.searchDateFrom = '';
+    this.searchDateTo = '';
+    this.applySearch();
   }
 
   // ===== DROPDOWN =====
@@ -307,13 +384,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
     if (values && values.length > 0 && values.some(v => v !== null && v !== undefined && v !== '')) {
       let processedValues = [...values];
 
-      // Если это фильтр по датам, форматируем их в ISO-формат с миллисекундами и Z
       if (type === FilterType.DateBetween) {
-        // Первая дата - начало дня (00:00:00.000Z)
         if (processedValues[0]) {
           processedValues[0] = this.formatDateToISO(processedValues[0], false);
         }
-        // Вторая дата - конец дня (23:59:59.999Z)
         if (processedValues[1]) {
           processedValues[1] = this.formatDateToISO(processedValues[1], true);
         }
@@ -328,12 +402,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.closeDropdown();
   }
 
-  // Форматирует дату в формат YYYY-MM-DDTHH:mm:ss.sssZ
-  // isEndOfDay = false -> 00:00:00.000Z, true -> 23:59:59.999Z
   formatDateToISO(date: any, isEndOfDay: boolean = false): string {
     if (!date) return '';
     const d = new Date(date);
-    if (isNaN(d.getTime())) return date;
+    if (isNaN(d.getTime())) return '';
 
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -346,7 +418,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
     }
   }
 
-
   removeFilter(field: string) {
     const col = this.columnOptions.find(c => c.field === field);
     if (col) {
@@ -357,13 +428,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
   clearAllFilters() {
     this.filters = [];
     this.activeFilters = {};
+    this.clearSearch();
+    this.activeTab = 'all';
     this.loadOrders(true);
   }
 
-  hasAnyFilters(): boolean {
-    return this.filters.length > 0;
+  hasAnyFilters(): any {
+    return this.filters.length > 0 || this.searchOrderNumber || this.searchPhone || this.searchEmail || this.searchDateFrom || this.searchDateTo;
   }
-
 
   getFilterValuesDisplay(col: ColumnConfig): string {
     const filter = this.activeFilters[col.field];
@@ -476,18 +548,19 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   // ===== МОДАЛЬНЫЕ ОКНА =====
   openDetailsModal(orderId: string): void {
-    this.selectedOrderId = orderId;
-    this.ordersService.getById(orderId).subscribe({
-      next: (response: any) => {
-        if (response && response.data) {
-          this.currentOrder = response.data;
-          this.showDetailsModal = true;
-        }
-      },
-      error: (error) => {
-        console.error('Ошибка загрузки заказа:', error);
-      }
-    });
+    
+    // this.selectedOrderId = orderId;
+    // this.ordersService.getById(orderId).subscribe({
+    //   next: (response: any) => {
+    //     if (response && response.data) {
+    //       this.currentOrder = response.data;
+    //       this.showDetailsModal = true;
+    //     }
+    //   },
+    //   error: (error) => {
+    //     console.error('Ошибка загрузки заказа:', error);
+    //   }
+    // });
   }
 
   openEditModal(orderId: string): void {
@@ -496,7 +569,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.ordersService.getById(orderId).subscribe({
       next: (response: any) => {
         if (response && response.data) {
-          this.currentOrder = response.data;
+          this.currentOrder = { ...response.data };
+          
+          this.currentOrder.orderStatus = Number(this.currentOrder.orderStatus) || 0;
+          this.currentOrder.paymentType = Number(this.currentOrder.paymentType) || 0;
+          this.currentOrder.isPaidFor = !!this.currentOrder.isPaidFor;
+
+          if (this.currentOrder.orderStatus === 8 || this.currentOrder.orderStatus === 9) {
+            this.currentOrder.isPaidFor = true;
+          }
+
           this.showModal = true;
         }
       },
@@ -506,17 +588,31 @@ export class OrdersComponent implements OnInit, OnDestroy {
     });
   }
 
+  onStatusChange(): void {
+    if (this.currentOrder.orderStatus === 8 || this.currentOrder.orderStatus === 9) {
+      this.currentOrder.isPaidFor = true;
+    }
+  }
+
   saveOrder(): void {
     if (this.isEditMode && this.selectedOrderId) {
-      this.currentOrder.orderStatus = Number(this.currentOrder.orderStatus)
+      this.currentOrder.orderStatus = Number(this.currentOrder.orderStatus);
+      
+      if (this.currentOrder.orderStatus === 8 || this.currentOrder.orderStatus === 9) {
+        this.currentOrder.isPaidFor = true;
+      }
+
       this.ordersService.update(this.selectedOrderId, this.currentOrder).subscribe({
         next: () => {
-          this.ordersService.changeStatus(this.selectedOrderId, this.currentOrder.orderStatus).subscribe(
-            (value: any) => {
+          this.ordersService.changeStatus(this.selectedOrderId, this.currentOrder.orderStatus).subscribe({
+            next: () => {
               this.showModal = false;
               this.loadOrders(true);
+            },
+            error: (error) => {
+              console.error('Ошибка изменения статуса:', error);
             }
-          )
+          });
         },
         error: (error) => {
           console.error('Ошибка обновления заказа:', error);

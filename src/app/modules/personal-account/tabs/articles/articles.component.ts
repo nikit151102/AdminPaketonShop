@@ -608,15 +608,20 @@ export class ArticlesComponent implements OnInit, OnDestroy {
           this.contentService.updateSection(originalSection.id, updateDto)
         );
 
-        const newImages = draft.images.filter(img => !img.uploadedId && img.file);
-        if (newImages.length) {
-          const uploadedIds: string[] = [];
-          for (const img of newImages) {
-            const uploaded = await firstValueFrom(this.contentService.uploadSectionImage(originalSection.id, img.file!));
-            uploadedIds.push(uploaded.id);
-          }
-          await firstValueFrom(this.contentService.updateSectionImages(originalSection.id, uploadedIds));
+
+        const newImages = draft.images.filter(
+          img => !img.uploadedId && img.file
+        );
+
+        for (const img of newImages) {
+          await firstValueFrom(
+            this.contentService.uploadSectionImage(
+              originalSection.id,
+              img.file!
+            )
+          );
         }
+
 
         const index = this.sections.findIndex(s => s.id === originalSection.id);
         if (index !== -1) this.sections[index] = updated.data;
@@ -646,7 +651,7 @@ export class ArticlesComponent implements OnInit, OnDestroy {
 
         if (draft.images.length) {
           const uploadedIds: string[] = [];
-
+          console.log('draft.images', draft.images)
           for (const img of draft.images) {
             if (!img.file) continue;
 

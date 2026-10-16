@@ -1,0 +1,451 @@
+<div class="wholesale-page" *ngIf="!isLoading && order; else loadingTpl">
+  <!-- Header -->
+  <header class="order-header">
+    <div class="header-main">
+      <div class="title-block">
+        <div class="eyebrow">ОПТОВАЯ ЗАЯВКА</div>
+        <div class="title-line">
+          <h1>Заявка №{{ order.number }}</h1>
+          <button class="copy-btn" type="button" title="Скопировать номер"
+            >
+            <span>⧉</span>
+          </button>
+        </div>
+        <div class="header-meta">
+          <span class="meta-chip"><span class="meta-dot"></span> Создана {{ order.orderDateTime | date:'dd.MM.yyyy HH:mm' }}</span>
+          <span class="meta-chip mono">ID {{ order.id | slice:0:8 }}…</span>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <span class="status-label">СТАТУС ЗАЯВКИ</span>
+        <span class="status-badge"
+          [ngClass]="{
+            'status-created': order.wholesaleOrderStatus === 1,
+            'status-processing': order.wholesaleOrderStatus === 2,
+            'status-docs': order.wholesaleOrderStatus === 3,
+            'status-accepted': order.wholesaleOrderStatus === 4,
+            'status-rejected': order.wholesaleOrderStatus === 10,
+            'status-inactive': order.wholesaleOrderStatus === 11
+          }">
+          <span class="status-indicator"></span>
+          <ng-container [ngSwitch]="order.wholesaleOrderStatus">
+            <span *ngSwitchCase="1">Создана</span>
+            <span *ngSwitchCase="2">В обработке</span>
+            <span *ngSwitchCase="3">Обработка документов</span>
+            <span *ngSwitchCase="4">Принята</span>
+            <span *ngSwitchCase="10">Отклонена</span>
+            <span *ngSwitchCase="11">Неактивна</span>
+            <span *ngSwitchDefault>Неизвестный статус</span>
+          </ng-container>
+        </span>
+
+        <div class="header-check-status">
+          <span class="status-label">ПРОВЕРКА СБ</span>
+          <span class="check-badge" [class.check-done]="hasSecurityCheck()">
+            <span class="status-indicator"></span>
+            {{ hasSecurityCheck() ? 'Отправлена' : 'Не отправлена' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main grid -->
+  <main class="content-grid">
+    <section class="left-column">
+      <!-- Partner hero -->
+      <article class="panel partner-panel">
+        <div class="panel-heading">
+          <div class="heading-icon partner-icon">⌂</div>
+          <div>
+            <div class="panel-kicker">КОНТРАГЕНТ</div>
+            <h2>{{ order.partnerInstance?.partner?.shortName || order.partnerInstance?.partner?.fullName || 'Не указан' }}</h2>
+          </div>
+          <span class="entity-badge" *ngIf="order.wholesalePartnerType === 1">Юр. лицо / ИП</span>
+          <span class="entity-badge" *ngIf="order.wholesalePartnerType === 2">Физ. лицо</span>
+        </div>
+
+        <div class="partner-grid">
+          <div class="data-item">
+            <span class="data-label">Полное наименование</span>
+            <span class="data-value">{{ order.partnerInstance?.partner?.fullName || 'Не указано' }}</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">ИНН</span>
+            <span class="data-value mono">{{ order.partnerInstance?.partner?.inn || '—' }}</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">ОГРН</span>
+            <span class="data-value mono">{{ order.partnerInstance?.partner?.ogrn || '—' }}</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Email</span>
+            <span class="data-value">{{ order.partnerInstance?.partner?.email || 'Не указан' }}</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Request overview -->
+      <article class="panel">
+        <div class="section-heading">
+          <div class="heading-icon green-icon">⌁</div>
+          <div>
+            <div class="panel-kicker">ПАРАМЕТРЫ</div>
+            <h2>Условия заявки</h2>
+          </div>
+        </div>
+
+        <div class="facts-grid">
+          <div class="fact-card">
+            <span class="fact-label">Тип партнёра</span>
+            <strong>
+              <ng-container [ngSwitch]="order.wholesalePartnerType">
+                <span *ngSwitchCase="1">Юридическое лицо</span>
+                <span *ngSwitchCase="2">Физическое лицо</span>
+                <span *ngSwitchDefault>Не указан</span>
+              </ng-container>
+            </strong>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Тип цены</span>
+            <strong>{{ order.viewPriceType === 3 ? 'Опт' : order.viewPriceType === 4 ? 'Опт межгород' : 'Не назначен' }}</strong>
+          </div>
+          <div class="fact-card accent-fact">
+            <span class="fact-label">Скидка</span>
+            <strong>{{ order.salePercent != null ? ((order.salePercent * 100) | number:'1.0-2') + '%' : 'Не назначена' }}</strong>
+          </div>
+          <div class="fact-card">
+            <span class="fact-label">Период действия</span>
+            <strong *ngIf="order.beginDateTime || order.endDateTime">
+              {{ order.beginDateTime ? (order.beginDateTime | date:'dd.MM.yyyy') : '—' }}
+              <span> → </span>
+              {{ order.endDateTime ? (order.endDateTime | date:'dd.MM.yyyy') : '—' }}
+            </strong>
+            <strong *ngIf="!order.beginDateTime && !order.endDateTime">Не задан</strong>
+          </div>
+        </div>
+      </article>
+
+      <!-- Payment conditions -->
+      <article class="panel payment-panel">
+        <div class="section-heading">
+          <div class="heading-icon blue-icon">₽</div>
+          <div>
+            <div class="panel-kicker">ФИНАНСОВЫЕ УСЛОВИЯ</div>
+            <h2>Оплата</h2>
+          </div>
+        </div>
+
+        <div class="payment-grid">
+          <div class="payment-item">
+            <div class="payment-icon">%</div>
+            <div>
+              <span class="data-label">Предоплата</span>
+              <strong>
+                <ng-container [ngSwitch]="order.prepaymentType">
+                  <span *ngSwitchCase="0">Без предоплаты</span>
+                  <span *ngSwitchCase="1">Частичная</span>
+                  <span *ngSwitchCase="2">Полная</span>
+                  <span *ngSwitchDefault>Не указана</span>
+                </ng-container>
+              </strong>
+              <small *ngIf="order.prepaymentPercent != null">{{ order.prepaymentPercent * 100 | number:'1.0-2' }}% от суммы</small>
+            </div>
+          </div>
+
+          <div class="payment-item">
+            <div class="payment-icon clock-icon">◷</div>
+            <div>
+              <span class="data-label">Отсрочка платежа</span>
+              <strong>{{ order.paymentDeferralDaysCount != null ? order.paymentDeferralDaysCount + ' дней' : 'Не задана' }}</strong>
+              <small>
+                <ng-container [ngSwitch]="order.paymentDeferralType">
+                  <span *ngSwitchCase="1">Отсрочка платежа</span>
+                  <span *ngSwitchCase="0">Допускается</span>
+                  <span *ngSwitchDefault>Тип не указан</span>
+                </ng-container>
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-summary" *ngIf="order.prepaymentPercent != null || order.paymentDeferralDaysCount != null">
+          <span>Итоговые условия</span>
+          <strong>
+            {{ order.prepaymentPercent != null ? 'Предоплата ' + (order.prepaymentPercent * 100 | number:'1.0-2') + '%' : 'Без указанной предоплаты' }}
+            <span class="summary-separator">•</span>
+            {{ order.paymentDeferralDaysCount != null ? 'Отсрочка ' + order.paymentDeferralDaysCount + ' дн.' : 'Без отсрочки' }}
+          </strong>
+        </div>
+      </article>
+
+      <!-- Client -->
+      <article class="panel">
+        <div class="section-heading">
+          <div class="heading-icon violet-icon">♙</div>
+          <div>
+            <div class="panel-kicker">КОНТАКТ</div>
+            <h2>Представитель</h2>
+          </div>
+        </div>
+
+        <div class="contact-layout">
+          <div class="avatar">
+            <img *ngIf="order.userInstance?.avatarUrl" [src]="order.userInstance.avatarUrl" alt="">
+            <span *ngIf="!order.userInstance?.avatarUrl">{{ order.userInstance?.firstName?.charAt(0) || 'П' }}</span>
+          </div>
+          <div class="contact-main">
+            <strong class="contact-name">{{ getFullName() || 'Не указан' }}</strong>
+            <div class="contact-links">
+              <span class="contact-link">☎ {{ getPhone() || 'Телефон не указан' }}</span>
+              <span class="contact-link">✉ {{ getEmail() || 'Email не указан' }}</span>
+            </div>
+          </div>
+          <div class="user-number" *ngIf="order.userInstance?.userNumber">
+            <span>Пользователь</span>
+            <strong>#{{ order.userInstance.userNumber }}</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <aside class="right-column">
+      <!-- Documents -->
+      <article class="panel documents-panel">
+        <div class="section-heading compact">
+          <div class="heading-icon amber-icon">▤</div>
+          <div>
+            <div class="panel-kicker">ФАЙЛЫ</div>
+            <h2>Документы</h2>
+          </div>
+          <span class="count-badge">{{ order.orderDocuments?.length || 0 }}</span>
+        </div>
+
+        <div class="document-list" *ngIf="order.orderDocuments?.length; else noDocs">
+          <div class="document-row" *ngFor="let doc of order.orderDocuments">
+            <div class="file-icon">{{ doc.fileInfo?.extansion?.toUpperCase() || 'FILE' }}</div>
+            <div class="file-info">
+              <strong [title]="doc.fileInfo?.fileName">{{ doc.fileInfo?.fileName }}</strong>
+              <span>Тип документа · {{ doc.orderDocumentType }} · {{ doc.fileInfo?.size }} КБ</span>
+            </div>
+            <button class="download-btn" type="button"
+              (click)="downloadDocument(doc.fileInfo.url, doc.fileInfo.fileName)" title="Скачать">
+              ↓
+            </button>
+          </div>
+        </div>
+        <ng-template #noDocs>
+          <div class="empty-state">
+            <div class="empty-icon">□</div>
+            <strong>Документов нет</strong>
+            <span>Загруженные файлы появятся здесь</span>
+          </div>
+        </ng-template>
+      </article>
+
+      <!-- Actions -->
+      <article class="panel actions-panel">
+        <div class="section-heading compact">
+          <div class="heading-icon green-icon">↗</div>
+          <div>
+            <div class="panel-kicker">УПРАВЛЕНИЕ</div>
+            <h2>Действия</h2>
+          </div>
+        </div>
+
+        <button class="action-primary" type="button" (click)="openContractModal()"
+          *ngIf="!hasContract()" [disabled]="isUploading">
+          <span class="action-icon">✓</span>
+          <span>
+            <strong>Подписать договор</strong>
+            <small>Условия цены + файл договора</small>
+          </span>
+          <span class="arrow">→</span>
+        </button>
+
+        <div class="action-complete" *ngIf="hasContract()">
+          <span class="complete-icon">✓</span>
+          <span>
+            <strong>Договор отправлен</strong>
+            <small>Повторная отправка недоступна</small>
+          </span>
+        </div>
+
+        <button class="action-primary security-action" type="button" (click)="openSecurityCheckModal()"
+          *ngIf="!hasSecurityCheck()" [disabled]="isUploading">
+          <span class="action-icon">✓</span>
+          <span>
+            <strong>Оформить проверку СБ</strong>
+            <small>Файл + условия оплаты</small>
+          </span>
+          <span class="arrow">→</span>
+        </button>
+
+        <div class="action-complete" *ngIf="hasSecurityCheck()">
+          <span class="complete-icon">✓</span>
+          <span>
+            <strong>Проверка СБ отправлена</strong>
+            <small>Повторная отправка недоступна</small>
+          </span>
+        </div>
+
+        <div class="action-divider"></div>
+
+        <button class="state-action danger-action" type="button" (click)="deactivate()"
+          [disabled]="order.wholesaleOrderStatus === 11 || !order.isUse">
+          <span>⊘</span>
+          <span>Заблокировать оптовые цены</span>
+        </button>
+        <button class="state-action success-action" type="button" (click)="activate()"
+          [disabled]="order.isUse">
+          <span>↗</span>
+          <span>Разблокировать оптовые цены</span>
+        </button>
+      </article>
+
+      <!-- Internal note -->
+      <article class="panel note-panel" *ngIf="order.commentSB">
+        <div class="panel-kicker">СЛУЖЕБНАЯ ИНФОРМАЦИЯ</div>
+        <h3>Комментарий СБ</h3>
+        <p>{{ order.commentSB }}</p>
+      </article>
+    </aside>
+  </main>
+</div>
+
+<!-- Contract / Security check modal -->
+<div class="modal-layer" *ngIf="showContractModal" (click)="closeContractModal()">
+  <div class="contract-modal security-modal" (click)="$event.stopPropagation()">
+    <ng-container *ngIf="modalMode === 'contract'; else securityModal">
+      <div class="modal-head">
+        <div>
+          <div class="panel-kicker">ДОГОВОР</div>
+          <h2>Подписание договора</h2>
+        </div>
+        <button class="modal-close" type="button" (click)="closeContractModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="field">
+          <span>Тип цены для просмотра</span>
+          <select [(ngModel)]="selectedViewPriceType" name="viewPriceType">
+            <option [ngValue]="null" disabled>Выберите тип цены…</option>
+            <option [ngValue]="3">Опт</option>
+            <option [ngValue]="4">Опт межгород</option>
+          </select>
+          <small>Выберите, какие оптовые цены будут доступны клиенту.</small>
+        </label>
+
+        <label class="field">
+          <span>Процент скидки</span>
+          <div class="input-suffix">
+            <input type="number" [(ngModel)]="salePercentInput" name="salePercent" min="0" max="8" step="1" placeholder="Например, 1">
+            <b>%</b>
+          </div>
+          <small>Допустимое значение от 0 до 8%.</small>
+        </label>
+
+        <div class="form-section-title">Файл договора</div>
+        <label class="file-drop" [class.has-file]="contractFile">
+          <span class="file-drop-icon">⇧</span>
+          <span class="file-drop-content">
+            <strong>{{ contractFile ? contractFile.name : 'Прикрепить подписанный договор или архив' }}</strong>
+            <small>{{ contractFile ? ((contractFile.size / 1024) | number:'1.0-0') + ' КБ' : 'PDF, DOC, DOCX, JPG, PNG, ZIP, RAR, 7Z' }}</small>
+          </span>
+          <input 
+            type="file" 
+            (change)="onContractFileSelected($event)" 
+            accept=".pdf,.doc,.docx,.jpg,.png,.zip,.rar,.7z" 
+            [disabled]="isUploading">
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="modal-cancel" type="button" (click)="closeContractModal()">Отмена</button>
+        <button class="modal-submit" type="button" (click)="submitContract()"
+          [disabled]="isUploading || !isContractFormValid()">
+          <span *ngIf="isUploading" class="spinner"></span>
+          {{ isUploading ? 'Сохранение…' : 'Подписать и загрузить' }}
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-template #securityModal>
+      <div class="modal-head">
+        <div>
+          <div class="panel-kicker">ПРОВЕРКА СБ</div>
+          <h2>Условия оптовой заявки</h2>
+        </div>
+        <button class="modal-close" type="button" (click)="closeContractModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-section-title">Предоплата</div>
+        <label class="field">
+          <span>Тип предоплаты</span>
+          <select [(ngModel)]="selectedPrepaymentType" name="prepaymentType">
+            <option [ngValue]="null" disabled>Выберите тип…</option>
+            <option [ngValue]="0">Без предоплаты</option>
+            <option [ngValue]="1">Частичная</option>
+            <option [ngValue]="2">Полная</option>
+          </select>
+        </label>
+
+        <label class="field" *ngIf="selectedPrepaymentType === 1">
+          <span>Процент предоплаты</span>
+          <div class="input-suffix">
+            <input type="number" [(ngModel)]="prepaymentPercentInput" name="prepaymentPercent" min="0" max="100" step="1" placeholder="Например, 30">
+            <b>%</b>
+          </div>
+          <small>В запрос уйдёт дробное значение: 30% → 0.3.</small>
+        </label>
+
+        <div class="form-section-title">Отсрочка платежа</div>
+        <label class="field">
+          <span>Тип отсрочки</span>
+          <select [(ngModel)]="selectedPaymentDeferralType" name="paymentDeferralType">
+            <option [ngValue]="null" disabled>Выберите тип…</option>
+            <option [ngValue]="0">Допускается</option>
+            <option [ngValue]="1">Не допускается</option>
+          </select>
+        </label>
+
+        <label class="field" *ngIf="selectedPaymentDeferralType === 0">
+          <span>Количество дней отсрочки</span>
+          <div class="input-suffix">
+            <input type="number" [(ngModel)]="paymentDeferralDaysInput" name="paymentDeferralDaysCount" min="0" step="1" placeholder="Например, 14">
+            <b>дн.</b>
+          </div>
+        </label>
+
+        <div class="form-section-title">Документ проверки</div>
+        <label class="file-drop" [class.has-file]="securityCheckFile">
+          <span class="file-drop-icon">⇧</span>
+          <span class="file-drop-content">
+            <strong>{{ securityCheckFile ? securityCheckFile.name : 'Прикрепить файл проверки СБ' }}</strong>
+            <small>{{ securityCheckFile ? ((securityCheckFile.size / 1024) | number:'1.0-0') + ' КБ' : 'PDF, DOC, DOCX, JPG, PNG' }}</small>
+          </span>
+          <input type="file" (change)="onSecurityCheckFileSelected($event)" accept=".pdf,.doc,.docx,.jpg,.png" [disabled]="isUploading">
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="modal-cancel" type="button" (click)="closeContractModal()">Отмена</button>
+        <button class="modal-submit" type="button" (click)="submitSecurityCheck()"
+          [disabled]="isUploading || !isSecurityFormValid()">
+          <span *ngIf="isUploading" class="spinner"></span>
+          {{ isUploading ? 'Сохранение…' : 'Сохранить и отправить' }}
+        </button>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">
+    <div class="loading-spinner"></div>
+    <strong>Загрузка заявки</strong>
+    <span>Получаем данные и документы…</span>
+  </div>
+</ng-template>

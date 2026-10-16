@@ -30,14 +30,24 @@ export class OrdersService {
   }
 
   update(id: string, order: any): Observable<any> {
-    const cleanOrder = this.removeNullFields({ ...order, id });
-    return this.http.put(`${this.apiUrl}/${id}`, cleanOrder);
+    console.log('order',order)
+    let cleanOrder = this.removeNullFields({ ...order, id });
+    return this.http.put(`${this.apiUrl}/${id}`, 
+      {
+        id: cleanOrder.id,
+        paymentStatusType: cleanOrder.paymentStatusType,
+        paymentType: cleanOrder.paymentType,
+        isPaidFor: cleanOrder.isPaidFor,
+        isUse: cleanOrder.isUse,
+      });
   }
 
 
 
   changeStatus(id: any, newOrderStatus: number | undefined): Observable<any> {
-    return this.http.put(`${this.apiUrl}/ChangeStatus/${id}`, { "newOrderStatus": newOrderStatus });
+    return this.http.put(`${this.apiUrl}/ChangeStatus/${id}`, { 
+      "id": id,
+      "newOrderStatus": newOrderStatus });
   }
 
   delete(id: string): Observable<any> {

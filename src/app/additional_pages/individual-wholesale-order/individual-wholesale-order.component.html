@@ -1,0 +1,176 @@
+<div class="container mt-4" *ngIf="!isLoading && order; else loadingTpl">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Заявка № {{ order.number }}</h2>
+        <span class="badge" [ngClass]="order.wholesaleOrderStatus === 1 ? 'bg-success' : 'bg-danger'">
+            Статус: {{ order.wholesaleOrderStatus === 1 ? 'Активна' : 'Заблокирована' }}
+        </span>
+    </div>
+
+    <!-- Адаптивная сетка вместо flex -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Информация о заявке</h5>
+                    <p><strong>Дата создания:</strong> {{ order.orderDateTime | date:'dd.MM.yyyy HH:mm' }}</p>
+                    <p><strong>Период действия:</strong> с {{ order.beginDateTime | date:'dd.MM.yyyy' }} по {{ order.endDateTime | date:'dd.MM.yyyy' }}</p>
+                    <hr>
+
+                    <h6>Контрагент</h6>
+                    <p><strong>{{ order.partnerInstance.partner.shortName }}</strong> ({{ order.partnerInstance.partner.fullName }})</p>
+                    <p>ИНН: {{ order.partnerInstance.partner.inn }} | Email: {{ order.partnerInstance.partner.email }}</p>
+
+                    <hr>
+
+                    <h6>Клиент</h6>
+                    <p>ФИО:{{ getFullName() }}</p>
+                    <p>Почта: {{ getEmail() }}</p>
+                    <p>Телефон: {{ getPhone() }}</p>
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Документы заявки</h5>
+                    <ul class="list-group list-group-flush" *ngIf="order.orderDocuments.length > 0; else noDocs">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            *ngFor="let doc of order.orderDocuments">
+                            <div>
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                {{ doc.fileInfo.fileName }}
+                                <small class="text-muted ms-2">(Тип: {{ doc.orderDocumentType }})</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary"
+                                (click)="downloadDocument(doc.fileInfo.url, doc.fileInfo.fileName)">
+                                Скачать
+                            </button>
+                        </li>
+                    </ul>
+                    <ng-template #noDocs>
+                        <p class="text-muted mb-0">Документы пока не загружены.</p>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Действия</h5>
+
+            <div class="d-flex flex-wrap gap-3">
+                <div class="d-flex gap-3 flex-wrap">
+                    <div>
+                        <!-- Кнопка открывает модальное окно -->
+                        <button class="btn btn-success" (click)="openContractModal()" [disabled]="isUploading">
+                            <i class="bi bi-file-earmark-check me-2"></i>
+                            Подписать договор
+                        </button>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-warning" (click)="file98.click()" [disabled]="isUploading">
+                            <span *ngIf="isUploading" class="spinner-border spinner-border-sm me-1"></span>
+                            <i class="bi bi-shield-check me-2" *ngIf="!isUploading"></i>
+                            Отправить результаты проверки СБ
+                        </button>
+                        <input type="file" #file98 (change)="uploadDocument(98, $event)" hidden
+                            accept=".pdf,.doc,.docx,.jpg,.png">
+                    </div>
+                    <div class="vr"></div>
+                </div>
+
+                <div class="d-flex gap-3 flex-wrap">
+                    <button class="btn btn-outline-danger" (click)="deactivate()"
+                        [disabled]="order.wholesaleOrderStatus !== 1">
+                        <i class="bi bi-lock-fill me-2"></i>
+                        Заблокировать оптовые цены
+                    </button>
+
+                    <button class="btn btn-outline-success" (click)="activate()"
+                        [disabled]="order.wholesaleOrderStatus === 1">
+                        <i class="bi bi-unlock-fill me-2"></i>
+                        Разблокировать оптовые цены
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Модальное окно для подписания договора -->
+<div class="modal fade" [class.show]="showContractModal" [style.display]="showContractModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-check me-2"></i>
+                    Подписание договора
+                </h5>
+                <button type="button" class="btn-close" (click)="closeContractModal()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label for="viewPriceType" class="form-label">
+                        <i class="bi bi-tags me-1 text-primary"></i> Тип цены для просмотра
+                    </label>
+                    <select class="form-select" id="viewPriceType" [(ngModel)]="selectedViewPriceType" name="viewPriceType">
+                        <option [ngValue]="null" disabled>Выберите тип цены...</option>
+                        <option [ngValue]="3">Опт</option>
+                        <option [ngValue]="4">Опт межгород</option>
+                    </select>
+                    <small class="form-text text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Выберите, какие оптовые цены будут доступны клиенту.
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="salePercent" class="form-label">
+                        <i class="bi bi-percent me-1 text-primary"></i> Процент скидки (SalePercent)
+                    </label>
+                    <input type="number" class="form-control" id="salePercent" [(ngModel)]="salePercentInput" name="salePercent" min="0" max="8" step="1" placeholder="Например: 1">
+                    <small class="form-text text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Укажите значение от 0 до 8. Значение 1 означает 1% .
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="contractFile" class="form-label">
+                        <i class="bi bi-cloud-upload me-1 text-primary"></i> Файл договора
+                    </label>
+                    <input type="file" class="form-control" id="contractFile" (change)="onContractFileSelected($event)" accept=".pdf,.doc,.docx,.jpg,.png">
+                    <small class="form-text text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Загрузите подписанный файл договора (PDF, DOC, DOCX, JPG, PNG).
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="closeContractModal()">Отмена</button>
+                <button type="button" class="btn btn-success" (click)="submitContract()" [disabled]="isUploading || !isFormValid()">
+                    <span *ngIf="isUploading" class="spinner-border spinner-border-sm me-1"></span>
+                    <i class="bi bi-check-circle me-1" *ngIf="!isUploading"></i>
+                    Подписать и загрузить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="showContractModal" (click)="closeContractModal()"></div>
+
+<ng-template #loadingTpl>
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <p class="mt-2">Загрузка данных заявки...</p>
+    </div>
+</ng-template>

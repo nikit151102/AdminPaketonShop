@@ -9,7 +9,7 @@ export enum NewsBannerTypeEnum {
   News = 0,
   Banner = 1,
   Article = 2
-}
+} 
 
 export interface INewsBanner {
   id?: string;
@@ -225,12 +225,17 @@ export class NewsBannerPromoService {
 
   // ============ File Upload ============
 
-  uploadSectionImage(idSection: string, file: File): Observable<{ id: string; url: string }> {
-    const formData = new FormData();
-    formData.append('id', idSection);
-    formData.append('file', file);
 
-    return this.http.put<{ id: string; url: string }>(
+  uploadSectionImage(
+    idSection: string,
+    file: File
+  ): Observable<any> {
+    const formData = new FormData();
+
+    formData.append('id', idSection);
+    formData.append('ImageInstances', file, file.name);
+
+    return this.http.put<any>(
       `${this.apiUrl}/Section/UpdateImages/${idSection}`,
       formData
     );

@@ -230,7 +230,6 @@
 
       .label {
         flex: 1;
-        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         font-weight: 500;
@@ -294,7 +293,6 @@
           font-size: 0.875rem;
           font-weight: 600;
           color: var(--text-primary);
-          white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }

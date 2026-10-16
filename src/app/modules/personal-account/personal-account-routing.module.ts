@@ -32,8 +32,16 @@ const routes: Routes = [
         loadComponent: () => import('./tabs/orders/orders.component').then(m => m.OrdersComponent)
       },
       {
+        path: 'ordersStat',
+        loadComponent: () => import('./tabs/orders-stat/orders-stat.component').then(m => m.OrdersStatComponent)
+      },
+      {
         path: 'B2Borders',
         loadComponent: () => import('./tabs/b2b-orders/b2b-orders.component').then(m => m.B2bOrdersComponent)
+      },
+      {
+        path: 'B2BordersStat',
+        loadComponent: () => import('./tabs/b2-b-orders-stat/b2-b-orders-stat.component').then(m => m.B2BOrdersStatComponent)
       },
       {
         path: 'barcode',

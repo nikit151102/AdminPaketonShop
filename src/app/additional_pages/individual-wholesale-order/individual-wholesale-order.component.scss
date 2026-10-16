@@ -1,0 +1,549 @@
+// Переменные цветов
+$primary-color: #327120;
+$primary-light: #4a9d32;
+$primary-dark: #245416;
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-500: #6b7280;
+$gray-700: #374151;
+$gray-900: #111827;
+
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$border-radius-lg: 16px;
+
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Контейнер
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  
+  @media (min-width: 768px) {
+    padding: 3rem 2rem;
+  }
+}
+
+// Заголовок с номером заявки
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: $gray-900;
+  margin: 0;
+  
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+// Карточки
+.card {
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  border: 1px solid $gray-200;
+  overflow: hidden;
+  transition: $transition;
+  
+  &:hover {
+    box-shadow: $shadow-lg;
+    transform: translateY(-2px);
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+    
+    @media (min-width: 768px) {
+      padding: 2rem;
+    }
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $primary-color;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid $gray-100;
+    position: relative;
+    margin-top: 0;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, $primary-color, $primary-light);
+      border-radius: 2px;
+    }
+  }
+}
+
+// Бейдж статуса
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: $shadow-sm;
+  transition: $transition;
+  
+  &.bg-success {
+    background: linear-gradient(135deg, $success-color, darken($success-color, 10%));
+    color: $white;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba($success-color, 0.4);
+    }
+  }
+  
+  &.bg-danger {
+    background: linear-gradient(135deg, $danger-color, darken($danger-color, 10%));
+    color: $white;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba($danger-color, 0.4);
+    }
+  }
+}
+
+// Информация о заявке
+p {
+  margin-bottom: 0.75rem;
+  color: $gray-700;
+  line-height: 1.6;
+  
+  strong {
+    color: $gray-900;
+    font-weight: 600;
+  }
+}
+
+h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $primary-color;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, $gray-200, transparent);
+  margin: 1.5rem 0;
+}
+
+// Список документов
+.list-group {
+  border-radius: $border-radius-sm;
+  overflow: hidden;
+  
+  &.list-group-flush {
+    .list-group-item {
+      border: none;
+      border-bottom: 1px solid $gray-100;
+      padding: 1rem 1.25rem;
+      transition: $transition;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background: linear-gradient(135deg, $gray-50, rgba($primary-color, 0.02));
+        transform: translateX(4px);
+        
+        .btn-outline-primary {
+          background: $primary-color;
+          color: $white;
+          border-color: $primary-color;
+        }
+      }
+      
+      i {
+        color: $primary-color;
+        font-size: 1.25rem;
+      }
+      
+      small {
+        color: $gray-500;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.text-muted {
+  color: $gray-500 !important;
+  font-style: italic;
+}
+
+// Кнопки
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: $border-radius-sm;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: $transition;
+  text-decoration: none;
+  white-space: nowrap;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  &:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+  
+  &:not(:disabled):active {
+    transform: translateY(0);
+  }
+  
+  &-success {
+    background: linear-gradient(135deg, $primary-color, $primary-light);
+    color: $white;
+    border-color: $primary-color;
+    
+    &:hover {
+      background: linear-gradient(135deg, $primary-light, $primary-color);
+      box-shadow: 0 4px 12px rgba($primary-color, 0.4);
+    }
+  }
+  
+  &-warning {
+    background: linear-gradient(135deg, $warning-color, darken($warning-color, 10%));
+    color: $white;
+    border-color: $warning-color;
+    
+    &:hover {
+      background: linear-gradient(135deg, darken($warning-color, 10%), $warning-color);
+      box-shadow: 0 4px 12px rgba($warning-color, 0.4);
+    }
+  }
+  
+  &-outline-danger {
+    background: $white;
+    color: $danger-color;
+    border-color: $danger-color;
+    
+    &:hover {
+      background: linear-gradient(135deg, $danger-color, darken($danger-color, 10%));
+      color: $white;
+      box-shadow: 0 4px 12px rgba($danger-color, 0.4);
+    }
+  }
+  
+  &-outline-success {
+    background: $white;
+    color: $primary-color;
+    border-color: $primary-color;
+    
+    &:hover {
+      background: linear-gradient(135deg, $primary-color, $primary-light);
+      color: $white;
+      box-shadow: 0 4px 12px rgba($primary-color, 0.4);
+    }
+  }
+  
+  &-outline-primary {
+    background: $white;
+    color: $primary-color;
+    border-color: $primary-color;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+    
+    &:hover {
+      background: $primary-color;
+      color: $white;
+    }
+  }
+  
+  &-sm {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+// Спиннер загрузки
+.spinner-border {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+}
+
+.spinner-border-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+// Вертикальный разделитель
+.vr {
+  align-self: stretch;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, $gray-300, transparent);
+  margin: 0 0.5rem;
+  
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+// Flex utilities
+.d-flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.justify-content-between { justify-content: space-between; }
+.align-items-center { align-items: center; }
+.gap-3 { gap: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 3rem; }
+.me-1 { margin-right: 0.25rem; }
+.me-2 { margin-right: 0.5rem; }
+.ms-2 { margin-left: 0.5rem; }
+
+// Loading state
+.text-center { text-align: center; }
+
+.spinner-border.text-primary {
+  color: $primary-color;
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.25em;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Анимация появления
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+
+// ==========================================
+// СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА 
+// ==========================================
+
+// Бэкдроп (затемнение фона)
+.modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba($gray-900, 0.6) !important;
+  backdrop-filter: blur(8px);
+  z-index: 1040 !important;
+}
+
+// Само модальное окно
+.modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  outline: 0 !important;
+  z-index: 1050 !important;
+  
+  &.show {
+    display: block !important;
+  }
+}
+
+// Диалоговое окно (контейнер модалки)
+.modal-dialog {
+  position: relative;
+  width: auto;
+  margin: 1.75rem auto;
+  max-width: 500px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  min-height: calc(100% - 3.5rem);
+  
+  &.modal-dialog-centered {
+    align-items: center;
+  }
+}
+
+// Контент модального окна
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  pointer-events: auto;
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-xl;
+  border: none;
+  overflow: hidden;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+// Шапка модального окна
+.modal-header {
+  background: linear-gradient(135deg, $primary-color, $primary-light);
+  color: $white;
+  border-bottom: none;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  .modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+  
+  .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+    transition: $transition;
+    background: transparent;
+    border: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Тело модального окна
+.modal-body {
+  position: relative;
+  flex: 1 1 auto;
+  padding: 2rem;
+  
+  .form-label {
+    font-weight: 600;
+    color: $gray-700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    
+    .text-primary {
+      color: $primary-color !important;
+    }
+  }
+  
+  .form-control, .form-select {
+    border-radius: $border-radius-sm;
+    border: 2px solid $gray-200;
+    padding: 0.75rem 1rem;
+    transition: $transition;
+    background-color: $gray-50;
+    font-size: 0.95rem;
+    width: -webkit-fill-available;
+    
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.15);
+      background-color: $white;
+      outline: none;
+    }
+  }
+  
+  .form-text {
+    font-size: 0.8125rem;
+    color: $gray-500;
+    margin-top: 0.375rem;
+    display: flex;
+    align-items: center;
+  }
+}
+
+// Подвал модального окна
+.modal-footer {
+  border-top: 1px solid $gray-100;
+  padding: 1.5rem 2rem;
+  background: $gray-50;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  
+  .btn-light {
+    background: $white;
+    color: $gray-700;
+    border: 2px solid $gray-200;
+    
+    &:hover {
+      background: $gray-100;
+      border-color: $gray-300;
+    }
+  }
+}
+
+// Блокировка скролла body когда модалка открыта
+body.modal-open {
+  overflow: hidden;
+}

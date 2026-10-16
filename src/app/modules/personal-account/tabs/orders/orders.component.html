@@ -5,7 +5,6 @@
             <h2>Управление заказами</h2>
         </div>
         <div class="toolbar-right">
-            <!-- Export -->
             <div class="dropdown">
                 <button class="icon-btn" (click)="toggleDropdown('export')" title="Экспорт">
                     <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -18,7 +17,6 @@
                 </div>
             </div>
 
-            <!-- Columns -->
             <div class="dropdown">
                 <button class="icon-btn" (click)="toggleDropdown('columns')" title="Колонки">
                     <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -35,7 +33,6 @@
                 </div>
             </div>
 
-            <!-- Clear Filters -->
             <button *ngIf="hasAnyFilters()" class="icon-btn" (click)="clearAllFilters()" title="Очистить все фильтры">
                 <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
@@ -43,7 +40,6 @@
                 </svg>
             </button>
 
-            <!-- Fullscreen -->
             <button class="icon-btn" (click)="toggleFullscreen()"
                 [title]="isFullscreen ? 'Выйти из полного экрана' : 'Полный экран'">
                 <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -56,13 +52,53 @@
         </div>
     </div>
 
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button *ngFor="let tab of tabs" class="tab-btn" [class.active]="activeTab === tab.id"
+            (click)="onTabChange(tab.id)">
+            {{ tab.label }}
+        </button>
+    </div>
+
+    <!-- Search Panel -->
+    <div class="search-panel">
+        <div class="search-group">
+            <label>Номер заказа</label>
+            <input type="text" [(ngModel)]="searchOrderNumber" placeholder="Например: 26264" />
+        </div>
+        <div class="search-group">
+            <label>Телефон</label>
+            <input type="text" [(ngModel)]="searchPhone" placeholder="Например: 9131201986" />
+        </div>
+        <div class="search-group">
+            <label>Почта</label>
+            <input type="text" [(ngModel)]="searchEmail" placeholder="Например: mail@ya.ru" />
+        </div>
+        <div class="search-group">
+            <label>Дата заказа с</label>
+            <input type="date" [(ngModel)]="searchDateFrom" />
+        </div>
+        <div class="search-group">
+            <label>Дата заказа по</label>
+            <input type="date" [(ngModel)]="searchDateTo" />
+        </div>
+        <div class="search-actions">
+            <button class="btn-search" (click)="applySearch()" [disabled]="loading">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                Найти
+            </button>
+            <button class="btn-clear" (click)="clearSearch()" [disabled]="loading">Сбросить</button>
+        </div>
+    </div>
+
     <!-- Active Filters -->
     <div class="active-filters" *ngIf="hasAnyFilters()">
         <span class="filters-label">Активные фильтры:</span>
         <div class="filters-list">
-
             <ng-container *ngFor="let col of columnOptions">
-
                 <span *ngIf="activeFilters[col.field] && isColumnVisible(col)" class="filter-tag">
                     {{ col.header }}: {{ getFilterValuesDisplay(col) }}
                     <button class="remove-filter" (click)="removeFilter(col.field)">
@@ -73,21 +109,24 @@
                     </button>
                 </span>
             </ng-container>
-
         </div>
     </div>
 
-    <!-- Table -->
+    <!-- Table Container with Loading Overlay -->
     <div class="table-container">
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" *ngIf="loading">
+            <div class="spinner"></div>
+            <p>Загрузка данных...</p>
+        </div>
+
         <table class="orders-table" *ngIf="isDesktop">
             <thead>
                 <tr>
                     <th *ngFor="let col of visibleColumns" [style.width]="col.width || 'auto'">
                         <div class="th-content">
-                            <!-- Label + Sort -->
                             <span class="th-label" (click)="toggleSort(col)">{{ col.header }}</span>
-
-                            <!-- Sort Button -->
                             <button class="icon-btn-small" *ngIf="col.sortable" (click)="toggleSort(col)"
                                 title="Сортировка">
                                 <svg class="icon-small" viewBox="0 0 24 24" fill="currentColor">
@@ -99,8 +138,6 @@
                                         d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z" />
                                 </svg>
                             </button>
-
-                            <!-- Filter Button -->
                             <div class="dropdown filter-dropdown" *ngIf="col.filterable">
                                 <button class="icon-btn-small" [class.active]="activeFilters[col.field]"
                                     (click)="toggleDropdown('filter-' + col.field); $event.stopPropagation()"
@@ -113,8 +150,7 @@
                                     (click)="$event.stopPropagation()">
                                     <app-filter-popover [column]="col"
                                         [currentFilter]="activeFilters[col.field]?.values"
-                                        (apply)="applyFilter(col, $event.values, $event.type)">
-                                    </app-filter-popover>
+                                        (apply)="applyFilter(col, $event.values, $event.type)"></app-filter-popover>
                                 </div>
                             </div>
                         </div>
@@ -138,8 +174,6 @@
                         </span>
                         <span *ngIf="col.field === 'totalCost'" class="cost-value">{{ formatCurrency(order.totalCost)
                             }}</span>
-                        <span *ngIf="col.field === 'productCount'" class="count-value">{{ order.productCount || 0
-                            }}</span>
                         <span *ngIf="col.field === 'userInstance.fullName'" class="user-name">{{
                             getUserName(order.userInstance) }}</span>
                         <span *ngIf="col.field === 'userInstance.phoneNumber'" class="phone-value">{{
@@ -153,13 +187,16 @@
                     </td>
                     <td class="col-actions">
                         <div class="actions">
-                            <button (click)="openDetailsModal(order.id!)" class="btn-details" title="Подробнее">
+                            <a [routerLink]="['/order', order.id]" target="_blank" rel="noopener noreferrer"
+                                class="btn-details" title="Подробнее">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                     <circle cx="12" cy="12" r="3" />
                                 </svg>
-                            </button>
+                            </a>
+                            <!-- (click)="openDetailsModal(order.id!)" -->
+
                             <button (click)="openEditModal(order.id!)" class="btn-edit" title="Редактировать">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -200,7 +237,6 @@
                         {{ getOrderStatusText(order.orderStatus) }}
                     </span>
                 </div>
-
                 <div class="card-extra-info">
                     <p class="card-info"><strong>Клиент:</strong> {{ getUserName(order.userInstance) }}</p>
                     <p class="card-info"><strong>Телефон:</strong> {{ order.userInstance?.phoneNumber || '-' }}</p>
@@ -210,7 +246,6 @@
                     <p class="card-info"><strong>Доставка:</strong> {{ getDeliveryTypeName(order.deliveryType) }}</p>
                     <p class="card-info"><strong>Оплачен:</strong> {{ order.isPaidFor ? 'Да' : 'Нет' }}</p>
                 </div>
-
                 <div class="card-actions">
                     <button (click)="openDetailsModal(order.id!)" class="btn-details" title="Подробнее">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -237,12 +272,7 @@
             </div>
         </div>
 
-        <!-- Loading / Empty -->
-        <div *ngIf="loading" class="loading-indicator">
-            <div class="spinner"></div>
-            <p>Загрузка заказов...</p>
-        </div>
-
+        <!-- Empty State (показывается только если нет загрузки и нет данных) -->
         <div *ngIf="!loading && orders.length === 0" class="empty-state">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -260,14 +290,16 @@
             Показано {{ Math.min(page * pageSize, totalCount) }} из {{ totalCount }}
         </span>
         <div class="page-controls">
-            <button class="page-btn" (click)="page > 0 && loadOrders(true)" [disabled]="page === 0">← Назад</button>
+            <button class="page-btn" (click)="page > 0 && loadOrders(true)" [disabled]="page === 0 || loading">←
+                Назад</button>
             <span class="page-num">{{ page + 1 }}</span>
-            <button class="page-btn" (click)="loadOrders()" [disabled]="page * pageSize >= totalCount">Вперёд →</button>
+            <button class="page-btn" (click)="loadOrders()" [disabled]="page * pageSize >= totalCount || loading">Вперёд
+                →</button>
         </div>
     </div>
 </div>
 
-<!-- Details Modal -->
+<!-- Details Modal (без изменений) -->
 <div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeModal()">
     <div class="modal modal-large" (click)="$event.stopPropagation()">
         <div class="modal-header">
@@ -279,7 +311,6 @@
                 </svg>
             </button>
         </div>
-
         <div class="modal-body">
             <div class="details-grid">
                 <div class="detail-section">
@@ -304,7 +335,6 @@
                         <span class="detail-value">{{ currentOrder.isPaidFor ? 'Да' : 'Нет' }}</span>
                     </div>
                 </div>
-
                 <div class="detail-section">
                     <h4>Клиент</h4>
                     <div class="detail-item">
@@ -320,7 +350,6 @@
                         <span class="detail-value">{{ currentOrder.userInstance.phoneNumber }}</span>
                     </div>
                 </div>
-
                 <div class="detail-section">
                     <h4>Доставка</h4>
                     <div class="detail-item">
@@ -336,7 +365,6 @@
                         <span class="detail-value">{{ formatDate(currentOrder.readyDateTime) }}</span>
                     </div>
                 </div>
-
                 <div class="detail-section">
                     <h4>Стоимость</h4>
                     <div class="detail-item">
@@ -353,7 +381,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="products-section"
                 *ngIf="currentOrder.productPositions && currentOrder.productPositions?.length">
                 <h4>Товары в заказе ({{ currentOrder.productPositions.length }})</h4>
@@ -391,8 +418,8 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>Статус заказа</label>
-                    <select [(ngModel)]="currentOrder.orderStatus">
-                        <option *ngFor="let status of orderStatuses" [value]="status.value">
+                    <select [(ngModel)]="currentOrder.orderStatus" (ngModelChange)="onStatusChange()">
+                        <option *ngFor="let status of orderStatuses" [ngValue]="status.value">
                             {{ status.label }}
                         </option>
                     </select>
@@ -401,21 +428,22 @@
                 <div class="form-group">
                     <label>Тип оплаты</label>
                     <select [(ngModel)]="currentOrder.paymentType">
-                        <option *ngFor="let type of paymentTypes" [value]="type.value">
+                        <option *ngFor="let type of paymentTypes" [ngValue]="type.value">
                             {{ type.label }}
                         </option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" [(ngModel)]="currentOrder.isPaidFor" />
+                    <label class="checkbox-label">
+                        <input type="checkbox" [(ngModel)]="currentOrder.isPaidFor"
+                            [disabled]="currentOrder.orderStatus === 8 || currentOrder.orderStatus === 9" />
                         Оплачен
                     </label>
                 </div>
 
                 <div class="form-group">
-                    <label>
+                    <label class="checkbox-label">
                         <input type="checkbox" [(ngModel)]="currentOrder.consultation" />
                         Консультация
                     </label>
@@ -442,7 +470,6 @@
                 </svg>
             </button>
         </div>
-
         <div class="modal-body">
             <div class="warning-icon">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -455,7 +482,6 @@
             <p class="warning-text">Вы уверены, что хотите удалить этот заказ?</p>
             <p class="warning-subtext">Это действие нельзя отменить.</p>
         </div>
-
         <div class="modal-footer">
             <button class="btn-cancel" (click)="cancelDelete()">Отмена</button>
             <button class="btn-delete-confirm" (click)="deleteOrder()">Удалить</button>

@@ -1,0 +1,79 @@
+<section class="b2b-stat">
+  <header class="page-header">
+    <div class="header-copy">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> АНАЛИТИКА • B2B</div>
+      <h1>Статистика оптовых заявок</h1>
+      <p>Сводка по заявкам, их статусам и ответственным сотрудникам.</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="loadStatistics()" [disabled]="loading">
+      <svg viewBox="0 0 24 24" aria-hidden="true" [class.spinning]="loading"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M5.6 9A7 7 0 0 1 17.3 6L20 12M4 12l2.7 6A7 7 0 0 0 18.4 15"></path></svg>
+      {{ loading ? 'Обновление…' : 'Обновить' }}
+    </button>
+  </header>
+
+  <div *ngIf="errorMessage" class="message message-error" role="alert">
+    <span class="message-icon">!</span>
+    <div><strong>Не удалось загрузить данные</strong><p>{{ errorMessage }}</p></div>
+    <button type="button" class="message-action" (click)="loadStatistics()">Повторить</button>
+  </div>
+  <div *ngIf="loading && !data" class="loading-state"><span class="loader"></span><span>Загружаем статистику заявок…</span></div>
+
+  <ng-container *ngIf="data as stats">
+    <div class="summary-grid">
+      <article class="summary-card summary-primary">
+        <div class="summary-top"><span class="summary-label">Всего заявок</span><span class="summary-icon icon-total">▤</span></div>
+        <div class="summary-value">{{ stats.totalCount }}</div><div class="summary-foot">Всего в системе</div>
+      </article>
+      <article class="summary-card">
+        <div class="summary-top"><span class="summary-label">Принято</span><span class="summary-icon icon-accepted">✓</span></div>
+        <div class="summary-value">{{ acceptedCount }}</div><div class="summary-foot"><span class="mini-dot green"></span>{{ acceptedPercent }}% от общего числа</div>
+      </article>
+      <article class="summary-card">
+        <div class="summary-top"><span class="summary-label">Создано</span><span class="summary-icon icon-created">＋</span></div>
+        <div class="summary-value">{{ createdCount }}</div><div class="summary-foot">Ожидают обработки</div>
+      </article>
+      <article class="summary-card">
+        <div class="summary-top"><span class="summary-label">Отклонено</span><span class="summary-icon icon-rejected">×</span></div>
+        <div class="summary-value">{{ rejectedCount }}</div><div class="summary-foot">Отклонённые заявки</div>
+      </article>
+    </div>
+
+    <section class="panel status-panel">
+      <div class="section-heading"><div><h2>Распределение по статусам</h2><p>Количество заявок в каждой категории</p></div><span class="section-count">{{ statusCards.length }} статусов</span></div>
+      <div class="status-grid">
+        <article class="status-card" *ngFor="let status of statusCards">
+          <div class="status-card-heading"><span class="status-dot" [ngClass]="'tone-' + status.tone"></span><span>{{ status.label }}</span></div>
+          <div class="status-number">{{ status.count }}</div>
+          <div class="progress-track"><div class="progress-fill" [ngClass]="'fill-' + status.tone" [style.width.%]="stats.totalCount ? (status.count / stats.totalCount) * 100 : 0"></div></div>
+          <div class="status-share">{{ stats.totalCount ? ((status.count / stats.totalCount) * 100 | number:'1.0-1') : '0' }}% от всех</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel orders-panel">
+      <div class="section-heading"><div><h2>Список заявок</h2><p>Данные из статистического API</p></div><span class="section-count">{{ filteredOrders.length }} из {{ stats.details.length }}</span></div>
+      <div class="filters">
+        <label class="search-field"><span aria-hidden="true">⌕</span><input type="search" [(ngModel)]="searchTerm" placeholder="Поиск по компании, ИНН, статусу…" aria-label="Поиск заявок"></label>
+        <label class="select-field"><span>Статус</span><select [(ngModel)]="selectedStatus" aria-label="Фильтр по статусу"><option value="all">Все статусы</option><option *ngFor="let status of statusMeta" [value]="status.key">{{ status.label }}</option></select></label>
+        <button class="sort-button" type="button" (click)="sortNewestFirst = !sortNewestFirst">{{ sortNewestFirst ? '↓ Сначала новые' : '↑ Сначала старые' }}</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Компания</th><th>ИНН</th><th>Статус</th><th>Дата создания</th><th>Ответственный</th><th class="th-action">Заявка</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let order of filteredOrders; trackBy: trackByOrderId">
+              <td><div class="company-cell"><span class="company-avatar">{{ (order.companyName || 'К').trim().charAt(0).toLocaleUpperCase('ru-RU') }}</span><span class="company-name" [title]="order.companyName">{{ order.companyName || 'Компания не указана' }}</span></div></td>
+              <td class="inn-cell">{{ order.inn || '—' }}</td>
+              <td><span class="status-badge" [ngClass]="'badge-' + statusTone(order)">{{ order.currentStatus || 'Не указан' }}</span></td>
+              <td class="date-cell">{{ formatDate(order.creationDate) }}</td>
+              <td>{{ order.responsiblePersonName || 'Не назначен' }}</td>
+              <td class="action-cell"><a *ngIf="order.wholesaleOrderURI" [href]="order.wholesaleOrderURI" target="_blank" rel="noopener noreferrer" class="open-link" aria-label="Открыть заявку">↗</a><span *ngIf="!order.wholesaleOrderURI" class="no-link">—</span></td>
+            </tr>
+            <tr *ngIf="filteredOrders.length === 0"><td colspan="6"><div class="empty-state"><span class="empty-icon">⌕</span><strong>Заявки не найдены</strong><span>Измените поисковый запрос или выберите другой статус.</span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer class="table-footer"><span>Показано заявок: <strong>{{ filteredOrders.length }}</strong></span><span>Всего по API: <strong>{{ stats.totalCount }}</strong></span></footer>
+    </section>
+  </ng-container>
+</section>

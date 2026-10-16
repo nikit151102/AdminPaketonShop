@@ -1,0 +1,463 @@
+<div class="dashboard">
+  <header class="dashboard-header">
+    <div>
+      <div class="eyebrow">ОПЕРАЦИОННАЯ АНАЛИТИКА</div>
+      <h1>Анализ заказов на доставку</h1>
+      <p>Статусы, сроки, склады и контроль просрочки</p>
+    </div>
+
+    <div class="header-actions">
+      <span class="updated" *ngIf="stats">
+        Обновлено: {{ formatDate(stats.generatedAt) }}
+      </span>
+
+      <button class="btn btn-primary" type="button" (click)="loadStatistics()" [disabled]="isLoading">
+        <span [class.spin]="isLoading">↻</span>
+        {{ isLoading ? 'Обновление...' : 'Обновить' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="loading-panel" *ngIf="isLoading && !stats">
+    Загружаем статистику заказов...
+  </div>
+
+  <div class="error-panel" *ngIf="errorMessage" role="alert">
+    <span>{{ errorMessage }}</span>
+    <button class="btn btn-secondary" (click)="loadStatistics()">
+      Повторить
+    </button>
+  </div>
+
+  <ng-container *ngIf="stats">
+    <!-- Фильтры -->
+    <section class="panel filters-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Фильтры</h2>
+          <p>Метрики и таблицы пересчитываются по выбранным условиям</p>
+        </div>
+
+        <button class="btn btn-secondary" (click)="resetFilters()">
+          Сбросить
+        </button>
+      </div>
+
+      <div class="filters-grid">
+        <label class="filter-field">
+          <span>Период с</span>
+          <input type="date" [(ngModel)]="dateFrom" (ngModelChange)="applyFilters()" />
+        </label>
+
+        <label class="filter-field">
+          <span>Период по</span>
+          <input type="date" [(ngModel)]="dateTo" [min]="dateFrom || null" (ngModelChange)="applyFilters()" />
+        </label>
+
+        <label class="filter-field">
+          <span>Фильтровать по дате</span>
+          <select [ngModel]="dateFilter" (ngModelChange)="setDateFilter($event)">
+            <option value="created">Создание заказа</option>
+            <option value="ready">Готовность к выдаче</option>
+            <option value="overdue">Дата просрочки</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Склад</span>
+          <select [(ngModel)]="selectedStore" (ngModelChange)="applyFilters()">
+            <option value="all">Все склады</option>
+            <option *ngFor="let store of storeOptions" [value]="store.id">
+              {{ store.name }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Статус заказа</span>
+          <select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()">
+            <option value="all">Все статусы</option>
+            <option *ngFor="let status of statusOptions" [value]="status.id">
+              {{ status.name }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Состояние</span>
+          <select [(ngModel)]="selectedOverdue" (ngModelChange)="applyFilters()">
+            <option value="all">Все заказы</option>
+            <option value="yes">Только просроченные</option>
+            <option value="no">Активные без просрочки</option>
+            <option value="drafts">Только черновики</option>
+            <option value="cancelled">Только отменённые</option>
+          </select>
+        </label>
+
+        <label class="filter-field search-field">
+          <span>Поиск</span>
+          <input type="search" [(ngModel)]="searchText" (ngModelChange)="applyFilters()"
+            placeholder="Номер, ID заказа, склад, причина..." />
+        </label>
+      </div>
+
+      <div class="filter-footer">
+        <span>
+          Период: <strong>{{ dateFilterLabel }}</strong>
+        </span>
+        <span>
+          Найдено заказов: <strong>{{ totalFiltered | number }}</strong>
+        </span>
+      </div>
+    </section>
+
+    <!-- Основные KPI -->
+    <section class="kpi-grid">
+      <article class="kpi-card">
+        <div class="kpi-top">
+          <span>Заказов в выборке</span>
+          <span class="kpi-icon icon-blue">▤</span>
+        </div>
+        <div class="kpi-value">{{ totalFiltered | number }}</div>
+        <div class="kpi-foot">С учетом всех фильтров</div>
+      </article>
+
+      <article class="kpi-card">
+        <div class="kpi-top">
+          <span>Просрочено</span>
+          <span class="kpi-icon icon-red">!</span>
+        </div>
+        <div class="kpi-value danger">{{ overdueFiltered | number }}</div>
+        <div class="kpi-foot">Требуют внимания</div>
+      </article>
+
+      <article class="kpi-card">
+        <div class="kpi-top">
+          <span>Без просрочки</span>
+          <span class="kpi-icon icon-green">✓</span>
+        </div>
+        <div class="kpi-value success">
+          {{ nonOverdueFiltered | number }}
+        </div>
+        <div class="kpi-foot">Не отмечены как просроченные</div>
+      </article>
+
+      <article class="kpi-card">
+        <div class="kpi-top">
+          <span>Доля просрочки</span>
+          <span class="kpi-icon icon-orange">◷</span>
+        </div>
+        <div class="kpi-value">{{ overduePercent }}%</div>
+        <div class="progress-track">
+          <span class="progress-danger" [style.width.%]="overduePercent">
+          </span>
+        </div>
+        <div class="kpi-foot">
+          {{ overdueFiltered }} из {{ totalFiltered }} заказов
+        </div>
+      </article>
+    </section>
+
+    <!-- Дополнительные KPI -->
+    <section class="secondary-kpi-grid">
+      <article class="mini-kpi">
+        <span>Складов в выборке</span>
+        <strong>{{ storeMetrics.length }}</strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Статусов в выборке</span>
+        <strong>{{ statusMetrics.length }}</strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Средний возраст заказа</span>
+        <strong>{{ averageAgeDays }} <small>дн.</small></strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Черновики (не просрочиваются)</span>
+        <strong>{{ draftFiltered }}</strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Отменённые</span>
+        <strong>{{ cancelledFiltered }}</strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Активные заказы</span>
+        <strong>{{ activeFiltered }}</strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Средняя длительность просрочки</span>
+        <strong>{{ overdueAverageDays }} <small>дн.</small></strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Просрочено более 7 дней</span>
+        <strong class="danger">{{ criticalOverdueFiltered }}</strong>
+      </article>
+
+      <article class="mini-kpi">
+        <span>Самый старый заказ</span>
+        <strong class="oldest-value">
+          {{ oldestOrder ? orderLabel(oldestOrder) : '—' }}
+        </strong>
+        <small *ngIf="oldestOrder">
+          {{ formatDate(oldestOrder.orderDateTime) }}
+        </small>
+      </article>
+    </section>
+
+    <!-- Аналитика по статусам -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Распределение по статусам</h2>
+          <p>Количество заказов и доля просрочки внутри статуса</p>
+        </div>
+        <span class="section-count">{{ statusMetrics.length }}</span>
+      </div>
+
+      <div class="empty-state" *ngIf="!statusMetrics.length">
+        По заданным фильтрам заказов нет
+      </div>
+
+      <div class="analytics-list" *ngIf="statusMetrics.length">
+        <div class="analytics-row" *ngFor="let item of statusMetrics; trackBy: trackByStatus">
+
+          <div class="analytics-main">
+            <button class="expand-btn" (click)="toggleStatus(statusKey(item.status))"
+              [attr.aria-expanded]="expandedStatuses.has(statusKey(item.status))">
+              {{ expandedStatuses.has(statusKey(item.status)) ? '−' : '+' }}
+            </button>
+            <div class="analytics-label">
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.count }} заказов · просрочено {{ item.overdue }}</span>
+            </div>
+          </div>
+
+          <div class="analytics-visual">
+            <div class="progress-track">
+              <span [style.width.%]="item.percent"></span>
+            </div>
+            <span class="percent-label">{{ item.percent }}%</span>
+          </div>
+
+          <div class="inline-order-list" *ngIf="expandedStatuses.has(statusKey(item.status))">
+
+            <div class="inline-order" *ngFor="let order of getOrdersByStatus(item.status)">
+
+              <div>
+                <a *ngIf="order.orderUrl; else plainStatusOrder" [href]="order.orderUrl" target="_blank"
+                  rel="noopener noreferrer">
+                  {{ orderLabel(order) }}
+                </a>
+                <ng-template #plainStatusOrder>
+                  <strong>{{ orderLabel(order) }}</strong>
+                </ng-template>
+                <small>{{ order.storeName }}</small>
+              </div>
+
+              <span [class.badge-danger]="order.isOverdue" [class.badge-success]="!order.isOverdue" class="badge">
+                {{ order.isOverdue ? 'Просрочен' : 'В срок' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Аналитика по складам -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Склады с наибольшей просрочкой</h2>
+          <p>Сортировка по количеству просроченных заказов</p>
+        </div>
+        <span class="section-count">{{ storeMetrics.length }}</span>
+      </div>
+
+      <div class="empty-state" *ngIf="!storeMetrics.length">
+        Нет данных по складам
+      </div>
+
+      <div class="table-wrapper" *ngIf="storeMetrics.length">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Склад</th>
+              <th>Всего</th>
+              <th>Просрочено</th>
+              <th>Доля просрочки</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let store of storeMetrics; trackBy: trackByStoreMetric">
+
+              <tr>
+                <td class="store-name">{{ store.name }}</td>
+                <td>{{ store.count }}</td>
+                <td>
+                  <span class="danger-number">{{ store.overdue }}</span>
+                </td>
+                <td class="store-rate">
+                  <div class="progress-track">
+                    <span class="progress-danger" [style.width.%]="store.percent">
+                    </span>
+                  </div>
+                  <strong>{{ store.percent }}%</strong>
+                </td>
+                <td>
+                  <button class="btn btn-small btn-secondary" (click)="toggleStore(store.id)">
+                    {{ expandedStores.has(store.id) ? 'Скрыть' : 'Заказы' }}
+                  </button>
+                </td>
+              </tr>
+
+              <tr *ngIf="expandedStores.has(store.id)">
+                <td colspan="5" class="nested-cell">
+                  <div class="nested-orders" *ngFor="let order of getOrdersByStore(store.id)">
+
+                    <div>
+                      <a *ngIf="order.orderUrl; else plainStoreOrder" [href]="order.orderUrl" target="_blank"
+                        rel="noopener noreferrer">
+                        {{ orderLabel(order) }}
+                      </a>
+                      <ng-template #plainStoreOrder>
+                        <strong>{{ orderLabel(order) }}</strong>
+                      </ng-template>
+                      <small>
+                        {{ order.statusName }} ·
+                        {{ formatDate(order.orderDateTime) }}
+                      </small>
+                    </div>
+
+                    <span class="badge" [class.badge-danger]="order.isOverdue" [class.badge-success]="!order.isOverdue">
+                      {{ order.isOverdue ? 'Просрочен' : 'В срок' }}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Общая таблица -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Заказы</h2>
+          <p>Детальный список с учетом фильтров и сортировки</p>
+        </div>
+
+        <span class="section-count">{{ totalFiltered }}</span>
+      </div>
+
+      <div class="table-toolbar">
+        <label>
+          Строк на странице
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+            <option [ngValue]="50">50</option>
+            <option [ngValue]="100">100</option>
+          </select>
+        </label>
+
+        <div class="sort-buttons">
+          <button class="btn btn-small btn-secondary" (click)="changeSort('date')">
+            Дата {{ sortBy === 'date' ? (sortDirection === 'asc' ? '↑' : '↓') : '' }}
+          </button>
+          <button class="btn btn-small btn-secondary" (click)="changeSort('store')">
+            Склад
+          </button>
+          <button class="btn btn-small btn-secondary" (click)="changeSort('status')">
+            Статус
+          </button>
+          <button class="btn btn-small btn-secondary" (click)="changeSort('overdue')">
+            Просрочка
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!totalFiltered">
+        Заказы по заданным фильтрам не найдены
+      </div>
+
+      <div class="table-wrapper" *ngIf="totalFiltered">
+        <table class="data-table orders-table">
+          <thead>
+            <tr>
+              <th>Заказ</th>
+              <th>Склад</th>
+              <th>Статус</th>
+              <th>Создан</th>
+              <th>Готовность</th>
+              <th>Просрочен с</th>
+              <th>Состояние</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let order of paginatedOrders; trackBy: trackByOrder">
+
+              <td class="order-number">{{ orderLabel(order) }}</td>
+              <td>{{ order.storeName }}</td>
+              <td>{{ order.statusName || '—' }}</td>
+              <td>{{ formatDate(order.orderDateTime) }}</td>
+              <td>{{ formatDate(order.readyDateTime) }}</td>
+              <td>{{ formatDate(order.overdueAt) }}</td>
+
+              <td>
+                <span class="badge"
+                  [class.badge-danger]="order.isOverdue"
+                  [class.badge-success]="!order.isOverdue && !order.isDraft && !order.isCancelled"
+                  [class.badge-draft]="order.isDraft"
+                  [class.badge-cancelled]="order.isCancelled">
+                  {{ order.isDraft ? 'Черновик' : order.isCancelled ? 'Отменён' : order.isOverdue ? 'Просрочен' : 'В срок' }}
+                </span>
+                <small class="overdue-reason" *ngIf="order.isOverdue">
+                  {{ order.overdueReason }} · {{ order.overdueAgeDays | number:'1.0-1' }} дн.
+                </small>
+              </td>
+
+              <td>
+                <a *ngIf="order.orderUrl" class="order-link" [href]="order.orderUrl" target="_blank"
+                  rel="noopener noreferrer">
+                  Открыть ↗
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" *ngIf="totalFiltered">
+        <span>
+          Показано {{ pageStart }}–{{ pageEnd }} из {{ totalFiltered }}
+        </span>
+
+        <div>
+          <button class="btn btn-secondary" (click)="previousPage()" [disabled]="currentPage <= 1">
+            Назад
+          </button>
+
+          <span class="page-number">
+            {{ currentPage }} / {{ pageCount }}
+          </span>
+
+          <button class="btn btn-secondary" (click)="nextPage()" [disabled]="currentPage >= pageCount">
+            Далее
+          </button>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>
