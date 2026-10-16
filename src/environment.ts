@@ -1,6 +1,6 @@
 export const environment = {
-    // production: 'https://xn--80akonecy.xn--p1ai/api',
-    production: 'https://песочница.пакетон.рф/api',
+    production: 'https://xn--80akonecy.xn--p1ai/api',
+    // production: 'https://песочница.пакетон.рф/api',
     dev: '',
     domain: 'https:/xn--80akonecy.xn--p1ai'
 }
