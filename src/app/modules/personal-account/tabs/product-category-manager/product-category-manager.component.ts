@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize } from 'rxjs';
 import {
   ProductCategory,
   CreateCategoryDto,
@@ -10,6 +10,7 @@ import {
   SubCategory
 } from '../../../../../models/category-management.interface';
 import { CategoryService } from '../../../../core/services/category.service';
+import { ProductService } from '../../../../core/services/product.service';
 
 @Component({
   selector: 'app-product-category-manager',
@@ -24,6 +25,8 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   selectedCategory: ProductCategory | null = null;
   subCategories: SubCategory[] = [];
   breadcrumbs: ProductCategory[] = [];
+  /** Быстрый фильтр списка категорий слева. */
+  categoryFilter = '';
 
   // Товары
   categoryProducts: ProductInstance[] = [];
@@ -60,7 +63,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
 
   // === ГЛОБАЛЬНЫЙ БУФЕР ТОВАРОВ ===
   productSearchQuery = '';
-  searchResults: ProductInstance[] = [];
+  searchResults: any[] = [];
   isSearching = false;
   selectedProducts: string[] = []; // Глобальный список ID
 
@@ -72,10 +75,34 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   viewMode: 'details' | 'products' = 'details';
   selectedSubCategoryId: string | null = null;
 
+  /** Категории текущего уровня, отфильтрованные по названию и коду. */
+  get filteredCategories(): ProductCategory[] {
+    const query = this.categoryFilter.trim().toLocaleLowerCase();
+    if (!query) return this.categories;
+    return this.categories.filter(category =>
+      `${category.name || ''} ${category.code || ''}`.toLocaleLowerCase().includes(query)
+    );
+  }
+
+  /** Подкатегории выбранной категории, отфильтрованные по названию и коду. */
+  get filteredSubCategories(): SubCategory[] {
+    const query = this.categoryFilter.trim().toLocaleLowerCase();
+    if (!query) return this.subCategories;
+    return this.subCategories.filter(category =>
+      `${category.name || ''}`.toLocaleLowerCase().includes(query)
+    );
+  }
+
+  clearCategoryFilter(): void {
+    this.categoryFilter = '';
+  }
+
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
-  constructor(private categoryService: CategoryService) {}
+  constructor(private categoryService: CategoryService,
+    private productService: ProductService
+  ) { }
 
   ngOnInit(): void {
     this.loadCategories();
@@ -106,12 +133,54 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   }
 
   selectCategory(category: ProductCategory): void {
+    this.categoryFilter = '';
     this.selectedCategory = category;
     this.viewMode = 'details';
     this.selectedSubCategoryId = null;
     this.loadSubCategories(category.id);
     this.resetForms();
     this.updateBreadcrumbs(category);
+  }
+
+  /** Возврат к родительской категории независимо от глубины вложенности. */
+  goToParent(): void {
+    if (!this.selectedCategory) return;
+
+    const currentIndex = this.breadcrumbs.findIndex(c => c.id === this.selectedCategory?.id);
+    if (currentIndex > 0) {
+      this.selectCategory(this.breadcrumbs[currentIndex - 1]);
+      return;
+    }
+
+    const parentId = this.selectedCategory.superCategoryId;
+    if (!parentId) {
+      this.goToRoot();
+      return;
+    }
+
+    this.isLoading = true;
+    this.categoryService.getCategoryById(parentId).subscribe({
+      next: (response: any) => {
+        const parent: ProductCategory = response.data || response;
+        this.selectCategory(parent);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Не удалось открыть родительскую категорию:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /** Возврат к корню каталога. */
+  goToRoot(): void {
+    this.categoryFilter = '';
+    this.selectedCategory = null;
+    this.breadcrumbs = [];
+    this.subCategories = [];
+    this.selectedSubCategoryId = null;
+    this.viewMode = 'details';
+    this.categoryProducts = [];
   }
 
   navigateToSubCategory(subCategory: SubCategory): void {
@@ -204,7 +273,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   }
 
   removeProductFromCategory(productId: any): void {
-    console.log('productId',productId)
+    console.log('productId', productId)
     if (!this.selectedCategory || !confirm('Удалить товар из категории?')) return;
     this.categoryService.removeProductsFromCategory(this.selectedCategory.id, [productId.productBarCode.id]).subscribe({
       next: () => {
@@ -249,21 +318,34 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   }
 
   addSelectedProductsToCategory(): void {
-    if (!this.selectedCategory || this.selectedProducts.length === 0) return;
+    if (!this.selectedCategory || this.selectedProducts.length === 0 || this.isLoading) return;
+
+    const categoryId = this.selectedCategory.id;
+    const productIds = [...this.selectedProducts];
     this.isLoading = true;
-    this.categoryService.addProductsToCategory(this.selectedCategory.id, this.selectedProducts).subscribe({
+
+    this.categoryService.addProductsToCategory(categoryId, productIds).subscribe({
       next: () => {
-        if (this.selectedCategory) {
-          this.selectedCategory.productCount = (this.selectedCategory.productCount || 0) + this.selectedProducts.length;
+        if (this.selectedCategory?.id === categoryId) {
+          this.selectedCategory.productCount = (this.selectedCategory.productCount || 0) + productIds.length;
         }
-        // Очищаем буфер после успешного добавления
+
         this.selectedProducts = [];
         this.searchResults = [];
         this.productSearchQuery = '';
-        if (this.viewMode === 'products' && this.selectedCategory) {
-          this.loadCategoryProducts(this.selectedCategory.id);
-        }
-        this.isLoading = false;
+
+        // Не выключаем общий индикатор здесь: пользователь должен дождаться индексации.
+        this.productService.reindexProducts(productIds).pipe(
+          finalize(() => {
+            // finalize срабатывает и при complete, и при error.
+            this.isLoading = false;
+            if (this.viewMode === 'products' && this.selectedCategory?.id === categoryId) {
+              this.loadCategoryProducts(categoryId);
+            }
+          })
+        ).subscribe({
+          error: (error) => console.error('Товары добавлены, но переиндексация завершилась с ошибкой:', error)
+        });
       },
       error: (error) => {
         console.error('Ошибка добавления товаров:', error);

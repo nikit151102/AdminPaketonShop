@@ -68,12 +68,12 @@ export class ProductService {
     return this.http.request(request);
   }
 
-  // 🔹 Обновление остатков и цен через 1C UUID
+  //Обновление остатков и цен через 1C UUID
   updateProductRemains(idList: string[]): Observable<any> {
     return this.http.put(`${environment.production}/api/Entities/ProductInstance/UpdateProductRemains`, { idList });
   }
 
-  // 🔹 Индексация товаров (поиск)
+  //Индексация товаров (поиск)
   reindexProducts(productIds: string[]): Observable<any> {
     const data = {
       filters: [
@@ -100,7 +100,7 @@ export class ProductService {
           }),
           catchError((error) => of({ index, success: false, error, product }))
         ),
-        1 // 🔹 Последовательное выполнение
+        1 //Последовательное выполнение
       ),
       tap((result: any) => {
         if (result.success) {
@@ -109,9 +109,9 @@ export class ProductService {
           errorResults.push(result);
         }
       }),
-      // 🔹 Пропускаем все кроме последнего элемента
+      //Пропускаем все кроме последнего элемента
       filter((_, index) => index === products.length - 1),
-      // 🔹 Возвращаем итоговый объект
+      //Возвращаем итоговый объект
       map(() => ({ success: successResults, errors: errorResults }))
     );
   }

@@ -21,6 +21,21 @@
     </div>
   </div>
 
+  <!-- Быстрая помощь: можно свернуть, чтобы не занимала место -->
+  <details class="help-guide">
+    <summary>
+      <span class="help-guide-icon" aria-hidden="true">?</span>
+      <span><strong>Как пользоваться каталогом?</strong><small>Короткая инструкция и подсказки по навигации</small></span>
+      <span class="help-guide-toggle" aria-hidden="true">⌄</span>
+    </summary>
+    <div class="help-guide-body">
+      <div class="help-step"><span>1</span><div><strong>Выберите категорию</strong><p>Список слева показывает текущий уровень каталога. Нажмите на категорию, чтобы открыть её.</p></div></div>
+      <div class="help-step"><span>2</span><div><strong>Переходите между уровнями</strong><p>Используйте «Назад к родителю» или путь над названием категории. «Категории» в левой панели возвращает к корню.</p></div></div>
+      <div class="help-step"><span>3</span><div><strong>Создавайте и редактируйте</strong><p>Кнопка «Новая категория» создаёт категорию на текущем уровне. Заполните обязательные поля со звёздочкой.</p></div></div>
+      <div class="help-step"><span>4</span><div><strong>Работайте с товарами</strong><p>Вкладка «Товары» открывает товары выбранной категории; используйте поиск, чтобы найти нужные позиции.</p></div></div>
+    </div>
+  </details>
+
   <div class="management-content">
     <!-- Sidebar -->
     <div class="categories-sidebar">
@@ -28,10 +43,25 @@
         <h3>Категории</h3>
         <div class="category-count" title="Всего корневых категорий">{{ categories.length }}</div>
       </div>
+      <p class="sidebar-tip"><span aria-hidden="true">ⓘ</span> Выберите категорию, чтобы открыть её. Поиск работает по названию и коду.</p>
+
+      <div class="category-search" role="search">
+        <svg class="category-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="search" name="categoryFilter" [(ngModel)]="categoryFilter"
+          [placeholder]="selectedCategory ? 'Найти подкатегорию…' : 'Найти категорию…'"
+          aria-label="Поиск категории по названию или коду" />
+        <button *ngIf="categoryFilter" type="button" class="category-search-clear"
+          (click)="clearCategoryFilter()" aria-label="Очистить поиск" title="Очистить поиск">×</button>
+      </div>
+      <div class="category-search-meta" *ngIf="categoryFilter">
+        Найдено: {{ selectedCategory ? filteredSubCategories.length : filteredCategories.length }}
+      </div>
 
       <!-- Breadcrumbs -->
       <div *ngIf="breadcrumbs.length > 0" class="breadcrumbs">
-        <button class="breadcrumb-home" (click)="selectedCategory = null; breadcrumbs = []; subCategories = []" title="Вернуться к корню">
+        <button class="breadcrumb-home" (click)="goToRoot()" title="Вернуться к корню">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
             <polyline points="9 22 9 12 15 12 15 22"/>
@@ -60,7 +90,7 @@
           </div>
 
           <div class="subcategories-list">
-            <div *ngFor="let subCat of subCategories" class="subcategory-item" (click)="navigateToSubCategory(subCat)">
+            <div *ngFor="let subCat of filteredSubCategories" class="subcategory-item" tabindex="0" role="button" (click)="navigateToSubCategory(subCat)" (keydown.enter)="navigateToSubCategory(subCat)" (keydown.space)="$event.preventDefault(); navigateToSubCategory(subCat)">
               <div class="subcategory-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -77,19 +107,22 @@
               </div>
             </div>
 
-            <div *ngIf="subCategories.length === 0" class="empty-subcategories">
+            <div *ngIf="filteredSubCategories.length === 0" class="empty-subcategories">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
               </svg>
-              <p>Подкатегории отсутствуют</p>
+              <p>{{ categoryFilter ? 'Ничего не найдено' : 'Подкатегории отсутствуют' }}</p>
+              <small *ngIf="categoryFilter">Попробуйте изменить запрос или <button type="button" class="inline-reset" (click)="clearCategoryFilter()">очистить поиск</button>.</small>
+              <button *ngIf="!categoryFilter" type="button" class="btn-small" (click)="startCreate()">Создать подкатегорию</button>
             </div>
           </div>
         </ng-container>
 
         <ng-template #rootCategories>
           <div class="root-categories">
-            <div *ngFor="let category of categories" class="category-item"
-              [class.active]="selectedCategory?.id === category.id" (click)="selectCategory(category)">
+            <div *ngFor="let category of filteredCategories" class="category-item" tabindex="0" role="button"
+              [attr.aria-label]="'Открыть категорию ' + category.name" [class.active]="selectedCategory?.id === category.id"
+              (click)="selectCategory(category)" (keydown.enter)="selectCategory(category)" (keydown.space)="$event.preventDefault(); selectCategory(category)">
               <div class="category-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
@@ -126,6 +159,12 @@
                 </svg>
               </button>
             </div>
+            <div *ngIf="filteredCategories.length === 0" class="empty-filter-state">
+              <span class="empty-filter-icon">⌕</span>
+              <strong>Категории не найдены</strong>
+              <p>Проверьте название или код.</p>
+              <button type="button" class="inline-reset" (click)="clearCategoryFilter()">Сбросить поиск</button>
+            </div>
           </div>
         </ng-template>
       </div>
@@ -143,6 +182,23 @@
       <!-- Selected Category View -->
       <div *ngIf="selectedCategory && !isCreating && !isEditing && !isMoving" class="category-content">
         <div class="category-header">
+          <div class="category-navigation" *ngIf="selectedCategory.superCategoryId || breadcrumbs.length > 1">
+            <button type="button" class="back-to-parent" (click)="goToParent()" title="Перейти к родительской категории">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6"/><path d="M20 12H9"/>
+              </svg>
+              <span>Назад к родителю</span>
+            </button>
+            <nav class="content-breadcrumbs" aria-label="Путь категории">
+              <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
+                <button type="button" class="content-breadcrumb" [class.active]="last"
+                  [disabled]="last" (click)="!last && selectCategory(crumb)" [title]="crumb.name">
+                  {{ crumb.name }}
+                </button>
+                <span class="content-breadcrumb-separator" *ngIf="!last" aria-hidden="true">/</span>
+              </ng-container>
+            </nav>
+          </div>
           <div class="header-main">
             <div class="header-title-section">
               <h2>{{ selectedCategory.name }}</h2>
@@ -341,7 +397,7 @@
               <h4>Результаты поиска ({{ searchResults.length }})</h4>
               <div class="search-results-grid">
                 <div *ngFor="let product of searchResults" class="search-product-card"
-                  [class.selected]="isSelected(product.id)" (click)="toggleProductSelection(product.id)">
+                  [class.selected]="isSelected(product.productInstanceId)" (click)="toggleProductSelection(product.productInstanceId)">
                   <div class="product-checkbox">
                     <div class="checkbox" [class.checked]="isSelected(product.id)">
                       <svg *ngIf="isSelected(product.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -430,16 +486,18 @@
           </div>
           <div class="form-body">
             <div class="form-group">
-              <label>Название *</label>
-              <input [(ngModel)]="newCategory.name" name="name" required placeholder="Название категории">
+              <label>Название <span class="required-mark">*</span></label>
+              <input [(ngModel)]="newCategory.name" name="name" required placeholder="Например, Электроника" title="Понятное название, которое увидят пользователи">
+              <small class="field-help">Короткое и понятное название для пользователей.</small>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Код *</label>
-                <input [(ngModel)]="newCategory.code" name="code" required placeholder="Уникальный код">
+                <label>Код <span class="required-mark">*</span></label>
+                <input [(ngModel)]="newCategory.code" name="code" required placeholder="Например, ELECTRONICS" title="Уникальный код категории">
+                <small class="field-help">Уникальный технический идентификатор категории.</small>
               </div>
               <div class="form-group">
-                <label>Короткий код</label>
+                <label>Короткий код <span class="optional-mark">необязательно</span></label>
                 <div class="input-with-button">
                   <input type="number" [(ngModel)]="newCategory.shortCode" name="shortCode" placeholder="Авто">
                   <button type="button" class="btn-gen" (click)="generateShortCode()">Генерировать</button>
@@ -447,8 +505,9 @@
               </div>
             </div>
             <div class="form-group">
-              <label>Описание</label>
-              <textarea [(ngModel)]="newCategory.description" name="description" rows="3" placeholder="Описание..."></textarea>
+              <label>Описание <span class="optional-mark">необязательно</span></label>
+              <textarea [(ngModel)]="newCategory.description" name="description" rows="3" placeholder="Что относится к этой категории? Например: смартфоны, планшеты и аксессуары."></textarea>
+              <small class="field-help">Помогает отличать эту категорию от похожих.</small>
             </div>
             <div *ngIf="selectedCategory" class="form-hint">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -475,13 +534,15 @@
           </div>
           <div class="form-body">
             <div class="form-group">
-              <label>Название *</label>
-              <input [(ngModel)]="editCategory.name" name="editName" required>
+              <label>Название <span class="required-mark">*</span></label>
+              <input [(ngModel)]="editCategory.name" name="editName" required title="Понятное название категории">
+              <small class="field-help">Изменение названия отобразится в каталоге.</small>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Код *</label>
-                <input [(ngModel)]="editCategory.code" name="editCode" required>
+                <label>Код <span class="required-mark">*</span></label>
+                <input [(ngModel)]="editCategory.code" name="editCode" required title="Уникальный технический код категории">
+                <small class="field-help">Проверьте, что код не используется другой категорией.</small>
               </div>
               <div class="form-group">
                 <label>Короткий код</label>
@@ -490,7 +551,8 @@
             </div>
             <div class="form-group">
               <label>Описание</label>
-              <textarea [(ngModel)]="editCategory.description" name="editDescription" rows="3"></textarea>
+              <textarea [(ngModel)]="editCategory.description" name="editDescription" rows="3" placeholder="Кратко опишите, какие товары относятся к категории"></textarea>
+              <small class="field-help">Описание помогает другим сотрудникам правильно выбирать категорию.</small>
             </div>
           </div>
           <div class="form-footer">
@@ -512,7 +574,7 @@
             </button>
           </div>
           <div class="move-body">
-            <div class="move-hint">Выберите подкатегорию и целевую категорию</div>
+            <div class="move-hint"><strong>Как переместить:</strong> выберите подкатегорию, затем категорию, в которую её нужно перенести. Перед подтверждением проверьте путь назначения.</div>
             <div class="move-cols">
               <div class="move-col">
                 <h4>Подкатегория</h4>
@@ -550,8 +612,9 @@
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
           </svg>
-          <h3>Выберите категорию</h3>
-          <p>Выберите категорию слева для просмотра и управления</p>
+          <h3>С чего начнём?</h3>
+          <p>Выберите категорию в списке слева, чтобы посмотреть описание, подкатегории и товары. Или создайте первую категорию.</p>
+          <div class="empty-tips"><span>Подсказка</span> Категории можно вкладывать друг в друга. Чтобы не потеряться, возвращайтесь по цепочке навигации.</div>
           <button class="btn-primary" (click)="startCreate()">Создать категорию</button>
         </div>
       </div>
