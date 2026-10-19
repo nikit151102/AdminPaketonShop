@@ -151,6 +151,16 @@ export class CategoryService {
     return this.http.delete(`${this.baseUrl}/${id}`);
   }
 
+  /** Загружает ZIP-архив изображений категорий. Имя файла изображения — код категории. */
+  uploadCategoryImagesArchive(archive: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('archive', archive, archive.name);
+
+    // Не задаём Content-Type вручную: браузер добавит multipart boundary.
+    const headers = new HttpHeaders({ accept: 'text/plain' });
+    return this.http.post(`${this.baseUrl}/upload_category_images_archive`, formData, { headers });
+  }
+
   searchProducts(searchQuery: string, page: number = 0, pageSize: number = 20): Observable<any> {
     const request = {
       filters: searchQuery ? [

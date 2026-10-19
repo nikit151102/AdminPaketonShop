@@ -11,6 +11,7 @@ import {
 } from '../../../../../models/category-management.interface';
 import { CategoryService } from '../../../../core/services/category.service';
 import { ProductService } from '../../../../core/services/product.service';
+import JSZip from 'jszip';
 
 @Component({
   selector: 'app-product-category-manager',
@@ -42,6 +43,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   isMoving = false;
   showDeleteConfirm = false;
   isProductsLoading = false;
+  isUploadingCategoryImages = false;
 
   // Подкатегории
   availableCategoriesForAddition: ProductCategory[] = [];
@@ -59,6 +61,8 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     superCategoryId: undefined, subCategories: [], products: []
   };
 
+  categoryImage: File | null = null;
+
   moveData = { subCategoryId: '', targetCategoryId: '', originalCategoryId: '' };
 
   // === ГЛОБАЛЬНЫЙ БУФЕР ТОВАРОВ ===
@@ -71,7 +75,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   pageSize = 10;
   totalPages = 1;
 
-  draggedSubCategory: SubCategory | null = null;
+  draggedSubCategory: any | null = null;
   viewMode: 'details' | 'products' = 'details';
   selectedSubCategoryId: string | null = null;
 
@@ -85,7 +89,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   }
 
   /** Подкатегории выбранной категории, отфильтрованные по названию и коду. */
-  get filteredSubCategories(): SubCategory[] {
+  get filteredSubCategories(): any[] {
     const query = this.categoryFilter.trim().toLocaleLowerCase();
     if (!query) return this.subCategories;
     return this.subCategories.filter(category =>
@@ -95,6 +99,51 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
 
   clearCategoryFilter(): void {
     this.categoryFilter = '';
+  }
+
+  /** Открывает диалог выбора архива с изображениями категорий. */
+  onCategoryImagesArchiveSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archive = input.files?.[0];
+    if (!archive) return;
+
+    // Сбрасываем input, чтобы можно было повторно выбрать тот же архив.
+    input.value = '';
+
+    if (this.isUploadingCategoryImages) return;
+    const extension = archive.name.split('.').pop()?.toLocaleLowerCase();
+    if (extension !== 'zip') {
+      alert('Выберите ZIP-архив с изображениями категорий. Название каждого файла должно соответствовать коду категории.');
+      return;
+    }
+
+    this.isUploadingCategoryImages = true;
+    this.categoryService.uploadCategoryImagesArchive(archive).pipe(
+      finalize(() => this.isUploadingCategoryImages = false)
+    ).subscribe({
+      next: () => {
+        alert('Изображения категорий успешно обновлены.');
+        this.loadCategories();
+
+        // Обновляем данные открытой категории, если она выбрана.
+        const selectedId = this.selectedCategory?.id;
+        if (selectedId) {
+          this.categoryService.getCategoryById(selectedId).subscribe({
+            next: (response: any) => {
+              const updatedCategory: ProductCategory = response?.data || response;
+              if (this.selectedCategory?.id === selectedId) {
+                this.selectedCategory = updatedCategory;
+              }
+            },
+            error: error => console.error('Не удалось обновить открытую категорию:', error)
+          });
+        }
+      },
+      error: error => {
+        console.error('Ошибка загрузки архива изображений категорий:', error);
+        alert('Не удалось обновить изображения категорий. Проверьте архив и попробуйте ещё раз.');
+      }
+    });
   }
 
   private destroy$ = new Subject<void>();
@@ -381,24 +430,70 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
       subCategories: (category.subCategories || []).map(sc => sc.id),
       products: []
     };
+
   }
 
-  createCategory(): void {
+  onCategoryImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Выберите файл изображения.');
+      input.value = '';
+      return;
+    }
+
+    this.categoryImage = file;
+  }
+
+  async createCategory(): Promise<void> {
+    this.newCategory.code = String(this.newCategory.shortCode);
+
     if (!this.validateCategory(this.newCategory)) return;
+
     this.isLoading = true;
-    this.categoryService.createCategory(this.newCategory).subscribe({
-      next: () => {
-        this.loadCategories();
-        if (this.selectedCategory) this.loadSubCategories(this.selectedCategory.id);
-        this.isCreating = false;
-        this.resetForms();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Ошибка создания категории:', error);
-        this.isLoading = false;
+
+    try {
+      const response: any = await this.categoryService
+        .createCategory(this.newCategory).toPromise();
+
+      if (this.categoryImage) {
+        const zip = new JSZip();
+        const code = String(this.newCategory.shortCode);
+
+        // Имя изображения внутри ZIP — код категории.
+        const extension =
+          this.categoryImage.name.split('.').pop()?.toLowerCase() || 'jpg';
+
+        zip.file(`${code}.${extension}`, this.categoryImage);
+
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const archive = new File([blob], `${code}.zip`, {
+          type: 'application/zip'
+        });
+
+        await this.categoryService
+          .uploadCategoryImagesArchive(archive).toPromise();
       }
-    });
+
+      this.loadCategories();
+
+      if (this.selectedCategory) {
+        this.loadSubCategories(this.selectedCategory.id);
+      }
+
+      this.isCreating = false;
+      this.resetForms();
+      this.categoryImage = null;
+
+    } catch (error) {
+      console.error('Ошибка создания категории или загрузки изображения:', error);
+      alert('Категория или изображение не удалось обработать. Проверьте результат операции.');
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   updateCategory(): void {

@@ -4,7 +4,7 @@
     <div class="header-content">
       <h1 class="page-title">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
         </svg>
         Управление категориями
       </h1>
@@ -12,9 +12,24 @@
     </div>
 
     <div class="header-actions">
-      <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading" title="Создать новую категорию или подкатегорию">
+      <input #categoryImagesArchiveInput class="category-images-archive-input" type="file" accept=".zip,application/zip"
+        (change)="onCategoryImagesArchiveSelected($event)" aria-label="Выбрать ZIP-архив изображений категорий" />
+      <button type="button" class="btn-secondary upload-category-images-btn"
+        (click)="categoryImagesArchiveInput.click()" [disabled]="isUploadingCategoryImages"
+        title="Загрузить архив, в котором имя каждого изображения соответствует коду категории">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        {{ isUploadingCategoryImages ? 'Обновление изображений…' : 'Обновить изображения' }}
+      </button>
+      <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading || isUploadingCategoryImages"
+        title="Создать новую категорию или подкатегорию">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
         Новая категория
       </button>
@@ -25,14 +40,33 @@
   <details class="help-guide">
     <summary>
       <span class="help-guide-icon" aria-hidden="true">?</span>
-      <span><strong>Как пользоваться каталогом?</strong><small>Короткая инструкция и подсказки по навигации</small></span>
+      <span><strong>Как пользоваться каталогом?</strong><small>Короткая инструкция и подсказки по
+          навигации</small></span>
       <span class="help-guide-toggle" aria-hidden="true">⌄</span>
     </summary>
     <div class="help-guide-body">
-      <div class="help-step"><span>1</span><div><strong>Выберите категорию</strong><p>Список слева показывает текущий уровень каталога. Нажмите на категорию, чтобы открыть её.</p></div></div>
-      <div class="help-step"><span>2</span><div><strong>Переходите между уровнями</strong><p>Используйте «Назад к родителю» или путь над названием категории. «Категории» в левой панели возвращает к корню.</p></div></div>
-      <div class="help-step"><span>3</span><div><strong>Создавайте и редактируйте</strong><p>Кнопка «Новая категория» создаёт категорию на текущем уровне. Заполните обязательные поля со звёздочкой.</p></div></div>
-      <div class="help-step"><span>4</span><div><strong>Работайте с товарами</strong><p>Вкладка «Товары» открывает товары выбранной категории; используйте поиск, чтобы найти нужные позиции.</p></div></div>
+      <div class="help-step"><span>1</span>
+        <div><strong>Выберите категорию</strong>
+          <p>Список слева показывает текущий уровень каталога. Нажмите на категорию, чтобы открыть её.</p>
+        </div>
+      </div>
+      <div class="help-step"><span>2</span>
+        <div><strong>Переходите между уровнями</strong>
+          <p>Используйте «Назад к родителю» или путь над названием категории. «Категории» в левой панели возвращает к
+            корню.</p>
+        </div>
+      </div>
+      <div class="help-step"><span>3</span>
+        <div><strong>Создавайте и редактируйте</strong>
+          <p>Кнопка «Новая категория» создаёт категорию на текущем уровне. Заполните обязательные поля со звёздочкой.
+          </p>
+        </div>
+      </div>
+      <div class="help-step"><span>4</span>
+        <div><strong>Работайте с товарами</strong>
+          <p>Вкладка «Товары» открывает товары выбранной категории; используйте поиск, чтобы найти нужные позиции.</p>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -43,17 +77,19 @@
         <h3>Категории</h3>
         <div class="category-count" title="Всего корневых категорий">{{ categories.length }}</div>
       </div>
-      <p class="sidebar-tip"><span aria-hidden="true">ⓘ</span> Выберите категорию, чтобы открыть её. Поиск работает по названию и коду.</p>
+      <p class="sidebar-tip"><span aria-hidden="true">ⓘ</span> Выберите категорию, чтобы открыть её. Поиск работает по
+        названию и коду.</p>
 
       <div class="category-search" role="search">
-        <svg class="category-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <!-- <svg class="category-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-        </svg>
+        </svg> -->
+
         <input type="search" name="categoryFilter" [(ngModel)]="categoryFilter"
           [placeholder]="selectedCategory ? 'Найти подкатегорию…' : 'Найти категорию…'"
           aria-label="Поиск категории по названию или коду" />
-        <button *ngIf="categoryFilter" type="button" class="category-search-clear"
-          (click)="clearCategoryFilter()" aria-label="Очистить поиск" title="Очистить поиск">×</button>
+        <button *ngIf="categoryFilter" type="button" class="category-search-clear" (click)="clearCategoryFilter()"
+          aria-label="Очистить поиск" title="Очистить поиск">×</button>
       </div>
       <div class="category-search-meta" *ngIf="categoryFilter">
         Найдено: {{ selectedCategory ? filteredSubCategories.length : filteredCategories.length }}
@@ -63,15 +99,15 @@
       <div *ngIf="breadcrumbs.length > 0" class="breadcrumbs">
         <button class="breadcrumb-home" (click)="goToRoot()" title="Вернуться к корню">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
         </button>
 
         <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
           <div class="breadcrumb-separator">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
+              <polyline points="9 18 15 12 9 6" />
             </svg>
           </div>
           <button class="breadcrumb-item" [class.active]="last" (click)="!last && selectCategory(crumb)"
@@ -80,7 +116,6 @@
           </button>
         </ng-container>
       </div>
-
       <!-- Categories List -->
       <div class="categories-list" *ngIf="!isLoading; else loadingTpl">
         <ng-container *ngIf="selectedCategory; else rootCategories">
@@ -90,11 +125,11 @@
           </div>
 
           <div class="subcategories-list">
-            <div *ngFor="let subCat of filteredSubCategories" class="subcategory-item" tabindex="0" role="button" (click)="navigateToSubCategory(subCat)" (keydown.enter)="navigateToSubCategory(subCat)" (keydown.space)="$event.preventDefault(); navigateToSubCategory(subCat)">
+            <div *ngFor="let subCat of filteredSubCategories" class="subcategory-item" tabindex="0" role="button"
+              (click)="navigateToSubCategory(subCat)" (keydown.enter)="navigateToSubCategory(subCat)"
+              (keydown.space)="$event.preventDefault(); navigateToSubCategory(subCat)">
               <div class="subcategory-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
+                <img [src]="subCat.imageInstanceLink" alt="" style="width: 60px;">
               </div>
               <div class="subcategory-info">
                 <div class="subcategory-name">{{ subCat.name }}</div>
@@ -102,18 +137,20 @@
               </div>
               <div class="subcategory-arrow">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"/>
+                  <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
             </div>
 
             <div *ngIf="filteredSubCategories.length === 0" class="empty-subcategories">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
               </svg>
               <p>{{ categoryFilter ? 'Ничего не найдено' : 'Подкатегории отсутствуют' }}</p>
-              <small *ngIf="categoryFilter">Попробуйте изменить запрос или <button type="button" class="inline-reset" (click)="clearCategoryFilter()">очистить поиск</button>.</small>
-              <button *ngIf="!categoryFilter" type="button" class="btn-small" (click)="startCreate()">Создать подкатегорию</button>
+              <small *ngIf="categoryFilter">Попробуйте изменить запрос или <button type="button" class="inline-reset"
+                  (click)="clearCategoryFilter()">очистить поиск</button>.</small>
+              <button *ngIf="!categoryFilter" type="button" class="btn-small" (click)="startCreate()">Создать
+                подкатегорию</button>
             </div>
           </div>
         </ng-container>
@@ -121,32 +158,40 @@
         <ng-template #rootCategories>
           <div class="root-categories">
             <div *ngFor="let category of filteredCategories" class="category-item" tabindex="0" role="button"
-              [attr.aria-label]="'Открыть категорию ' + category.name" [class.active]="selectedCategory?.id === category.id"
-              (click)="selectCategory(category)" (keydown.enter)="selectCategory(category)" (keydown.space)="$event.preventDefault(); selectCategory(category)">
+              [attr.aria-label]="'Открыть категорию ' + category.name"
+              [class.active]="selectedCategory?.id === category.id" (click)="selectCategory(category)"
+              (keydown.enter)="selectCategory(category)"
+              (keydown.space)="$event.preventDefault(); selectCategory(category)">
               <div class="category-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <!-- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
+                </svg> -->
+                <img [src]="category.imageInstanceLink" alt="" style="width: 60px;">
               </div>
               <div class="category-info">
                 <div class="category-name">{{ category.name }}</div>
                 <div class="category-meta">
                   <span class="meta-item" title="Код категории">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
+                      <polyline points="4 7 4 4 20 4 20 7" />
+                      <line x1="9" y1="20" x2="15" y2="20" />
+                      <line x1="12" y1="4" x2="12" y2="20" />
                     </svg>
                     {{ category.code }}
                   </span>
                   <span class="meta-item" title="Количество товаров">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
                     </svg>
                     {{ category.productCount }} товаров
                   </span>
                   <span class="meta-item" *ngIf="category.subCategories?.length" title="Подкатегорий">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="14" y="14" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
                     </svg>
                     {{ category.subCategories.length }} подкатегорий
                   </span>
@@ -154,8 +199,8 @@
               </div>
               <button class="action-btn" (click)="startEdit(category); $event.stopPropagation()" title="Редактировать">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
             </div>
@@ -183,16 +228,18 @@
       <div *ngIf="selectedCategory && !isCreating && !isEditing && !isMoving" class="category-content">
         <div class="category-header">
           <div class="category-navigation" *ngIf="selectedCategory.superCategoryId || breadcrumbs.length > 1">
-            <button type="button" class="back-to-parent" (click)="goToParent()" title="Перейти к родительской категории">
+            <button type="button" class="back-to-parent" (click)="goToParent()"
+              title="Перейти к родительской категории">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m15 18-6-6 6-6"/><path d="M20 12H9"/>
+                <path d="m15 18-6-6 6-6" />
+                <path d="M20 12H9" />
               </svg>
               <span>Назад к родителю</span>
             </button>
             <nav class="content-breadcrumbs" aria-label="Путь категории">
               <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
-                <button type="button" class="content-breadcrumb" [class.active]="last"
-                  [disabled]="last" (click)="!last && selectCategory(crumb)" [title]="crumb.name">
+                <button type="button" class="content-breadcrumb" [class.active]="last" [disabled]="last"
+                  (click)="!last && selectCategory(crumb)" [title]="crumb.name">
                   {{ crumb.name }}
                 </button>
                 <span class="content-breadcrumb-separator" *ngIf="!last" aria-hidden="true">/</span>
@@ -205,15 +252,20 @@
               <div class="category-badge">{{ selectedCategory.code }}</div>
             </div>
             <div class="header-tabs">
-              <button class="tab-btn" [class.active]="viewMode === 'details'" (click)="switchView('details')" title="Просмотр деталей">
+              <button class="tab-btn" [class.active]="viewMode === 'details'" (click)="switchView('details')"
+                title="Просмотр деталей">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
                 </svg>
                 Детали
               </button>
-              <button class="tab-btn" [class.active]="viewMode === 'products'" (click)="switchView('products')" title="Товары категории">
+              <button class="tab-btn" [class.active]="viewMode === 'products'" (click)="switchView('products')"
+                title="Товары категории">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                 </svg>
                 Товары ({{ selectedCategory.productCount }})
               </button>
@@ -222,14 +274,15 @@
           <div class="header-actions">
             <button class="btn-secondary" (click)="startEdit(selectedCategory)" title="Редактировать категорию">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
               Редактировать
             </button>
             <button class="btn-danger" (click)="showDeleteConfirm = true" title="Удалить категорию">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
               </svg>
               Удалить
             </button>
@@ -249,7 +302,8 @@
                 <div class="stat-card">
                   <div class="stat-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
                     </svg>
                   </div>
                   <div class="stat-content">
@@ -260,7 +314,9 @@
                 <div class="stat-card">
                   <div class="stat-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>
+                      <polyline points="4 7 4 4 20 4 20 7" />
+                      <line x1="9" y1="20" x2="15" y2="20" />
+                      <line x1="12" y1="4" x2="12" y2="20" />
                     </svg>
                   </div>
                   <div class="stat-content">
@@ -271,8 +327,10 @@
                 <div class="stat-card">
                   <div class="stat-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="14" y="14" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
                     </svg>
                   </div>
                   <div class="stat-content">
@@ -287,13 +345,17 @@
                 <div class="section-header">
                   <h3>Подкатегории</h3>
                   <div class="section-actions">
-                    <button class="btn-small" (click)="startAddSubCategories()" *ngIf="!isAddingSubCategories" title="Добавить существующие категории">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    <button class="btn-small" (click)="startAddSubCategories()" *ngIf="!isAddingSubCategories"
+                      title="Добавить существующие категории">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
                       </svg>
                       Добавить
                     </button>
-                    <button class="btn-small" (click)="cancelAddSubCategories()" *ngIf="isAddingSubCategories">Отмена</button>
+                    <button class="btn-small" (click)="cancelAddSubCategories()"
+                      *ngIf="isAddingSubCategories">Отмена</button>
                   </div>
                 </div>
 
@@ -305,8 +367,9 @@
                       (click)="toggleCategoryForAddition(category.id)">
                       <div class="category-checkbox">
                         <div class="checkbox" [class.checked]="selectedCategoriesForAddition.includes(category.id)">
-                          <svg *ngIf="selectedCategoriesForAddition.includes(category.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                            <polyline points="20 6 9 17 4 12"/>
+                          <svg *ngIf="selectedCategoriesForAddition.includes(category.id)" width="12" height="12"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12" />
                           </svg>
                         </div>
                       </div>
@@ -323,24 +386,35 @@
                     <p>Нет доступных категорий для добавления</p>
                   </div>
                   <div class="form-actions" *ngIf="availableCategoriesForAddition.length > 0">
-                    <button class="btn-primary" (click)="addSubCategoriesToCategory()" [disabled]="!selectedCategoriesForAddition.length || isLoading">
+                    <button class="btn-primary" (click)="addSubCategoriesToCategory()"
+                      [disabled]="!selectedCategoriesForAddition.length || isLoading">
                       Добавить ({{ selectedCategoriesForAddition.length }})
                     </button>
                     <button class="btn-secondary" (click)="cancelAddSubCategories()">Отмена</button>
                   </div>
                 </div>
 
-                <div *ngIf="selectedCategory?.subCategories?.length && !isAddingSubCategories" class="subcategories-grid">
+                <div *ngIf="selectedCategory?.subCategories?.length && !isAddingSubCategories"
+                  class="subcategories-grid">
                   <div *ngFor="let subCat of selectedCategory.subCategories" class="subcategory-card">
                     <div class="subcategory-content">
                       <div class="subcategory-header">
                         <div class="subcategory-name">{{ subCat.name }}</div>
                         <div class="subcategory-actions">
                           <button class="action-btn-small" (click)="navigateToSubCategory(subCat)" title="Перейти">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
                           </button>
-                          <button class="action-btn-small danger" (click)="removeSubCategoryFromCategory(subCat.id)" title="Удалить">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          <button class="action-btn-small danger" (click)="removeSubCategoryFromCategory(subCat.id)"
+                            title="Удалить">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path
+                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -351,7 +425,7 @@
 
                 <div *ngIf="!selectedCategory?.subCategories?.length && !isAddingSubCategories" class="empty-state-sm">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                   </svg>
                   <p>Нет подкатегорий</p>
                   <button class="btn-small" (click)="startCreate()">Создать подкатегорию</button>
@@ -378,15 +452,22 @@
           <div *ngIf="viewMode === 'products'" class="products-view">
             <div class="products-search-section">
               <div class="search-container">
-                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
                 </svg>
                 <input type="text" [(ngModel)]="productSearchQuery" (ngModelChange)="onSearchQueryChange($event)"
-                  placeholder="Поиск товаров для добавления..." title="Ищите товары здесь, отмечайте и добавляйте в текущую категорию"/>
-                <div *ngIf="isSearching" class="search-loading"><div class="spinner-small"></div></div>
-                <button *ngIf="productSearchQuery" class="clear-search-btn" (click)="clearSearch()" title="Очистить поиск">
+                  placeholder="Поиск товаров для добавления..."
+                  title="Ищите товары здесь, отмечайте и добавляйте в текущую категорию" />
+                <div *ngIf="isSearching" class="search-loading">
+                  <div class="spinner-small"></div>
+                </div>
+                <button *ngIf="productSearchQuery" class="clear-search-btn" (click)="clearSearch()"
+                  title="Очистить поиск">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               </div>
@@ -397,11 +478,13 @@
               <h4>Результаты поиска ({{ searchResults.length }})</h4>
               <div class="search-results-grid">
                 <div *ngFor="let product of searchResults" class="search-product-card"
-                  [class.selected]="isSelected(product.productInstanceId)" (click)="toggleProductSelection(product.productInstanceId)">
+                  [class.selected]="isSelected(product.productInstanceId)"
+                  (click)="toggleProductSelection(product.productInstanceId)">
                   <div class="product-checkbox">
                     <div class="checkbox" [class.checked]="isSelected(product.id)">
-                      <svg *ngIf="isSelected(product.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                        <polyline points="20 6 9 17 4 12"/>
+                      <svg *ngIf="isSelected(product.id)" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </div>
                   </div>
@@ -425,39 +508,53 @@
                 <h3>Товары в категории ({{ totalProducts }})</h3>
                 <div class="pagination-controls" *ngIf="productsTotalPages > 1">
                   <button class="pagination-btn" (click)="prevProductsPage()" [disabled]="productsPage === 0">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
                   </button>
                   <span class="pagination-info">{{ productsPage + 1 }} / {{ productsTotalPages }}</span>
-                  <button class="pagination-btn" (click)="nextProductsPage()" [disabled]="productsPage >= productsTotalPages - 1">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  <button class="pagination-btn" (click)="nextProductsPage()"
+                    [disabled]="productsPage >= productsTotalPages - 1">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
                   </button>
                 </div>
               </div>
 
               <div *ngIf="isProductsLoading" class="loading-products">
-                <div class="loading-spinner"></div><p>Загрузка товаров...</p>
+                <div class="loading-spinner"></div>
+                <p>Загрузка товаров...</p>
               </div>
 
               <div *ngIf="!isProductsLoading && categoryProducts.length > 0" class="products-grid">
                 <div *ngFor="let product of categoryProducts" class="product-card">
                   <div class="product-image-container">
-                    <img *ngIf="product.imageLinks?.length" [src]="product.imageLinks[0]" [alt]="product.fullName" class="product-img">
+                    <img *ngIf="product.imageLinks?.length" [src]="product.imageLinks[0]" [alt]="product.fullName"
+                      class="product-img">
                     <div *ngIf="!product.imageLinks?.length" class="product-image-placeholder">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
                       </svg>
                     </div>
                   </div>
                   <div class="product-content">
                     <div class="product-title">{{ product.fullName }}</div>
                     <div class="product-details">
-                      <div class="detail-row"><span class="detail-label">Арт:</span><span class="detail-value">{{ product.article }}</span></div>
-                      <div class="detail-row"><span class="detail-label">Цена:</span><span class="detail-value price">{{ product.price }} ₽</span></div>
+                      <div class="detail-row"><span class="detail-label">Арт:</span><span class="detail-value">{{
+                          product.article }}</span></div>
+                      <div class="detail-row"><span class="detail-label">Цена:</span><span class="detail-value price">{{
+                          product.price }} ₽</span></div>
                     </div>
                   </div>
-                  <button class="action-btn danger" (click)="removeProductFromCategory(product)" title="Удалить из категории">
+                  <button class="action-btn danger" (click)="removeProductFromCategory(product)"
+                    title="Удалить из категории">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
                   </button>
                 </div>
@@ -465,7 +562,8 @@
 
               <div *ngIf="!isProductsLoading && categoryProducts.length === 0" class="empty-products">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
                 </svg>
                 <h4>Товаров нет</h4>
                 <p>Используйте поиск выше для добавления</p>
@@ -481,23 +579,27 @@
           <div class="form-header">
             <h2>Новая категория</h2>
             <button type="button" class="btn-close" (click)="cancelCreate()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
           <div class="form-body">
             <div class="form-group">
               <label>Название <span class="required-mark">*</span></label>
-              <input [(ngModel)]="newCategory.name" name="name" required placeholder="Например, Электроника" title="Понятное название, которое увидят пользователи">
+              <input [(ngModel)]="newCategory.name" name="name" required placeholder="Например, Электроника"
+                title="Понятное название, которое увидят пользователи">
               <small class="field-help">Короткое и понятное название для пользователей.</small>
             </div>
             <div class="form-row">
-              <div class="form-group">
+              <!-- <div class="form-group">
                 <label>Код <span class="required-mark">*</span></label>
-                <input [(ngModel)]="newCategory.code" name="code" required placeholder="Например, ELECTRONICS" title="Уникальный код категории">
+                <input [(ngModel)]="newCategory.shortCode" name="code" required placeholder="Например, ELECTRONICS" title="Уникальный код категории">
                 <small class="field-help">Уникальный технический идентификатор категории.</small>
-              </div>
+              </div> -->
               <div class="form-group">
-                <label>Короткий код <span class="optional-mark">необязательно</span></label>
+                <label>Код <span class="optional-mark">необязательно</span></label>
                 <div class="input-with-button">
                   <input type="number" [(ngModel)]="newCategory.shortCode" name="shortCode" placeholder="Авто">
                   <button type="button" class="btn-gen" (click)="generateShortCode()">Генерировать</button>
@@ -506,13 +608,33 @@
             </div>
             <div class="form-group">
               <label>Описание <span class="optional-mark">необязательно</span></label>
-              <textarea [(ngModel)]="newCategory.description" name="description" rows="3" placeholder="Что относится к этой категории? Например: смартфоны, планшеты и аксессуары."></textarea>
+              <textarea [(ngModel)]="newCategory.description" name="description" rows="3"
+                placeholder="Что относится к этой категории? Например: смартфоны, планшеты и аксессуары."></textarea>
               <small class="field-help">Помогает отличать эту категорию от похожих.</small>
             </div>
             <div *ngIf="selectedCategory" class="form-hint">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
               Создаётся как подкатегория «{{ selectedCategory.name }}»
             </div>
+
+            <div class="form-group">
+              <label>Изображение категории</label>
+
+              <input type="file" accept="image/*" name="categoryImage" (change)="onCategoryImageSelected($event)" />
+
+              <small class="field-help" *ngIf="categoryImage">
+                Выбрано: {{ categoryImage.name }}
+              </small>
+
+              <small class="field-help" *ngIf="!categoryImage">
+                Выберите изображение. Оно загрузится автоматически после создания категории.
+              </small>
+            </div>
+
           </div>
           <div class="form-footer">
             <button type="button" class="btn-secondary" (click)="cancelCreate()">Отмена</button>
@@ -529,7 +651,10 @@
           <div class="form-header">
             <h2>Редактирование</h2>
             <button type="button" class="btn-close" (click)="cancelEdit()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
           <div class="form-body">
@@ -541,7 +666,8 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Код <span class="required-mark">*</span></label>
-                <input [(ngModel)]="editCategory.code" name="editCode" required title="Уникальный технический код категории">
+                <input [(ngModel)]="editCategory.code" name="editCode" required
+                  title="Уникальный технический код категории">
                 <small class="field-help">Проверьте, что код не используется другой категорией.</small>
               </div>
               <div class="form-group">
@@ -551,7 +677,8 @@
             </div>
             <div class="form-group">
               <label>Описание</label>
-              <textarea [(ngModel)]="editCategory.description" name="editDescription" rows="3" placeholder="Кратко опишите, какие товары относятся к категории"></textarea>
+              <textarea [(ngModel)]="editCategory.description" name="editDescription" rows="3"
+                placeholder="Кратко опишите, какие товары относятся к категории"></textarea>
               <small class="field-help">Описание помогает другим сотрудникам правильно выбирать категорию.</small>
             </div>
           </div>
@@ -570,11 +697,15 @@
           <div class="form-header">
             <h2>Перемещение</h2>
             <button type="button" class="btn-close" (click)="cancelMove()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
           <div class="move-body">
-            <div class="move-hint"><strong>Как переместить:</strong> выберите подкатегорию, затем категорию, в которую её нужно перенести. Перед подтверждением проверьте путь назначения.</div>
+            <div class="move-hint"><strong>Как переместить:</strong> выберите подкатегорию, затем категорию, в которую
+              её нужно перенести. Перед подтверждением проверьте путь назначения.</div>
             <div class="move-cols">
               <div class="move-col">
                 <h4>Подкатегория</h4>
@@ -586,20 +717,21 @@
               <div class="move-col">
                 <h4>Целевая категория</h4>
                 <div *ngFor="let c of categories" class="drop-target"
-                  [class.active]="moveData.targetCategoryId === c.id"
-                  (click)="moveData.targetCategoryId = c.id">
+                  [class.active]="moveData.targetCategoryId === c.id" (click)="moveData.targetCategoryId = c.id">
                   <div class="dt-name">{{ c.name }}</div>
                   <div class="dt-code">{{ c.code }}</div>
                 </div>
               </div>
             </div>
             <div *ngIf="moveData.subCategoryId && moveData.targetCategoryId" class="move-summary">
-              <strong>{{ getSubCategoryName(moveData.subCategoryId) }}</strong> → <strong>{{ getCategoryName(moveData.targetCategoryId) }}</strong>
+              <strong>{{ getSubCategoryName(moveData.subCategoryId) }}</strong> → <strong>{{
+                getCategoryName(moveData.targetCategoryId) }}</strong>
             </div>
           </div>
           <div class="form-footer">
             <button class="btn-secondary" (click)="cancelMove()">Отмена</button>
-            <button class="btn-primary" (click)="moveSubCategory()" [disabled]="!moveData.subCategoryId || !moveData.targetCategoryId || isLoading">
+            <button class="btn-primary" (click)="moveSubCategory()"
+              [disabled]="!moveData.subCategoryId || !moveData.targetCategoryId || isLoading">
               {{ isLoading ? 'Перемещение...' : 'Переместить' }}
             </button>
           </div>
@@ -610,11 +742,13 @@
       <div *ngIf="!selectedCategory && !isCreating && !isEditing && !isMoving" class="empty-state-full">
         <div class="empty-content">
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
           </svg>
           <h3>С чего начнём?</h3>
-          <p>Выберите категорию в списке слева, чтобы посмотреть описание, подкатегории и товары. Или создайте первую категорию.</p>
-          <div class="empty-tips"><span>Подсказка</span> Категории можно вкладывать друг в друга. Чтобы не потеряться, возвращайтесь по цепочке навигации.</div>
+          <p>Выберите категорию в списке слева, чтобы посмотреть описание, подкатегории и товары. Или создайте первую
+            категорию.</p>
+          <div class="empty-tips"><span>Подсказка</span> Категории можно вкладывать друг в друга. Чтобы не потеряться,
+            возвращайтесь по цепочке навигации.</div>
           <button class="btn-primary" (click)="startCreate()">Создать категорию</button>
         </div>
       </div>
@@ -631,14 +765,17 @@
       <div class="buffer-actions">
         <button class="btn-clear-buf" (click)="clearSelectedProducts()" title="Очистить выбор">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
           Очистить
         </button>
-        <button class="btn-add-all" (click)="addSelectedProductsToCategory()" [disabled]="!selectedCategory || isLoading"
+        <button class="btn-add-all" (click)="addSelectedProductsToCategory()"
+          [disabled]="!selectedCategory || isLoading"
           [title]="selectedCategory ? 'Добавить в ' + selectedCategory.name : 'Сначала выберите категорию'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           Добавить в категорию
         </button>
@@ -652,20 +789,28 @@
       <div class="modal-header">
         <h3>Удаление категории</h3>
         <button class="modal-close" (click)="showDeleteConfirm = false">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       </div>
       <div class="modal-content">
         <div class="warning-icon">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
         </div>
         <p>Удалить <strong>{{ selectedCategory?.name }}</strong>?</p>
         <div class="warning-list">
           <p>Это приведёт к:</p>
-          <ul><li>Удалению подкатегорий</li><li>Разрыву связей с товарами</li><li>Необратимости</li></ul>
+          <ul>
+            <li>Удалению подкатегорий</li>
+            <li>Разрыву связей с товарами</li>
+            <li>Необратимости</li>
+          </ul>
         </div>
       </div>
       <div class="modal-actions">

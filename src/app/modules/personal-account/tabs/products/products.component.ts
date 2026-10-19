@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, firstValueFrom, takeUntil, forkJoin, of } from 'rxjs';
 import { catchError, mergeMap } from 'rxjs/operators';
 import { ProductInstance, Filter, MeasurementUnit } from '../../../../../models/category-management.interface';
-import { CreateProductDto, ProductBarCodeDto, UpdateProductDto } from '../../../../../models/product.interface';
-import { Category, CategoryService } from '../../../../core/services/category.service';
+import { Category, CreateProductDto, ProductBarCodeDto, UpdateProductDto } from '../../../../../models/product.interface';
 import { ProductService } from '../../../../core/services/product.service';
 import { environment } from '../../../../../environment';
 import { HttpClient, HttpEventType } from '@angular/common/http';
+import { CategoryService } from '../../../../core/services/category.service';
 
 interface BulkProductEntry {
   idFrom1c: string;
@@ -725,7 +725,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   loadCategories(): void {
     this.categoryService.getAllCategories().subscribe({
       next: (response: any) => { this.categories = response.data || []; this.allCategoriesFlat = this.flattenCategories(this.categories); },
-      error: (error) => console.error('Ошибка загрузки категорий:', error)
+      error: (error: any) => console.error('Ошибка загрузки категорий:', error)
     });
   }
 
