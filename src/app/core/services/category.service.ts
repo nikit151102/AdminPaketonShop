@@ -76,7 +76,7 @@ export class CategoryService {
   }
 
   // Получение товаров категории с пагинацией
-  getCategoryProducts(categoryId: string, page: number = 0, pageSize: number = 20): Observable<CategoryProductsResponse> {
+  getCategoryProducts(categoryId: string, page: number = 0, pageSize: number = 150): Observable<CategoryProductsResponse> {
     const request = {
       filters: [{ field: 'Text', values: [], type: 0 },
       { field: 'ProductCategories.Id', values: [categoryId], type: 11 }],
@@ -104,7 +104,7 @@ export class CategoryService {
     );
   }
 
-  getProductsByCategory(categoryId: string, page: number = 0, pageSize: number = 20): Observable<any> {
+  getProductsByCategory(categoryId: string, page: number = 0, pageSize: number = 150): Observable<any> {
     const request = {
       filters: [
         { field: 'ProductCategory.Id', values: [categoryId], type: 0 }
@@ -161,7 +161,7 @@ export class CategoryService {
     return this.http.post(`${this.baseUrl}/upload_category_images_archive`, formData, { headers });
   }
 
-  searchProducts(searchQuery: string, page: number = 0, pageSize: number = 20): Observable<any> {
+  searchProducts(searchQuery: string, page: number = 0, pageSize: number = 150): Observable<any> {
     const request = {
       filters: searchQuery ? [
         { field: 'searchQuery', values: [searchQuery], type: 0 }
