@@ -72,7 +72,7 @@ export interface ProductInstance {
   description: string;
   viewPriceSale: number;
   price: number;
-  imageLinks: string[];
+  productImageLinks: string[];
   productCategoryIds: string[];
   properties: Record<string, string>;
   numericProperties: Record<string, number>;

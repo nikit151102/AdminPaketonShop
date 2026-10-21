@@ -202,32 +202,14 @@ export class CategoryService {
 
   // Добавление подкатегорий в категорию
   addSubCategoriesToCategory(categoryId: string, subCategoryIds: string[]): Observable<any> {
-    const request = { guids: subCategoryIds };
-    return this.http.put(`${this.baseUrl}/AddCategoryToCategory/${categoryId}`, request);
+    // API ожидает непосредственно массив Guid, без обёртки { guids: [...] }.
+    return this.http.put(`${this.baseUrl}/AddCategoryToCategory/${categoryId}`, subCategoryIds);
   }
 
-  // Удаление подкатегорий из категории
-removeSubCategoriesFromCategory(categoryId: string, subCategoryIds: string[]): Observable<any> {
-  // Создаем FormData для multipart/form-data
-  const formData = new FormData();
-  
-  // Добавляем каждый guid как отдельное поле
-  subCategoryIds.forEach(guid => {
-    formData.append('guids', guid);
-  });
-
-  // Для FormData НЕ указываем Content-Type вручную
-  const headers = new HttpHeaders({
-    'accept': 'text/plain'
-    // Content-Type браузер установит сам: 'multipart/form-data; boundary=...'
-  });
-
-  return this.http.put(
-    `${this.baseUrl}/RemoveCategoryFromCategory/${categoryId}`,
-    formData,
-    { headers }  // Заголовки передаются как отдельный объект
-  );
-}
+  // Удаление подкатегорий из категории: после отвязки категория становится самостоятельной.
+  removeSubCategoriesFromCategory(categoryId: string, subCategoryIds: string[]): Observable<any> {
+    return this.http.put(`${this.baseUrl}/RemoveCategoryFromCategory/${categoryId}`, subCategoryIds);
+  }
 
   // Обновим существующие методы для работы с товарами
   addProductsToCategory(categoryId: string, productIds: string[]): Observable<any> {

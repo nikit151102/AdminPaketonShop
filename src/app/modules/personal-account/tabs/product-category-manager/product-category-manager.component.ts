@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize, firstValueFrom } from 'rxjs';
 import {
   ProductCategory,
   CreateCategoryDto,
@@ -41,6 +41,15 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   isCreating = false;
   isEditing = false;
   isMoving = false;
+  moveFormMode: 'subcategory' | 'category' = 'subcategory';
+  /** Каскадные списки категорий для выбора источника и назначения. */
+  moveSourceLevels: ProductCategory[][] = [];
+  moveTargetLevels: ProductCategory[][] = [];
+  moveSourcePath: string[] = [];
+  moveTargetPath: string[] = [];
+  private moveCategoryParentIds = new Map<string, string | null>();
+  private moveCategoryChildrenIds = new Map<string, string[]>();
+  private readonly rootCategoryId = '00000000-0000-0000-0000-000000000000';
   showDeleteConfirm = false;
   isProductsLoading = false;
   isUploadingCategoryImages = false;
@@ -76,7 +85,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   totalPages = 1;
 
   draggedSubCategory: any | null = null;
-  viewMode: 'details' | 'products' = 'details';
+  viewMode: 'details' | 'products' = 'products';
   selectedSubCategoryId: string | null = null;
 
   /** Категории текущего уровня, отфильтрованные по названию и коду. */
@@ -184,9 +193,13 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   selectCategory(category: ProductCategory): void {
     this.categoryFilter = '';
     this.selectedCategory = category;
-    this.viewMode = 'details';
+    this.viewMode = 'products';
     this.selectedSubCategoryId = null;
+    this.productsPage = 0;
+    this.categoryProducts = [];
     this.loadSubCategories(category.id);
+    // При выборе категории сразу загружаем товары: вкладка «Товары» уже активна.
+    this.loadCategoryProducts(category.id);
     this.resetForms();
     this.updateBreadcrumbs(category);
   }
@@ -228,7 +241,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     this.breadcrumbs = [];
     this.subCategories = [];
     this.selectedSubCategoryId = null;
-    this.viewMode = 'details';
+    this.viewMode = 'products';
     this.categoryProducts = [];
   }
 
@@ -449,6 +462,10 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   }
 
   async createCategory(): Promise<void> {
+    // Сначала создаём самостоятельную категорию, а затем отдельным API-запросом
+    // добавляем её в выбранную категорию как подкатегорию.
+    const parentCategoryId = this.selectedCategory?.id || null;
+    this.newCategory.superCategoryId = undefined;
     this.newCategory.code = String(this.newCategory.shortCode);
 
     if (!this.validateCategory(this.newCategory)) return;
@@ -458,6 +475,10 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     try {
       const response: any = await this.categoryService
         .createCategory(this.newCategory).toPromise();
+      const createdCategoryId: string | undefined = response?.data?.id || response?.id || response?.data?.category?.id;
+      if (parentCategoryId && !createdCategoryId) {
+        throw new Error('Категория создана, но сервер не вернул её ID для добавления в родительскую категорию.');
+      }
 
       if (this.categoryImage) {
         const zip = new JSZip();
@@ -478,10 +499,14 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
           .uploadCategoryImagesArchive(archive).toPromise();
       }
 
+      if (parentCategoryId && createdCategoryId) {
+        await this.categoryService.addSubCategoriesToCategory(parentCategoryId, [createdCategoryId]).toPromise();
+      }
+
       this.loadCategories();
 
-      if (this.selectedCategory) {
-        this.loadSubCategories(this.selectedCategory.id);
+      if (parentCategoryId) {
+        this.loadSubCategories(parentCategoryId);
       }
 
       this.isCreating = false;
@@ -541,52 +566,123 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     });
   }
 
-  moveSubCategory(): void {
-    if (!this.moveData.subCategoryId || !this.moveData.targetCategoryId) return;
-    if (this.moveData.subCategoryId === this.moveData.targetCategoryId) {
-      alert('Нельзя переместить подкатегорию в саму себя');
+  /** Инициализируем только первый уровень. Дочерние уровни загружаются по выбору пользователя. */
+  loadMoveCategories(): void {
+    this.moveSourceLevels = [this.categories];
+    this.moveTargetLevels = [this.categories];
+    this.moveSourcePath = [];
+    this.moveTargetPath = [];
+    this.moveCategoryParentIds.clear();
+    this.moveCategoryChildrenIds.clear();
+  }
+
+  async onMoveCategoryLevelChange(side: 'source' | 'target', level: number, categoryId: string): Promise<void> {
+    const isSource = side === 'source';
+    const path = isSource ? this.moveSourcePath : this.moveTargetPath;
+    const levels = isSource ? this.moveSourceLevels : this.moveTargetLevels;
+
+    path.length = level;
+    levels.length = level + 1;
+    if (!categoryId) {
+      if (isSource) this.moveData.subCategoryId = path[path.length - 1] || '';
+      else this.moveData.targetCategoryId = path[path.length - 1] || '';
       return;
     }
 
-    const subCat = this.selectedCategory?.subCategories?.find(sc => sc.id === this.moveData.subCategoryId);
-    if (!subCat || !this.selectedCategory) return;
+    path[level] = categoryId;
+    if (isSource) this.moveData.subCategoryId = categoryId;
+    else this.moveData.targetCategoryId = categoryId;
 
+    // Сначала используем имеющиеся данные, затем запрашиваем детали только выбранной категории.
+    const selected = levels[level]?.find(category => category.id === categoryId) ||
+      this.categories.find(category => category.id === categoryId);
+    let details: any = selected;
+    try {
+      const response: any = await firstValueFrom(this.categoryService.getCategoryById(categoryId));
+      details = response?.data || response || selected;
+    } catch (error) {
+      console.warn('Не удалось загрузить подкатегории выбранной категории:', categoryId, error);
+    }
+
+    const parentId = details?.superCategoryId || (level > 0 ? path[level - 1] : null);
+    this.moveCategoryParentIds.set(categoryId, parentId);
+    const children: ProductCategory[] = details?.subCategories || [];
+    this.moveCategoryChildrenIds.set(categoryId, children.map(child => child.id));
+    if (children.length) levels[level + 1] = children;
+
+    if (isSource) {
+      this.moveSourcePath = [...path];
+      this.moveSourceLevels = [...levels];
+    } else {
+      this.moveTargetPath = [...path];
+      this.moveTargetLevels = [...levels];
+    }
+  }
+
+  async moveSubCategory(): Promise<void> {
+    if (!this.validateMove()) return;
+
+    const sourceId = this.moveData.subCategoryId;
+    const targetId = this.moveData.targetCategoryId;
+    const source = this.findMoveCategory(sourceId) || this.categories.find(c => c.id === sourceId) ||
+      this.selectedCategory?.subCategories?.find(c => c.id === sourceId);
+    if (!source) {
+      alert('Не удалось найти исходную категорию. Обновите список категорий и попробуйте ещё раз.');
+      return;
+    }
+
+    // Нельзя вложить категорию в саму себя или в любую её дочернюю категорию.
+    const descendants = new Set<string>();
+    const collectDescendants = (id: string): void => {
+      for (const childId of this.moveCategoryChildrenIds.get(id) || []) {
+        if (!descendants.has(childId)) {
+          descendants.add(childId);
+          collectDescendants(childId);
+        }
+      }
+    };
+    collectDescendants(sourceId);
+    if (sourceId === targetId || descendants.has(targetId)) {
+      alert('Нельзя перенести категорию в саму себя или в её подкатегорию.');
+      return;
+    }
+
+    const oldParentId = this.moveCategoryParentIds.get(sourceId) ??
+      (source as ProductCategory).superCategoryId ??
+      (this.moveData.originalCategoryId || null);
+    const hasRealParent = !!oldParentId && oldParentId !== this.rootCategoryId;
     this.isLoading = true;
-    const updatedSubs = this.selectedCategory.subCategories.filter(sc => sc.id !== this.moveData.subCategoryId);
 
-    const updateDto: UpdateCategoryDto = {
-      id: this.selectedCategory.id, code: this.selectedCategory.code,
-      shortCode: this.selectedCategory.shortCode, name: this.selectedCategory.name,
-      description: this.selectedCategory.description,
-      superCategoryId: this.selectedCategory.superCategoryId || undefined,
-      subCategories: updatedSubs.map(sc => sc.id), products: []
+    const addToTarget = () => this.categoryService.addSubCategoriesToCategory(targetId, [sourceId]);
+    const finish = () => {
+      this.loadCategories();
+      if (this.selectedCategory) this.loadSubCategories(this.selectedCategory.id);
+      this.isLoading = false;
+      this.isMoving = false;
+      this.resetMoveData();
     };
 
-    this.categoryService.updateCategory(this.selectedCategory.id, updateDto).subscribe({
-      next: () => {
-        const target = this.categories.find(c => c.id === this.moveData.targetCategoryId);
-        if (target) {
-          const targetDto: UpdateCategoryDto = {
-            id: target.id, code: target.code, shortCode: target.shortCode,
-            name: target.name, description: target.description,
-            superCategoryId: target.superCategoryId || undefined,
-            subCategories: [...(target.subCategories || []).map(sc => sc.id), subCat.id],
-            products: []
-          };
-          this.categoryService.updateCategory(target.id, targetDto).subscribe({
-            next: () => {
-              this.loadCategories();
-              if (this.selectedCategory) this.loadSubCategories(this.selectedCategory.id);
-              this.isMoving = false;
-              this.resetMoveData();
-            },
-            error: (e) => console.error('Ошибка обновления целевой категории:', e)
-          });
-        }
-      },
-      error: (e) => {
-        console.error('Ошибка перемещения:', e);
+    // У самостоятельной категории нет родителя — её не нужно удалять откуда-либо.
+    // Отвязываем только категории, которые действительно являются подкатегориями.
+    if (hasRealParent && oldParentId !== targetId) {
+      try {
+        await firstValueFrom(this.categoryService.removeSubCategoriesFromCategory(oldParentId!, [sourceId]));
+      } catch (error) {
+        console.error('Ошибка удаления категории из прежнего родителя:', error);
         this.isLoading = false;
+        alert('Не удалось отвязать категорию от прежнего родителя.');
+        return;
+      }
+    }
+
+    addToTarget().subscribe({
+      next: finish,
+      error: error => {
+        console.error('Ошибка переноса категории:', error);
+        this.isLoading = false;
+        alert(hasRealParent && oldParentId !== targetId
+          ? 'Категория отвязана от прежнего родителя, но не добавлена в новую. Обновите каталог и проверьте её расположение.'
+          : 'Не удалось перенести категорию.');
       }
     });
   }
@@ -634,24 +730,41 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     this.newCategory.shortCode = Math.floor(Math.random() * 1000);
   }
 
+  private findMoveCategory(id: string): ProductCategory | undefined {
+    for (const level of [...this.moveSourceLevels, ...this.moveTargetLevels]) {
+      const found = level?.find(category => category.id === id);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
   getSubCategoryName(id: string): string {
-    return this.selectedCategory?.subCategories?.find(sc => sc.id === id)?.name || 'Неизвестно';
+    return this.findMoveCategory(id)?.name || this.categories.find(c => c.id === id)?.name ||
+      this.selectedCategory?.subCategories?.find(sc => sc.id === id)?.name || 'Неизвестно';
   }
 
   getCategoryName(id: string): string {
-    return this.categories.find(c => c.id === id)?.name || 'Неизвестно';
+    return this.findMoveCategory(id)?.name || this.categories.find(c => c.id === id)?.name || 'Неизвестно';
   }
 
   startMove(subCategory: SubCategory): void {
-    this.moveData.subCategoryId = subCategory.id;
-    this.moveData.originalCategoryId = this.selectedCategory?.id || '';
+    this.moveFormMode = 'subcategory';
+    this.moveData = { subCategoryId: '', targetCategoryId: '', originalCategoryId: this.selectedCategory?.id || '' };
     this.isMoving = true;
+    this.loadMoveCategories();
+  }
+
+  startMoveCategory(): void {
+    this.moveFormMode = 'category';
+    this.moveData = { subCategoryId: '', targetCategoryId: '', originalCategoryId: '' };
+    this.isMoving = true;
+    this.loadMoveCategories();
   }
 
   validateMove(): boolean {
-    if (!this.moveData.subCategoryId) { alert('Выберите подкатегорию для перемещения'); return false; }
+    if (!this.moveData.subCategoryId) { alert('Выберите категорию для перемещения'); return false; }
     if (!this.moveData.targetCategoryId) { alert('Выберите целевую категорию'); return false; }
-    if (this.moveData.subCategoryId === this.moveData.targetCategoryId) { alert('Нельзя переместить подкатегорию в саму себя'); return false; }
+    if (this.moveData.subCategoryId === this.moveData.targetCategoryId) { alert('Нельзя переместить категорию в саму себя'); return false; }
     return true;
   }
 

@@ -176,7 +176,7 @@ export class StoresComponent implements OnInit, OnDestroy {
 
   stores: ProductPlace[] = [];
   filteredStores: ProductPlace[] = [];
-  selectedStore: ProductPlace | null = null;
+  selectedStore: any = null;
 
   stats = {
     total: 0,
@@ -205,9 +205,9 @@ export class StoresComponent implements OnInit, OnDestroy {
 
   schedulePresets: SchedulePreset[] = [
     { id: '24/7', label: '24/7', hours: this.daysOfWeek.map(d => ({ day: d.value, open: 0, close: 24 })) },
-    { id: 'workday', label: 'Пн-Пт 9:00-18:00', hours: [0,1,2,3,4].map(d => ({ day: d, open: 9, close: 18 })) },
+    { id: 'workday', label: 'Пн-Пт 9:00-18:00', hours: [0, 1, 2, 3, 4].map(d => ({ day: d, open: 9, close: 18 })) },
     { id: 'retail', label: 'Ежедневно 10:00-22:00', hours: this.daysOfWeek.map(d => ({ day: d.value, open: 10, close: 22 })) },
-    { id: 'weekend', label: 'Сб-Вс 10:00-20:00', hours: [5,6].map(d => ({ day: d, open: 10, close: 20 })) },
+    { id: 'weekend', label: 'Сб-Вс 10:00-20:00', hours: [5, 6].map(d => ({ day: d, open: 10, close: 20 })) },
     { id: 'closed', label: 'Выходной', hours: [] }
   ];
 
@@ -404,6 +404,9 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   startEdit(store: ProductPlace): void {
+    // Сохраняем именно редактируемый магазин, чтобы использовать его расписание.
+    this.selectedStore = store;
+
     this.formData = {
       id: store.id,
       updaterId: store.id,
@@ -540,11 +543,11 @@ export class StoresComponent implements OnInit, OnDestroy {
       .subscribe((response: any) => {
         if (response && response.data) {
           const newStoreId = response.data.id;
-          
+
           if (this.selectedFiles.length > 0) {
             this.uploadImages(newStoreId);
           }
-          
+
           if (this.hasScheduleChanges()) {
             this.saveSchedule(newStoreId, undefined);
           } else {
@@ -591,9 +594,13 @@ export class StoresComponent implements OnInit, OnDestroy {
           if (this.selectedFiles.length > 0) {
             this.uploadImages(response.data.id);
           }
-          
+
           if (this.hasScheduleChanges()) {
-            const existingScheduleId = this.selectedStore?.storeSchedule?.id;
+            // Ищем расписание по ID обновляемого магазина, не полагаясь на старый selectedStore.
+            const storeBeingUpdated = this.stores.find(store => store.id === response.data.id);
+            const existingScheduleId =
+              storeBeingUpdated?.storeSchedule?.id ||
+              (this.selectedStore?.id === response.data.id ? this.selectedStore.storeSchedule?.id : undefined);
             this.saveSchedule(response.data.id, existingScheduleId);
           } else {
             this.loadStores();
@@ -606,7 +613,7 @@ export class StoresComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
+
   hasScheduleChanges(): boolean {
     return this.scheduleForm.workingHours.some(wh => wh.open < wh.close);
   }
@@ -616,7 +623,11 @@ export class StoresComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    const scheduleIdToUse = existingScheduleId || this.selectedStore?.storeSchedule?.id;
+    // Не используем расписание от другого магазина, если selectedStore устарел.
+    const scheduleIdToUse =
+      existingScheduleId ||
+      this.stores.find(store => store.id === storeId)?.storeSchedule?.id ||
+      (this.selectedStore?.id === storeId ? this.selectedStore.storeSchedule?.id : undefined);
 
     const saveWorkingHours = (schedId: string): Promise<void> => {
       const workingHoursRequests = this.scheduleForm.workingHours
@@ -635,7 +646,7 @@ export class StoresComponent implements OnInit, OnDestroy {
         );
 
       return workingHoursRequests.length > 0
-        ? Promise.all(workingHoursRequests).then(() => {})
+        ? Promise.all(workingHoursRequests).then(() => { })
         : Promise.resolve();
     };
 
@@ -645,7 +656,7 @@ export class StoresComponent implements OnInit, OnDestroy {
         .map(wh => this.http.delete(`${environment.production}/api/Entities/StoreScheduleWorkingHour/${wh.id}`).toPromise());
 
       return deleteRequests.length > 0
-        ? Promise.all(deleteRequests).then(() => {})
+        ? Promise.all(deleteRequests).then(() => { })
         : Promise.resolve();
     };
 
@@ -720,41 +731,41 @@ export class StoresComponent implements OnInit, OnDestroy {
 
 
   getScheduleDisplay(schedule?: StoreSchedule): string {
-  if (!schedule?.workingHours?.length) return '—';
-  
-  // Фильтруем и парсим рабочие часы
-  const parsedHours = schedule.workingHours
-    .filter(wh => {
-      const open = parseInt(wh.openTime.split(':')[0], 10);
-      const close = parseInt(wh.closeTime.split(':')[0], 10);
-      return open < close;
-    })
-    .map(h => ({
-      day: h.dayOfWeek,
-      open: parseInt(h.openTime.split(':')[0], 10),
-      close: parseInt(h.closeTime.split(':')[0], 10)
-    }));
-  
-  if (!parsedHours.length) return 'Выходной';
-  
-  // Проверяем, одинаковое ли время во все дни
-  const sameHours = parsedHours.every(h => 
-    h.open === parsedHours[0].open && h.close === parsedHours[0].close
-  );
-  
-  if (sameHours && parsedHours.length === 7) {
-    return `Ежедневно ${this.formatTime(parsedHours[0].open)}–${this.formatTime(parsedHours[0].close)}`;
+    if (!schedule?.workingHours?.length) return '—';
+
+    // Фильтруем и парсим рабочие часы
+    const parsedHours = schedule.workingHours
+      .filter(wh => {
+        const open = parseInt(wh.openTime.split(':')[0], 10);
+        const close = parseInt(wh.closeTime.split(':')[0], 10);
+        return open < close;
+      })
+      .map(h => ({
+        day: h.dayOfWeek,
+        open: parseInt(h.openTime.split(':')[0], 10),
+        close: parseInt(h.closeTime.split(':')[0], 10)
+      }));
+
+    if (!parsedHours.length) return 'Выходной';
+
+    // Проверяем, одинаковое ли время во все дни
+    const sameHours = parsedHours.every(h =>
+      h.open === parsedHours[0].open && h.close === parsedHours[0].close
+    );
+
+    if (sameHours && parsedHours.length === 7) {
+      return `Ежедневно ${this.formatTime(parsedHours[0].open)}–${this.formatTime(parsedHours[0].close)}`;
+    }
+    if (sameHours) {
+      return `${this.formatTime(parsedHours[0].open)}–${this.formatTime(parsedHours[0].close)}`;
+    }
+
+    // Формируем краткое описание для разных дней
+    return parsedHours
+      .map(h => `${this.daysOfWeek[h.day]?.label}:${this.formatTime(h.open)}-${this.formatTime(h.close)}`)
+      .slice(0, 3)
+      .join(', ') + (parsedHours.length > 3 ? '...' : '');
   }
-  if (sameHours) {
-    return `${this.formatTime(parsedHours[0].open)}–${this.formatTime(parsedHours[0].close)}`;
-  }
-  
-  // Формируем краткое описание для разных дней
-  return parsedHours
-    .map(h => `${this.daysOfWeek[h.day]?.label}:${this.formatTime(h.open)}-${this.formatTime(h.close)}`)
-    .slice(0, 3)
-    .join(', ') + (parsedHours.length > 3 ? '...' : '');
-}
 
 
   uploadImages(id: string): void {
@@ -1072,7 +1083,7 @@ export class StoresComponent implements OnInit, OnDestroy {
   applySchedulePreset(presetId: string): void {
     const preset = this.schedulePresets.find(p => p.id === presetId);
     if (!preset) return;
-    
+
     this.initScheduleGrid();
     preset.hours.forEach(h => {
       for (let hour = h.open; hour < h.close; hour++) {

@@ -1031,7 +1031,6 @@
 
           .product-image-container {
             width: 64px;
-            height: 64px;
             flex-shrink: 0;
 
             .product-img {
@@ -2722,4 +2721,7 @@
     color: #64748b;
     overflow-wrap: anywhere;
   }
+}
+.move-level-select + .move-level-select {
+  margin-top: 8px;
 }

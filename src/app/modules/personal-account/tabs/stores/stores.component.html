@@ -26,10 +26,10 @@
       </div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-value">{{ stats.total }}</div><div class="stat-label">Всего</div></div>
-      <div class="stat-card"><div class="stat-value">{{ stats.active }}</div><div class="stat-label">Активных</div></div>
-      <div class="stat-card"><div class="stat-value">{{ stats.deleted }}</div><div class="stat-label">Удалённых</div></div>
-      <div class="stat-card"><div class="stat-value">{{ stats.withAddress }}</div><div class="stat-label">С адресом</div></div>
+      <div class="stat-card"><div class="stat-value">{{ stats.total }}</div><div class="stat-label">Всего магазинов</div></div>
+      <div class="stat-card"><div class="stat-value">{{ stats.active }}</div><div class="stat-label">Активные точки</div></div>
+      <div class="stat-card"><div class="stat-value">{{ stats.deleted }}</div><div class="stat-label">Удалённые точки</div></div>
+      <div class="stat-card"><div class="stat-value">{{ stats.withAddress }}</div><div class="stat-label">С указанным адресом</div></div>
     </div>
   </div>
 
@@ -46,6 +46,13 @@
       </button>
     </div>
 
+    <div class="list-heading" *ngIf="!isLoading && filteredStores.length > 0">
+      <div>
+        <h2>Список торговых точек</h2>
+        <p>Контакты, адрес, график работы и состояние каждой точки. Нажмите на стрелку слева, чтобы увидеть подробности.</p>
+      </div>
+      <div class="list-count"><strong>{{ filteredStores.length }}</strong><span>{{ filteredStores.length === 1 ? 'точка' : (filteredStores.length < 5 ? 'точки' : 'точек') }}</span></div>
+    </div>
     <div class="table-wrapper" *ngIf="!isLoading && filteredStores.length > 0">
       <table class="stores-table">
         <thead>
