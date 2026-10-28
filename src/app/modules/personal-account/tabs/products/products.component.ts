@@ -10,6 +10,8 @@ import { environment } from '../../../../../environment';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { CategoryService } from '../../../../core/services/category.service';
 
+import JSZip from 'jszip';
+
 interface BulkProductEntry {
   idFrom1c: string;
   article: string;
@@ -39,7 +41,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   showDeleteConfirm = false;
   isUploadingImage = false;
 
-  // 🔹 Режимы создания
+  // Режимы создания
   creationMode: 'single' | 'bulk' = 'single';
   creationStep: 1 | 2 | 3 = 1;
   createdProductId: string | null = null;
@@ -47,7 +49,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   zipUploadAfterUpdate = false;
   bulkCreationProgress = { current: 0, total: 0, errors: 0 };
 
-  // 🔹 Массовое создание
+  // Массовое создание
   bulkProducts: BulkProductEntry[] = [];
   createdProductIds: string[] = [];
   idFrom1cList: string[] = [];
@@ -62,6 +64,33 @@ export class ProductsComponent implements OnInit, OnDestroy {
   selectedCategory: string = '';
   sortField = 'fullName';
   sortDirection: 'asc' | 'desc' = 'asc';
+
+  // === ZIP UPLOAD STATE ===
+  showZipUpload = false;
+  selectedZipFile: File | null = null;
+  isUploadingZip = false;
+  zipUploadProgress = 0;
+  zipUploadError: string | null = null;
+  zipUploadSuccess = false;
+  isDragOverZip = false;
+
+  // Новые переменные для пакетной загрузки
+  isSplittingZip = false;
+  totalBatches = 0;
+  currentBatch = 0;
+  batchResults: {
+    index: number;
+    status: 'pending' | 'success' | 'partial' | 'error';
+    successCount?: number;
+    errorCount?: number;
+    error?: string
+  }[] = [];
+
+  private readonly MAX_ZIP_SIZE = 2 * 1024 * 1024 * 1024; // Увеличено до 2 ГБ (браузер сам ограничит память, но искусственное ограничение в 200 МБ снято)
+
+  totalFilesInArchive = 0;
+  totalSuccessfullyUploaded = 0;
+  totalUploadErrors = 0;
 
   measurementUnits: MeasurementUnit[] = [];
   newBarcodes: ProductBarCodeDto[] = [];
@@ -88,15 +117,6 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
-  // === ZIP UPLOAD STATE ===
-  showZipUpload = false;
-  selectedZipFile: File | null = null;
-  isUploadingZip = false;
-  zipUploadProgress = 0;
-  zipUploadError: string | null = null;
-  zipUploadSuccess = false;
-  isDragOverZip = false;
-  private readonly MAX_ZIP_SIZE = 200 * 1024 * 1024;
 
   // === CATEGORY SELECTOR STATE ===
   showCategorySelector = false;
@@ -165,7 +185,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   selectProduct(product: ProductInstance): void { this.isViewingDetails = true; this.selectedProduct = product; }
   closeDetails(): void { this.isViewingDetails = false; this.selectedProduct = null; }
 
-  // 🔹 Начало создания — выбор режима
+  // Начало создания — выбор режима
   startCreate(mode: 'single' | 'bulk' = 'single'): void {
     this.isCreating = true;
     this.creationMode = mode;
@@ -179,7 +199,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.resetForms();
   }
 
-  // 🔹 Добавление товара в очередь массового создания
+  // Добавление товара в очередь массового создания
   addProductToBulkQueue(): void {
     if (!this.validateProductStep1(this.newProduct)) return;
 
@@ -197,12 +217,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.showNotification(`Товар "${this.newProduct.fullName}" добавлен в очередь`, 'success');
   }
 
-  // 🔹 Удаление товара из очереди
+  // Удаление товара из очереди
   removeProductFromBulkQueue(index: number): void {
     this.bulkProducts.splice(index, 1);
   }
 
-  // 🔹 Переход к шагу 2: создание товаров
+  // Переход к шагу 2: создание товаров
   async goToStep2(): Promise<void> {
     if (this.creationMode === 'single') {
       await this.createSingleProduct();
@@ -211,7 +231,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔹 Создание одиночного товара
+  // Создание одиночного товара
   private async createSingleProduct(): Promise<void> {
     if (!this.validateProductStep1(this.newProduct)) return;
     this.isLoading = true;
@@ -243,7 +263,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔹 Начало массового создания
+  // Начало массового создания
   private async startBulkCreation(): Promise<void> {
     if (this.bulkProducts.length === 0) {
       alert('Добавьте хотя бы один товар в очередь');
@@ -255,7 +275,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.bulkCreationProgress = { current: 0, total: this.bulkProducts.length, errors: 0 };
 
     try {
-      // 🔹 Последовательное создание товаров
+      // Последовательное создание товаров
       for (let i = 0; i < this.bulkProducts.length; i++) {
         const item = this.bulkProducts[i];
         this.bulkCreationProgress.current = i + 1;
@@ -291,7 +311,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
         }
       }
 
-      // 🔹 Переход к шагу 3: обновление цен
+      // Переход к шагу 3: обновление цен
       this.creationStep = 3;
       this.showNotification(`Создано: ${this.createdProductIds.length}, Ошибок: ${this.bulkCreationProgress.errors}`, 'success');
 
@@ -303,17 +323,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔹 Шаг 2 для одиночного товара: Обновление цен из 1C
+  // Шаг 2 для одиночного товара: Обновление цен из 1C
   async updatePricesFrom1C(): Promise<void> {
     if (!this.createdProductId) return;
     this.updateRemainsLoading = true;
 
     try {
-      // 🔹 Берём idFrom1c из формы (он уже введён пользователем на шаге 1)
+      // Берём idFrom1c из формы (он уже введён пользователем на шаге 1)
       let idFrom1c = this.newProduct.idFrom1c?.trim();
 
       if (!idFrom1c) {
-        // 🔹 Если не нашли в форме, пробуем найти в списке товаров
+        // Если не нашли в форме, пробуем найти в списке товаров
         const product = this.products.find(p => p.id === this.createdProductId);
         if (!product?.idFrom1c) {
           throw new Error('Не найден idFrom1c для товара');
@@ -321,13 +341,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
         idFrom1c = product.idFrom1c;
       }
 
-      // 🔹 1. Вызываем UpdateProductRemains с одним ID
+      // 1. Вызываем UpdateProductRemains с одним ID
       await firstValueFrom(this.productService.updateProductRemains([idFrom1c]));
 
-      // 🔹 2. Индексация для поиска — передаём системный UUID товара
+      // 2. Индексация для поиска — передаём системный UUID товара
       await firstValueFrom(this.productService.reindexProducts([this.createdProductId]));
 
-      // 🔹 3. Предлагаем загрузить ZIP с картинками
+      // 3. Предлагаем загрузить ZIP с картинками
       this.zipUploadAfterUpdate = true;
       this.showNotification('Цены и остатки обновлены!', 'success');
 
@@ -340,7 +360,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
 
-  // 🔹 Шаг 3: Пакетное обновление цен и остатков + индексация
+  // Шаг 3: Пакетное обновление цен и остатков + индексация
   async updatePricesAndIndex(): Promise<void> {
     if (this.idFrom1cList.length === 0) {
       alert('Нет товаров для обновления');
@@ -350,13 +370,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.updateRemainsLoading = true;
 
     try {
-      // 🔹 1. Обновление цен и остатков (по idFrom1c)
+      // 1. Обновление цен и остатков (по idFrom1c)
       await firstValueFrom(this.productService.updateProductRemains(this.idFrom1cList));
 
-      // 🔹 2. Индексация для поиска (по системным UUID)
+      // 2. Индексация для поиска (по системным UUID)
       await firstValueFrom(this.productService.reindexProducts(this.createdProductIds));
 
-      // 🔹 3. Предложение загрузить ZIP
+      // 3. Предложение загрузить ZIP
       this.zipUploadAfterUpdate = true;
       this.showNotification('Цены и остатки обновлены!', 'success');
 
@@ -368,7 +388,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔹 Завершение создания
+  // Завершение создания
   finishCreation(): void {
     this.isCreating = false;
     this.creationStep = 1;
@@ -591,41 +611,157 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   private validateAndSetZipFile(file: File): void {
-    this.zipUploadError = null; this.zipUploadSuccess = false;
+    this.zipUploadError = null;
+    this.zipUploadSuccess = false;
     if (!file.name.toLowerCase().endsWith('.zip')) {
-      this.zipUploadError = 'Допускается только формат .zip'; this.selectedZipFile = null; return;
+      this.zipUploadError = 'Допускается только формат .zip';
+      this.selectedZipFile = null;
+      return;
     }
-    if (file.size > this.MAX_ZIP_SIZE) {
-      this.zipUploadError = `Файл слишком большой (${this.formatFileSize(file.size)}). Максимум 200 МБ.`;
-      this.selectedZipFile = null; return;
-    }
+    // Мы убрали проверку на 200 МБ, так как теперь архив разбивается на мелкие части
     this.selectedZipFile = file;
+  }
+
+  
+    async uploadZipArchive(): Promise<void> {
+    if (!this.selectedZipFile) return;
+
+    this.isUploadingZip = true;
+    this.zipUploadError = null;
+    this.zipUploadSuccess = false;
+    this.zipUploadProgress = 0;
+    this.isSplittingZip = true;
+    this.batchResults = [];
+    this.currentBatch = 0;
+    this.totalBatches = 0;
+    
+    // Сброс счетчиков
+    this.totalFilesInArchive = 0;
+    this.totalSuccessfullyUploaded = 0;
+    this.totalUploadErrors = 0;
+
+    try {
+      const zip = new JSZip();
+      const loadedZip = await zip.loadAsync(this.selectedZipFile);
+
+      const imageFiles: { name: string; async: () => Promise<Blob> }[] = [];
+      loadedZip.forEach((relativePath: any, zipEntry: any) => {
+        if (!zipEntry.dir && this.isImageFile(zipEntry.name)) {
+          imageFiles.push({ name: zipEntry.name, async: () => zipEntry.async('blob') });
+        }
+      });
+
+      if (imageFiles.length === 0) {
+        throw new Error('В архиве не найдено поддерживаемых изображений (jpg, png, webp, gif, bmp)');
+      }
+
+      // 🔹 ВОЗВРАЩАЕМ 20 ФАЙЛОВ В ПАКЕТ
+      const CHUNK_SIZE = 10;
+      const chunks = [];
+      for (let i = 0; i < imageFiles.length; i += CHUNK_SIZE) {
+        chunks.push(imageFiles.slice(i, i + CHUNK_SIZE));
+      }
+
+      this.totalBatches = chunks.length;
+      this.totalFilesInArchive = imageFiles.length; // Запоминаем общее количество
+      this.isSplittingZip = false;
+
+      for (let i = 0; i < chunks.length; i++) {
+        this.currentBatch = i + 1;
+        this.batchResults.push({ index: i + 1, status: 'pending' });
+
+        try {
+          const newZip = new JSZip();
+          const chunk = chunks[i];
+
+          for (const file of chunk) {
+            const blob = await file.async();
+            newZip.file(file.name, blob);
+          }
+
+          const blob = await newZip.generateAsync({ type: 'blob' });
+          const batchFile = new File([blob], `batch_${i + 1}.zip`, { type: 'application/zip' });
+
+          console.log(`📦 Отправка партии ${i + 1} из ${this.totalBatches}, размер: ${(blob.size / 1024 / 1024).toFixed(2)} МБ`);
+
+          // Ждем финального ответа (Response)
+          await new Promise<void>((resolve, reject) => {
+            this.productService.uploadZipArchive(batchFile).subscribe({
+              next: (event: any) => {
+                if (event.type === HttpEventType.UploadProgress && event.total) {
+                  this.zipUploadProgress = Math.round((event.loaded / event.total) * 100);
+                }
+                
+                // 🔹 ЧТЕНИЕ ОТВЕТА С БЕКА
+                if (event.type === HttpEventType.Response) {
+                  const body = event.body;
+                  const success = body?.successCount ?? 0;
+                  const errors = body?.errorCount ?? 0;
+
+                  this.totalSuccessfullyUploaded += success;
+                  this.totalUploadErrors += errors;
+
+                  // Определяем статус партии
+                  if (success > 0 && errors === 0) {
+                    this.batchResults[i].status = 'success';
+                  } else if (success > 0 && errors > 0) {
+                    this.batchResults[i].status = 'partial';
+                  } else {
+                    this.batchResults[i].status = 'error';
+                  }
+                  
+                  this.batchResults[i].successCount = success;
+                  this.batchResults[i].errorCount = errors;
+                  
+                  resolve();
+                }
+              },
+              error: (err) => reject(err)
+            });
+          });
+
+        } catch (error: any) {
+          console.error(`❌ Ошибка сети при загрузке партии ${i + 1}:`, error);
+          this.batchResults[i].status = 'error';
+          this.batchResults[i].errorCount = chunks[i].length; // Считаем все файлы в партии как ошибочные
+          this.batchResults[i].error = error?.error?.message || error?.message || 'Ошибка сети или CORS';
+          this.totalUploadErrors += chunks[i].length;
+        }
+      }
+
+      // Финальная проверка
+      if (this.totalUploadErrors > 0 && this.totalSuccessfullyUploaded === 0) {
+        this.zipUploadError = 'Ни один файл не был загружен. Проверьте ошибки выше.';
+        this.isUploadingZip = false;
+      } else {
+        this.zipUploadSuccess = true;
+        this.selectedZipFile = null;
+
+        setTimeout(() => {
+          if (this.zipUploadAfterUpdate) {
+            this.finishCreation();
+          } else {
+            this.closeZipUploadModal();
+            this.loadProducts();
+          }
+        }, 2000); // Даем 2 секунды, чтобы пользователь увидел сводку
+      }
+
+    } catch (error: any) {
+      console.error('Критическая ошибка обработки архива:', error);
+      this.isUploadingZip = false;
+      this.isSplittingZip = false;
+      this.zipUploadError = error?.message || 'Ошибка обработки архива';
+    }
   }
 
   removeZipFile(): void { this.selectedZipFile = null; this.zipUploadError = null; this.zipUploadSuccess = false; }
 
-  uploadZipArchive(): void {
-    if (!this.selectedZipFile) return;
-    this.isUploadingZip = true; this.zipUploadError = null; this.zipUploadSuccess = false; this.zipUploadProgress = 0;
 
-    this.productService.uploadZipArchive(this.selectedZipFile).subscribe({
-      next: (event) => {
-        if (event.type === HttpEventType.UploadProgress && event.total) {
-          this.zipUploadProgress = Math.round((event.loaded / event.total) * 100);
-        }
-        if (event.type === HttpEventType.Response) {
-          this.isUploadingZip = false; this.zipUploadSuccess = true; this.selectedZipFile = null;
-          setTimeout(() => {
-            if (this.zipUploadAfterUpdate) { this.finishCreation(); }
-            else { this.closeZipUploadModal(); this.loadProducts(); }
-          }, 1500);
-        }
-      },
-      error: (err) => {
-        this.isUploadingZip = false;
-        this.zipUploadError = err.error?.message || `Ошибка сервера (${err.status || 'неизвестно'})`;
-      }
-    });
+  // Вспомогательный метод для проверки расширения файла
+  private isImageFile(filename: string): boolean {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'].includes(ext || '');
   }
 
   formatFileSize(bytes: number): string {
