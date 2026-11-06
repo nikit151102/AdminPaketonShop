@@ -342,6 +342,7 @@ export class StocksComponent implements OnInit {
   }
 
   selectProduct(product: any): void {
+    console.log('product',product)
     this.selectedProductForPreview = product;
 
     // Загружаем фасовки для выбранного товара
@@ -606,7 +607,7 @@ export class StocksComponent implements OnInit {
     this.loading = true;
     const formValue = this.orderForm.value;
 
-    const payloadItem: any = {
+    let payloadItem: any = {
       salePercent: formValue.salePercent / 100,
       isRecountNeed: formValue.isRecountNeed,
       isPriceUpdateBlocked: formValue.isPriceUpdateBlocked,
@@ -617,7 +618,9 @@ export class StocksComponent implements OnInit {
       productBarCodeId: formValue.productBarCodeId,
       promoOrderGroupId: formValue.promoOrderGroupId
     };
-
+    if(payloadItem.productId == null){
+      payloadItem.productId = this.selectedProductForPreview.id
+    }
     if (formValue.updatePrices) {
       payloadItem.retailPrice = formValue.retailPrice;
       payloadItem.retailPriceDest = formValue.retailPriceDest;

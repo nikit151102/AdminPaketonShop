@@ -17,7 +17,7 @@ export class BarcodeManagementService {
   searchProduct(query: string, page = 0, pageSize = 10): Observable<FilterResponse<ProductSearchResult>> {
     const request: FilterRequest = {
       filters: [{
-        field: 'searchQuery',
+        field: 'article',
         values: [query],
         type: 0
       }],
@@ -26,7 +26,7 @@ export class BarcodeManagementService {
     };
 
     return this.http.post<FilterResponse<ProductSearchResult>>(
-      `${this.baseUrl}/ProductInstanceSearch/Filter`,
+      `${this.baseUrl}/ProductInstance/Filter`,
       request
     );
   }

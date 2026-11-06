@@ -18,14 +18,14 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
 
   // 🔹 Состояние поиска товара
   searchQuery = '';
-  productSearchResults: ProductSearchResult[] = [] as ProductSearchResult[];
+  productSearchResults: any[] = [];
   barcodes: ProductBarcode[] = [] as ProductBarcode[];
   measurementUnits: MeasurementUnit[] = [] as MeasurementUnit[];
   totalProductResults = 0;
   currentProductPage = 0;
   totalProductPages = 1;
   isLoadingSearch = false;
-  selectedProduct: ProductSearchResult | null = null;
+  selectedProduct: any | null = null;
 
   totalBarcodeResults = 0;
   currentBarcodePage = 0;
@@ -157,14 +157,29 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
   }
 
   // 🔹 Выбор товара
-  selectProduct(product: ProductSearchResult): void {
-    console.log('product',product)
+   selectProduct(product: ProductSearchResult): void {
     this.selectedProduct = product;
-    this.productSearchResults = [];
-    this.searchQuery = '';
+    // Убрали очистку this.productSearchResults и this.searchQuery
+    // Теперь пользователь видит, что он выбрал, и может легко переключиться на другой товар из списка
+    
+    this.loadBarcodesForProduct(product.id);
+    
+    // Плавная прокрутка к секции штрихкодов
+    setTimeout(() => {
+      const barcodeSection = document.querySelector('.barcode-section');
+      if (barcodeSection) {
+        barcodeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
 
-    // 🔹 Загружаем штрихкоды для выбранного товара
-    this.loadBarcodesForProduct(product.productInstanceId);
+  formatPrice(price: number | null | undefined): string {
+    if (price === null || price === undefined) return '—';
+    return new Intl.NumberFormat('ru-RU', { 
+      style: 'currency', 
+      currency: 'RUB', 
+      minimumFractionDigits: 2 
+    }).format(price);
   }
 
   deselectProduct(): void {
@@ -207,13 +222,14 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
   // 🔹 Управление формой добавления
   toggleAddForm(): void {
     this.showAddForm = !this.showAddForm;
+    console.log('showAddForm', this.showAddForm)
     if (this.showAddForm) {
       // 🔹 Генерируем новый штрихкод при открытии формы
       const generatedBarcode = this.generateBarcode(); // или this.generateEAN13()
 
       this.addBarcodeForm.reset({
         coefficient: 1,
-        productInstanceId: this.selectedProduct?.productInstanceId, // 🔹 Исправлено: productInstanceId
+        productInstanceId: this.selectedProduct?.id, // 🔹 Исправлено: productInstanceId
         barCode: generatedBarcode,  // 🔹 Автозаполнение
         comment: 'сайт пакетон'
       });
@@ -225,7 +241,7 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
   }
 
   addBarcode(): void {
-    if (!this.selectedProduct?.productInstanceId || this.addBarcodeForm.invalid) return;
+    if (!this.selectedProduct?.id) return;
 
     this.isSaving = true;
     const formValue = this.addBarcodeForm.value;
@@ -234,7 +250,7 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
       barCode: formValue.barCode,
       representationFrom1C: formValue.representationFrom1C || undefined,
       coefficient: formValue.coefficient,
-      productInstanceId: this.selectedProduct.productInstanceId,
+      productInstanceId: this.selectedProduct.id,
       measurementUnitId: formValue.measurementUnitId,
       comment: formValue.comment || 'сайт пакетон'
     };

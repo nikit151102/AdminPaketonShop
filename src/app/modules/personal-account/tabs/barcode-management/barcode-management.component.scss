@@ -22,8 +22,6 @@ $success-light: #ecfdf5;
   margin: 0 auto;
   padding: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(180deg, $bg 0%, $bg-light 100%);
-  min-height: 100vh;
 }
 
 .manager-header {
@@ -1058,5 +1056,108 @@ $success-light: #ecfdf5;
   .status-badge {
     padding: 4px 10px;
     font-size: 11px;
+  }
+}
+
+// 🔹 Стили для цен в результатах поиска
+.price-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  
+  &.retail {
+    background: rgba($primary, 0.1);
+    color: $primary-dark;
+  }
+  
+  &.wholesale {
+    background: rgba($warning, 0.15);
+    color: darken($warning, 15%);
+  }
+}
+
+// 🔹 Липкая шапка выбранного товара
+.selected-product-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 16px 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid $border;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.product-card {
+  // ... ваши существующие стили ...
+  
+  &__info {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 700;
+      color: $text;
+      line-height: 1.3;
+    }
+
+    .product-details {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+      color: $text-secondary;
+      flex-wrap: wrap;
+
+      strong {
+        color: $text;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.btn-close {
+  width: auto;
+  padding: 10px 16px;
+  height: auto;
+  border: 1px solid $border;
+  background: $bg;
+  color: $text-secondary;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $danger-light;
+    border-color: $danger;
+    color: $danger;
+    transform: translateY(-1px);
+  }
+  
+  .btn-text {
+    display: inline;
+  }
+}
+
+// Адаптив для кнопки закрытия
+@media (max-width: 768px) {
+  .btn-close .btn-text {
+    display: none;
+  }
+  .btn-close {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
   }
 }
