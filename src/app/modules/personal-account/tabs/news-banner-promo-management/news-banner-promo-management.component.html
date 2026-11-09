@@ -160,6 +160,31 @@
         </div>
 
         <div class="card-body">
+          <div class="banner-sort-control" *ngIf="activeTab === 'banners'">
+            <div class="banner-sort-info">
+              <span class="banner-sort-label">Порядок показа</span>
+              <span class="banner-sort-hint">Меньше число — выше баннер. Пустые значения идут в конце.</span>
+            </div>
+            <div class="banner-sort-actions">
+              <input
+                type="number"
+                min="0"
+                step="1"
+                class="banner-sort-input"
+                [(ngModel)]="item.sortIndex"
+                [name]="'sortIndex-' + item.id"
+                placeholder="Не задан"
+                [disabled]="sortIndexSaving[item.id]"
+                aria-label="Порядок сортировки баннера">
+              <button
+                type="button"
+                class="banner-sort-save"
+                (click)="saveBannerSortIndex(item)"
+                [disabled]="sortIndexSaving[item.id]">
+                {{ sortIndexSaving[item.id] ? 'Сохранение...' : 'Сохранить' }}
+              </button>
+            </div>
+          </div>
           <h3 class="card-title">{{ item.header }}</h3>
           <p class="card-subtitle">{{ item.subheader }}</p>
           <p class="card-description">{{ item.description || 'Нет описания' }}</p>

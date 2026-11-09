@@ -1455,3 +1455,91 @@
     }
   }
 }
+
+/* Управление порядком баннеров */
+.banner-sort-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+
+.banner-sort-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.banner-sort-label {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.banner-sort-hint {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.banner-sort-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.banner-sort-input {
+  width: 82px;
+  min-height: 38px;
+  padding: 0 9px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.banner-sort-save {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.banner-sort-save:hover:not(:disabled) {
+  filter: brightness(.94);
+}
+
+.banner-sort-save:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+@media (max-width: 480px) {
+  .banner-sort-control {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .banner-sort-actions {
+    width: 100%;
+  }
+
+  .banner-sort-input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}

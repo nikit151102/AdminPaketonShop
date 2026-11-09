@@ -9,6 +9,7 @@ import { environment } from '../../../../../environment';
 // Интерфейсы
 interface NewsBanner {
   id: string;
+  sortIndex?: number | null;
   beginDateTime: string;
   endDateTime: string;
   header: string;
@@ -141,6 +142,7 @@ export class NewsBannerPromoComponent implements OnInit {
   newKeyWord = '';
   Math = Math;
   selectedFiles: { file: File; preview: string }[] = [];
+  sortIndexSaving: { [id: string]: boolean } = {};
 
   // Добавьте метод для получения количества активных элементов
   getActiveCount(): number {
@@ -330,9 +332,53 @@ export class NewsBannerPromoComponent implements OnInit {
         if (type === NewsBannerType.News) {
           this.newsList = response.data;
         } else {
-          this.bannersList = response.data;
+          this.bannersList = this.sortBannersByIndex(response.data || []);
         }
       });
+  }
+
+  // Сортировка: сначала баннеры с sortIndex по возрастанию, затем без значения.
+  private sortBannersByIndex(items: NewsBanner[]): NewsBanner[] {
+    return [...items].sort((a, b) => {
+      const aIndex = a.sortIndex;
+      const bIndex = b.sortIndex;
+      if (aIndex == null && bIndex == null) return 0;
+      if (aIndex == null) return 1;
+      if (bIndex == null) return -1;
+      return aIndex - bIndex;
+    });
+  }
+
+  // Сохранение позиции баннера. Пустое значение отправляется как null.
+  saveBannerSortIndex(item: NewsBanner): void {
+    if (!item?.id || this.sortIndexSaving[item.id]) return;
+
+    const sortIndex = item.sortIndex === null || item.sortIndex === undefined ||
+      (item.sortIndex as any) === '' ? null : Number(item.sortIndex);
+
+    if (sortIndex !== null && !Number.isFinite(sortIndex)) {
+      this.showNotification('Укажите корректный номер сортировки', 'error');
+      return;
+    }
+
+    this.sortIndexSaving[item.id] = true;
+    this.http.put<ApiResponse<NewsBanner>>(
+      `${environment.production}/api/Entities/NewsBanner/${item.id}`,
+      { id: item.id, sortIndex }
+    ).pipe(
+      finalize(() => this.sortIndexSaving[item.id] = false)
+    ).subscribe({
+      next: () => {
+        item.sortIndex = sortIndex;
+        this.bannersList = this.sortBannersByIndex(this.bannersList);
+        this.showNotification('Порядок баннера сохранен', 'success');
+      },
+      error: error => {
+        console.error('Ошибка сохранения сортировки баннера:', error);
+        this.showNotification('Не удалось сохранить порядок баннера', 'error');
+        this.loadData();
+      }
+    });
   }
 
   // Загрузка промокодов
