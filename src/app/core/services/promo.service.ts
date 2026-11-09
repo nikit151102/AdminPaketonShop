@@ -10,6 +10,8 @@ export interface PromoOrderGroup {
   description: string;
   promoOrderConditions?: PromoOrderCondition[];
   promoOrders?: PromoOrder[];
+  isDeleted?: boolean;
+  isUse?: boolean;
 }
 
 export interface PromoOrderCondition {
@@ -20,6 +22,8 @@ export interface PromoOrderCondition {
   value: number;
   dateTime: string;
   dateTimeExpire: string;
+  isDeleted?: boolean;
+  isUse?: boolean;
   promoOrderGroupId: string;
   promoOrderGroup?: PromoOrderGroup;
 }
@@ -38,6 +42,8 @@ export interface PromoOrder {
   wholesalePrice?: number;
   wholesalePriceDest?: number;
   productId: string;
+  isDeleted?: boolean;
+  isUse?: boolean;
   productBarCodeId: string;
   promoOrderGroupId: string;
   product?: any;
@@ -118,7 +124,7 @@ export class PromoService {
     return this.http.post<ApiResponse<PromoOrderGroup[]>>(`${this.apiUrl}/api/Entities/PromoOrderGroup/Filter`, query);
   }
 
-  updatePromoOrderGroup(id: string, data: PromoOrderGroup): Observable<ApiResponse<PromoOrderGroup>> {
+  updatePromoOrderGroup(id: string, data: any): Observable<ApiResponse<PromoOrderGroup>> {
     return this.http.put<ApiResponse<PromoOrderGroup>>(`${this.apiUrl}/api/Entities/PromoOrderGroup/${id}`, data);
   }
 
@@ -135,7 +141,7 @@ export class PromoService {
     return this.http.post<ApiResponse<PromoOrderCondition[]>>(`${this.apiUrl}/api/Entities/PromoOrderCondition/Filter`, query);
   }
 
-  updatePromoOrderCondition(id: string, data: PromoOrderCondition): Observable<ApiResponse<PromoOrderCondition>> {
+  updatePromoOrderCondition(id: string, data: any): Observable<ApiResponse<PromoOrderCondition>> {
     return this.http.put<ApiResponse<PromoOrderCondition>>(`${this.apiUrl}/api/Entities/PromoOrderCondition/${id}`, data);
   }
 
@@ -148,7 +154,7 @@ export class PromoService {
     return this.http.post<ApiResponse<PromoOrder[]>>(`${this.apiUrl}/api/Entities/PromoOrder/Filter`, query);
   }
 
-  updatePromoOrder(id: string, data: PromoOrder): Observable<ApiResponse<PromoOrder>> {
+  updatePromoOrder(id: string, data: any): Observable<ApiResponse<PromoOrder>> {
     return this.http.put<ApiResponse<PromoOrder>>(`${this.apiUrl}/api/Entities/PromoOrder/${id}`, data);
   }
 

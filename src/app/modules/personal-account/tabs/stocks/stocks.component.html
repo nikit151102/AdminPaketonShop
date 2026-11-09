@@ -24,7 +24,7 @@
             15 ? '...' : '' }}
           </span>
         </button>
-  
+
         <button [class.active]="activeTab === 'orders'" (click)="setActiveTab('orders')"
           [disabled]="!selectedGroupForOrders" class="tab-button" [class.has-badge]="selectedGroupForOrders">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -94,6 +94,12 @@
               </button>
             </div>
           </div>
+
+          <!-- <label class="deleted-toggle" title="Показывать удаленные акции">
+            <input type="checkbox" [(ngModel)]="showDeletedItems">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Показывать удаленные</span>
+          </label> -->
 
           <button class="btn-primary" (click)="showCreateGroupForm()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -223,13 +229,19 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let group of sortedGroups" [class.active-row]="isGroupActive(group)">
+              <tr *ngFor="let group of sortedGroups; trackBy: trackByEntityId"
+                [class.active-row]="isGroupActive(group)"
+                [class.deleted-row]="isGroupDeleted(group)"
+                [class.has-deleted-children]="!isGroupDeleted(group) && getDeletedOrdersCount(group) > 0">
                 <td *ngIf="groupColumns['description']">
                   <div class="group-info">
                     <h3 class="group-title" (click)="viewGroupDetails(group)">
                       {{ group.description }}
                     </h3>
                     <div class="group-id">ID: {{ group.id | slice:0:8 }}...</div>
+                    <span *ngIf="getGroupDeletionLabel(group)" class="deleted-badge group-deleted-badge">
+                      {{ getGroupDeletionLabel(group) }}
+                    </span>
                   </div>
                 </td>
                 <td *ngIf="groupColumns['beginDateTime']">
@@ -331,7 +343,9 @@
 
           <!-- Для мобильных -->
           <div *ngIf="!isDesktop" class="cards-container">
-            <div *ngFor="let group of sortedGroups" class="group-card" [class.active-card]="isGroupActive(group)">
+            <div *ngFor="let group of sortedGroups; trackBy: trackByEntityId" class="group-card"
+              [class.active-card]="isGroupActive(group)" [class.deleted-card]="isGroupDeleted(group)"
+              [class.has-deleted-children]="!isGroupDeleted(group) && getDeletedOrdersCount(group) > 0">
               <div class="card-header">
                 <div class="card-title-section">
                   <h3 class="card-title" (click)="viewGroupDetails(group)">
@@ -507,6 +521,14 @@
             </div>
           </div>
 
+
+
+          <label class="deleted-toggle" title="Показывать удалённые элементы">
+            <input type="checkbox" [(ngModel)]="showDeletedItems">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Показывать удалённые</span>
+          </label>
+
           <button class="btn-primary" (click)="showCreateConditionForm()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -669,6 +691,14 @@
             </div>
           </div>
 
+
+
+          <label class="deleted-toggle" title="Показывать удалённые элементы">
+            <input type="checkbox" [(ngModel)]="showDeletedItems">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Показывать удалённые</span>
+          </label>
+
           <div class="header-buttons">
             <button class="btn-secondary" (click)="showAddProductsModal()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -757,19 +787,41 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let order of sortedOrders">
+              <tr *ngFor="let order of sortedOrders; trackBy: trackByEntityId"
+                  [class.deleted-row]="isDeletedEntity(order)">
                 <td>
                   <div class="product-cell">
                     <div class="product-image" *ngIf="getProductImage(order.productId)">
                       <img [src]="getProductImage(order.productId)" [alt]="getProductName(order.productId)">
                     </div>
                     <div class="product-info">
-                      <h4 class="product-name">{{ getProductName(order.productId) }}</h4>
+                      <!-- 🔹 КЛИКАБЕЛЬНАЯ ССЫЛКА НА ТОВАР -->
+                      <a [href]="getProductUrl(order)" target="_blank"
+                        rel="noopener noreferrer" class="product-name-link" title="Открыть карточку товара на сайте">
+                        <h4 class="product-name">{{ getProductName(order.productId) }}</h4>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </a>
+
                       <div class="product-details">
                         <span class="product-article">{{ getProductArticle(order.productId) }}</span>
                         <span class="product-price original">{{ getProductPrice(order.productId) |
                           currency:'RUB':'symbol':'1.0-2' }}</span>
                       </div>
+
+                      <!-- 🔹 БЕЙДЖ "УДАЛЕНО" -->
+                      <span *ngIf="order.isDeleted" class="deleted-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        Удалено
+                      </span>
                     </div>
                   </div>
                 </td>

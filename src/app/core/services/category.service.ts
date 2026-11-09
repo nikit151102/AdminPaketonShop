@@ -164,13 +164,13 @@ export class CategoryService {
   searchProducts(searchQuery: string, page: number = 0, pageSize: number = 150): Observable<any> {
     const request = {
       filters: searchQuery ? [
-        { field: 'searchQuery', values: [searchQuery], type: 0 }
+        { field: 'article', values: [searchQuery], type: 0 }
       ] : [],
       sorts: [],
       page,
       pageSize
     };
-    return this.http.post(this.searchUrl, request);
+    return this.http.post(`${environment.production}/api/Entities/ProductInstance/Filter`, request);
   }
 
   private buildCategoryTree(categories: ProductCategory[]): CategoryTreeItem[] {

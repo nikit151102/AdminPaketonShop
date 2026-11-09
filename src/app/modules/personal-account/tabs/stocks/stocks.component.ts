@@ -15,6 +15,7 @@ import { PromoOrderGroup, PromoOrderCondition, PromoOrder, PromoService, QueryDt
 })
 export class StocksComponent implements OnInit {
   activeTab: 'groups' | 'conditions' | 'orders' = 'groups';
+  showDeletedItems = false;
 
   promoGroups: PromoOrderGroup[] = [];
   promoConditions: PromoOrderCondition[] = [];
@@ -183,6 +184,43 @@ export class StocksComponent implements OnInit {
     });
   }
 
+  /** API в разных ответах может помечать удаление разными флагами. */
+  isDeletedEntity(entity: any): boolean {
+    if (!entity) return false;
+    return entity.isDeleted === true || entity.deleted === true ||
+      entity.isRemoved === true || entity.is_deleted === true ||
+      entity.status === 'deleted' || entity.status === 'Deleted';
+  }
+
+  isGroupDeleted(group: PromoOrderGroup): boolean {
+    return this.isDeletedEntity(group);
+  }
+
+  getDeletedOrdersCount(group: PromoOrderGroup): number {
+    const orders = (group as any)?.promoOrders || [];
+    return orders.filter((order: any) => this.isDeletedEntity(order)).length;
+  }
+
+  getGroupDeletionLabel(group: PromoOrderGroup): string {
+    if (this.isGroupDeleted(group)) return 'Группа удалена';
+    const count = this.getDeletedOrdersCount(group);
+    return count ? `Удалённых товаров: ${count}` : '';
+  }
+
+  getProductUrl(order: PromoOrder): string {
+    const productId = order.productId || '';
+    const barcodeId = order.productBarCodeId || '';
+    const base = 'https://пакетон.рф/product/'+ barcodeId;
+    const params = new URLSearchParams();
+    // if (productId) params.set('id', productId);
+    // if (barcodeId) params.set('barcode', barcodeId);
+    return params.toString() ? `${base}?${params.toString()}` : base;
+  }
+
+  trackByEntityId(index: number, item: any): string | number {
+    return item?.id || index;
+  }
+
   sortGroups(field: string): void {
     if (this.groupSortField === field) this.groupSortDirection = this.groupSortDirection === 'asc' ? 'desc' : 'asc';
     else { this.groupSortField = field; this.groupSortDirection = 'asc'; }
@@ -266,7 +304,14 @@ export class StocksComponent implements OnInit {
   }
 
   get sortedOrders(): PromoOrder[] {
-    return [...this.promoOrders].sort((a, b) => {
+    let orders = [...this.promoOrders];
+
+    // Фильтруем удаленные, если переключатель выключен
+    if (!this.showDeletedItems) {
+      orders = orders.filter((order: any) => !order.isDeleted);
+    }
+
+    return orders.sort((a, b) => {
       let valueA: any, valueB: any;
       switch (this.orderSortField) {
         case 'salePercent': valueA = a.salePercent; valueB = b.salePercent; break;
@@ -342,7 +387,7 @@ export class StocksComponent implements OnInit {
   }
 
   selectProduct(product: any): void {
-    console.log('product',product)
+    console.log('product', product)
     this.selectedProductForPreview = product;
 
     // Загружаем фасовки для выбранного товара
@@ -618,7 +663,7 @@ export class StocksComponent implements OnInit {
       productBarCodeId: formValue.productBarCodeId,
       promoOrderGroupId: formValue.promoOrderGroupId
     };
-    if(payloadItem.productId == null){
+    if (payloadItem.productId == null) {
       payloadItem.productId = this.selectedProductForPreview.id
     }
     if (formValue.updatePrices) {
@@ -689,7 +734,7 @@ export class StocksComponent implements OnInit {
     Object.keys(columns).forEach(key => { columns[key] = true; });
   }
 
-  search(): void { this.showInfo('Поиск в разработке'); }
+  search(): void { this.currentPage = 1; }
 
   getPageNumbers(): number[] {
     const totalPages = Math.ceil(this.totalItems / this.pageSize);
