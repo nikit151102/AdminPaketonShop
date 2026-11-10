@@ -84,7 +84,7 @@ export class NewsBannerPromoComponent implements OnInit {
 
   // Фильтрация и пагинация
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 100;
   totalItems = 0;
 
   // Поиск
@@ -308,7 +308,14 @@ export class NewsBannerPromoComponent implements OnInit {
           field: 'newsBannerType',
           values: [type],
           type: 1
+        },
+                {
+          field: 'isDeleted',
+          values: [0],
+          type: 12
         }
+
+        
       ],
       sorts: [
         {
@@ -330,9 +337,9 @@ export class NewsBannerPromoComponent implements OnInit {
       )
       .subscribe(response => {
         if (type === NewsBannerType.News) {
-          this.newsList = response.data;
+             this.newsList = response.data.filter((item:any) => item.isDeleted !== true);
         } else {
-          this.bannersList = this.sortBannersByIndex(response.data || []);
+          this.bannersList = this.sortBannersByIndex(response.data.filter((item:any) => item.isDeleted !== true) || []);
         }
       });
   }

@@ -483,8 +483,8 @@
               <h4>Результаты поиска ({{ searchResults.length }})</h4>
               <div class="search-results-grid">
                 <div *ngFor="let product of searchResults" class="search-product-card"
-                  [class.selected]="isSelected(product.productInstanceId)"
-                  (click)="toggleProductSelection(product.productInstanceId)">
+                  [class.selected]="isSelected(product.id)"
+                  (click)="toggleProductSelection(product.id)">
                   <div class="product-checkbox">
                     <div class="checkbox" [class.checked]="isSelected(product.id)">
                       <svg *ngIf="isSelected(product.id)" width="12" height="12" viewBox="0 0 24 24" fill="none"

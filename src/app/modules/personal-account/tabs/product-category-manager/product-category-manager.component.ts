@@ -381,7 +381,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
 
   addSelectedProductsToCategory(): void {
     if (!this.selectedCategory || this.selectedProducts.length === 0 || this.isLoading) return;
-
+console.log('selectedCategory',this.selectedProducts)
     const categoryId = this.selectedCategory.id;
     const productIds = [...this.selectedProducts];
     this.isLoading = true;
