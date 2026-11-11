@@ -32,8 +32,12 @@ export interface ProductSearchResult {
   fullName: string;
   shortName?: string;
   productImageLink?: string;
+  productImageLinks?: string[];
+  retailPrice?: number;
+  wholesalePrice?: number;
   baseMeasurementUnit?: MeasurementUnit;
   productInstanceId: string;
+  isApprovedByManager?: boolean;
 }
 
 export interface FilterRequest {
@@ -60,3 +64,11 @@ export interface FilterResponse<T> {
   data: T[];
 }
 
+
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  productCount?: number;
+  subCategories?: ProductCategory[];
+}

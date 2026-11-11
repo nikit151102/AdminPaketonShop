@@ -14,22 +14,45 @@ export class BarcodeManagementService {
   constructor(private http: HttpClient) { }
 
   // 🔹 Поиск товара
-  searchProduct(query: string, page = 0, pageSize = 10): Observable<FilterResponse<ProductSearchResult>> {
-    const request: FilterRequest = {
-      filters: [{
-        field: 'article',
-        values: [query],
-        type: 0
-      }],
-      page,
-      pageSize
-    };
+// Сервис поиска товаров по категории и названию
+searchProduct(
+  categoryIds: any[],
+  query: string,
+  page = 0,
+  pageSize = 10
+): Observable<FilterResponse<ProductSearchResult>> {
 
-    return this.http.post<FilterResponse<ProductSearchResult>>(
-      `${this.baseUrl}/ProductInstance/Filter`,
-      request
-    );
+  const filters: FilterRequest['filters'] = [];
+
+  // Фильтр по категории
+  if (categoryIds?.length) {
+    filters.push({
+      field: 'mainProductCategoryId',
+      values: categoryIds,
+      type: 10
+    });
   }
+
+  // Фильтр по названию
+  if (query?.trim()) {
+    filters.push({
+      field: 'fullName',
+      values: [query.trim()],
+      type: 0
+    });
+  }
+
+  const request: FilterRequest = {
+    filters,
+    page,
+    pageSize
+  };
+
+  return this.http.post<FilterResponse<ProductSearchResult>>(
+    `${this.baseUrl}/ProductInstance/Filter`,
+    request
+  );
+}
 
   // 🔹 Поиск штрихкодов по товару
   getBarcodesByProduct(productId: string, page = 0, pageSize = 10): Observable<FilterResponse<ProductBarcode>> {
@@ -65,7 +88,7 @@ export class BarcodeManagementService {
   }
 
   // 🔹 Обновление штрихкода (только изменённые поля)
-  updateBarcode(id: string, changes: Partial<ProductBarcode>): Observable<FilterResponse<ProductBarcode>> {
+  updateBarcode(id: any, changes: Partial<ProductBarcode>): Observable<FilterResponse<ProductBarcode>> {
     // 🔹 Удаляем undefined значения — отправляем только изменённые поля
     const payload = Object.fromEntries(
       Object.entries(changes).filter(([_, v]) => v !== undefined && v !== null)
@@ -74,6 +97,23 @@ export class BarcodeManagementService {
     return this.http.put<FilterResponse<ProductBarcode>>(
       `${this.baseUrl}/ProductBarCode/${id}`,
       { id, ...payload }
+    );
+  }
+
+  getCategory(): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/ProductCategory/Filter/FirstLevel`,
+      {}
+    );
+  }
+
+  setProductApproval(id: string, value: boolean): Observable<any> {
+    return this.http.put<any>(
+      `${this.baseUrl}/ProductInstance/${id}`,
+      {
+        "id": id,
+        "isApprovedByManager": value
+      }
     );
   }
 

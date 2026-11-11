@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize, firstValueFrom } from 'rxjs';
 import {
@@ -33,7 +33,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   categoryProducts: ProductInstance[] = [];
   totalProducts = 0;
   productsPage = 0;
-  productsPageSize = 50;
+  productsPageSize = 100;
   productsTotalPages = 0;
 
   // Состояния
@@ -174,7 +174,9 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
   }
+
 
   loadCategories(): void {
     this.isLoading = true;
@@ -198,11 +200,28 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     this.productsPage = 0;
     this.categoryProducts = [];
     this.loadSubCategories(category.id);
-    // При выборе категории сразу загружаем товары: вкладка «Товары» уже активна.
-    this.loadCategoryProducts(category.id);
+    this.loadCategoryProducts(category.id, false);
     this.resetForms();
     this.updateBreadcrumbs(category);
+
   }
+
+    onContainerScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    const scrollPosition = target.scrollTop + target.clientHeight;
+    const scrollHeight = target.scrollHeight;
+
+    // Для отладки: раскомментируйте строку ниже и откройте консоль браузера при скролле
+    // console.log('Scroll:', scrollHeight - scrollPosition, 'Page:', this.productsPage, 'Total:', this.productsTotalPages);
+
+    // Если до конца списка осталось меньше 150px, загрузка не идет и есть следующие страницы
+    if (scrollHeight - scrollPosition < 150 && !this.isProductsLoading && this.productsPage < this.productsTotalPages - 1) {
+      this.loadMoreProducts();
+    }
+  }
+
 
   /** Возврат к родительской категории независимо от глубины вложенности. */
   goToParent(): void {
@@ -298,27 +317,73 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
   switchView(mode: 'details' | 'products'): void {
     this.viewMode = mode;
     if (mode === 'products' && this.selectedCategory) {
-      this.productsPage = 0;
-      this.loadCategoryProducts(this.selectedCategory.id);
+      // Загружаем только если список пуст (чтобы не сбрасывать уже загруженное при переключении вкладок)
+      if (this.categoryProducts.length === 0) {
+        this.productsPage = 0;
+        this.loadCategoryProducts(this.selectedCategory.id, false);
+      }
     }
   }
 
-  loadCategoryProducts(categoryId: string): void {
-    this.isProductsLoading = true;
-    this.categoryService.getCategoryProducts(categoryId, this.productsPage, this.productsPageSize).subscribe({
+loadCategoryProducts(categoryId: string, append = false): void {
+  if (this.isProductsLoading) return;
+
+  this.isProductsLoading = true;
+
+  this.categoryService
+    .getCategoryProducts(
+      categoryId,
+      this.productsPage,
+      this.productsPageSize
+    )
+    .subscribe({
       next: (response: any) => {
-        this.categoryProducts = response.data || [];
+        console.log('Ответ API товаров:', response);
+
+        const newProducts = response.data || [];
+
+        this.categoryProducts = append
+          ? [...this.categoryProducts, ...newProducts]
+          : newProducts;
+
         this.totalProducts = response.totalProducts || 0;
         this.productsTotalPages = response.totalPages || 0;
+
+        console.log('Всего страниц:', this.productsTotalPages);
+        console.log('Текущая страница:', this.productsPage);
+
         this.isProductsLoading = false;
       },
-      error: (error) => {
+      error: error => {
         console.error('Ошибка загрузки товаров:', error);
-        this.categoryProducts = [];
+
+        if (append) {
+          this.productsPage--;
+        } else {
+          this.categoryProducts = [];
+        }
+
         this.isProductsLoading = false;
       }
     });
+}
+
+
+loadMoreProducts(): void {
+  if (
+    !this.selectedCategory ||
+    this.isProductsLoading ||
+    this.productsPage >= this.productsTotalPages - 1
+  ) {
+    return;
   }
+
+  this.productsPage++;
+
+  console.log('Подгружаем страницу:', this.productsPage);
+
+  this.loadCategoryProducts(this.selectedCategory.id, true);
+}
 
   nextProductsPage(): void {
     if (this.productsPage < this.productsTotalPages - 1) {
@@ -334,12 +399,14 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
     }
   }
 
-  removeProductFromCategory(productId: any): void {
-    console.log('productId', productId)
+  removeProductFromCategory(product: any): void {
     if (!this.selectedCategory || !confirm('Удалить товар из категории?')) return;
-    this.categoryService.removeProductsFromCategory(this.selectedCategory.id, [productId.productBarCode.id]).subscribe({
+
+    const productIdToRemove = product.productBarCode?.id || product.id;
+
+    this.categoryService.removeProductsFromCategory(this.selectedCategory.id, [productIdToRemove]).subscribe({
       next: () => {
-        this.categoryProducts = this.categoryProducts.filter(p => p.id !== productId.productBarCode.id);
+        this.categoryProducts = this.categoryProducts.filter((p: any) => (p.productBarCode?.id || p.id) !== productIdToRemove);
         this.totalProducts = Math.max(0, this.totalProducts - 1);
         if (this.selectedCategory) {
           this.selectedCategory.productCount = Math.max(0, (this.selectedCategory.productCount || 1) - 1);
@@ -348,6 +415,7 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
       error: (error) => console.error('Ошибка удаления товара:', error)
     });
   }
+
 
   // === ГЛОБАЛЬНОЕ ДОБАВЛЕНИЕ ТОВАРОВ ===
   onSearchQueryChange(query: string): void {
@@ -381,7 +449,6 @@ export class ProductCategoryManagerComponent implements OnInit, OnDestroy {
 
   addSelectedProductsToCategory(): void {
     if (!this.selectedCategory || this.selectedProducts.length === 0 || this.isLoading) return;
-console.log('selectedCategory',this.selectedProducts)
     const categoryId = this.selectedCategory.id;
     const productIds = [...this.selectedProducts];
     this.isLoading = true;
@@ -390,19 +457,20 @@ console.log('selectedCategory',this.selectedProducts)
       next: () => {
         if (this.selectedCategory?.id === categoryId) {
           this.selectedCategory.productCount = (this.selectedCategory.productCount || 0) + productIds.length;
+          this.totalProducts += productIds.length;
         }
 
         this.selectedProducts = [];
         this.searchResults = [];
         this.productSearchQuery = '';
 
-        // Не выключаем общий индикатор здесь: пользователь должен дождаться индексации.
         this.productService.reindexProducts(productIds).pipe(
           finalize(() => {
-            // finalize срабатывает и при complete, и при error.
             this.isLoading = false;
             if (this.viewMode === 'products' && this.selectedCategory?.id === categoryId) {
-              this.loadCategoryProducts(categoryId);
+              // Перезагружаем первую страницу, чтобы показать добавленные товары сверху
+              this.productsPage = 0;
+              this.loadCategoryProducts(categoryId, false);
             }
           })
         ).subscribe({
@@ -415,7 +483,6 @@ console.log('selectedCategory',this.selectedProducts)
       }
     });
   }
-
   clearSelectedProducts(): void {
     this.selectedProducts = [];
     this.searchResults = [];
@@ -837,4 +904,6 @@ console.log('selectedCategory',this.selectedProducts)
     this.isAddingSubCategories = false;
     this.selectedCategoriesForAddition = [];
   }
+
+
 }

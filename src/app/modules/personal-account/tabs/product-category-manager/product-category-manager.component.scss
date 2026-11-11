@@ -957,14 +957,18 @@
       }
     }
 
-    .category-products-section {
+        .category-products-section {
       padding: 24px;
+      display: flex;
+      flex-direction: column;
+      max-height: 65vh; // Ограничиваем высоту для появления скролла
 
       .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
+        flex-shrink: 0;
 
         h3 {
           margin: 0;
@@ -972,41 +976,28 @@
           font-weight: 700;
           color: var(--text);
         }
+      }
 
-        .pagination-controls {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+      // Контейнер с независимым скроллом
+      .products-grid-container {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 8px;
+        margin-right: -8px; // Компенсация, чтобы контент не "прыгал" при появлении скроллбара
+
+        &::-webkit-scrollbar {
+          width: 6px;
         }
-
-        .pagination-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          border: 1px solid var(--border);
-          background: var(--white);
-          color: var(--text-sec);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: var(--tr);
-
-          &:hover:not(:disabled) {
-            border-color: var(--primary);
-            color: var(--primary);
-          }
-
-          &:disabled {
-            opacity: .4;
-            cursor: not-allowed;
-          }
+        &::-webkit-scrollbar-track {
+          background: var(--bg);
+          border-radius: 3px;
         }
-
-        .pagination-info {
-          font-size: 13px;
-          color: var(--text-sec);
-          font-weight: 500;
+        &::-webkit-scrollbar-thumb {
+          background: var(--border);
+          border-radius: 3px;
+          &:hover {
+            background: var(--text-sec);
+          }
         }
       }
 
@@ -1015,6 +1006,7 @@
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 12px;
 
+        // === ВОССТАНОВЛЕННЫЕ СТИЛИ КАРТОЧКИ ===
         .product-card {
           display: flex;
           gap: 12px;
@@ -1120,6 +1112,23 @@
             }
           }
         }
+        // ========================================
+      }
+
+      // Стили для кнопки "Загрузить ещё"
+      .load-more-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        flex-shrink: 0;
+
+        .load-more-btn {
+          min-width: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
       }
 
       .empty-products {
@@ -1128,6 +1137,7 @@
         background: var(--bg);
         border: 1px dashed var(--border);
         border-radius: var(--r);
+        flex-shrink: 0;
 
         svg {
           color: var(--border);
@@ -1147,7 +1157,32 @@
           font-size: 13px;
         }
       }
+      
+      .loading-products {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+        flex-shrink: 0;
+        
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--border);
+          border-top-color: var(--primary);
+          border-radius: 50%;
+          animation: spin .8s linear infinite;
+          margin-bottom: 12px;
+        }
+        
+        p {
+          color: var(--text-sec);
+          font-size: 13px;
+        }
+      }
     }
+
   }
 }
 
