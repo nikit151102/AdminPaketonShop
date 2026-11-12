@@ -14,45 +14,55 @@ export class BarcodeManagementService {
   constructor(private http: HttpClient) { }
 
   // 🔹 Поиск товара
-// Сервис поиска товаров по категории и названию
-searchProduct(
-  categoryIds: any[],
-  query: string,
-  page = 0,
-  pageSize = 10
-): Observable<FilterResponse<ProductSearchResult>> {
+  // Сервис поиска товаров по категории и названию
+  searchProduct(
+    categoryIds: any[],
+    query: string,
+    articleQuery: string,
+    page = 0,
+    pageSize = 10
+  ): Observable<FilterResponse<ProductSearchResult>> {
 
-  const filters: FilterRequest['filters'] = [];
+    const filters: FilterRequest['filters'] = [];
 
-  // Фильтр по категории
-  if (categoryIds?.length) {
-    filters.push({
-      field: 'mainProductCategoryId',
-      values: categoryIds,
-      type: 10
-    });
+    // Фильтр по категории
+    if (categoryIds?.length) {
+      filters.push({
+        field: 'mainProductCategoryId',
+        values: categoryIds,
+        type: 10
+      });
+    }
+
+    // Фильтр по названию
+    if (query?.trim()) {
+      filters.push({
+        field: 'fullName',
+        values: [query.trim()],
+        type: 0
+      });
+    }
+
+    // Отдельный фильтр по артикулу
+    if (articleQuery?.trim()) {
+      filters.push({
+        field: 'article',
+        values: [articleQuery.trim()],
+        type: 0
+      });
+    }
+
+    const request: FilterRequest = {
+      filters,
+      page,
+      pageSize
+    };
+
+    return this.http.post<FilterResponse<ProductSearchResult>>(
+      `${this.baseUrl}/ProductInstance/Filter`,
+      request
+    );
   }
-
-  // Фильтр по названию
-  if (query?.trim()) {
-    filters.push({
-      field: 'fullName',
-      values: [query.trim()],
-      type: 0
-    });
-  }
-
-  const request: FilterRequest = {
-    filters,
-    page,
-    pageSize
-  };
-
-  return this.http.post<FilterResponse<ProductSearchResult>>(
-    `${this.baseUrl}/ProductInstance/Filter`,
-    request
-  );
-}
 
   // 🔹 Поиск штрихкодов по товару
   getBarcodesByProduct(productId: string, page = 0, pageSize = 10): Observable<FilterResponse<ProductBarcode>> {

@@ -11,6 +11,7 @@ export interface ProductBarcode {
   barCode: string;
   representationFrom1C?: string | null;
   coefficient: number;
+  viewCoefficient: number;
   comment?: string;
   productInstanceId: string;
   measurementUnitId: string;

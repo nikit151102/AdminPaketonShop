@@ -105,8 +105,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   toggleExitProfile() {
-    StorageUtils.deleteLocalStorageCache(localStorageEnvironment.auth.key);
-    StorageUtils.deleteSessionStorage(sessionStorageEnvironment.auth.key);
     this.router.navigate(['/'])
   }
 

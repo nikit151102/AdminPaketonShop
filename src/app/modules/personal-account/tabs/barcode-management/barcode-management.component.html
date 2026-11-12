@@ -22,20 +22,24 @@
 
     <div class="search-form">
       <div class="search-input-wrapper">
-        <input #searchInput type="text" class="search-input"
-          placeholder="Поиск по наименованию товара..."
+        <input #searchInput type="text" class="search-input" placeholder="Поиск по наименованию товара..."
           [(ngModel)]="searchQuery" (keyup.enter)="searchProduct()" (input)="onSearchInput()">
         <button type="button" class="search-clear" *ngIf="searchQuery" (click)="clearSearch()">×</button>
       </div>
+      <div class="search-input-wrapper">
+        <input type="text" class="search-input" placeholder="Поиск по артикулу..."
+          [(ngModel)]="articleSearchQuery" (keyup.enter)="searchProduct()" (input)="onSearchInput()">
+      </div>
       <button type="button" class="btn-search" (click)="searchProduct()"
-        [disabled]="!searchQuery?.trim() || isLoadingSearch">
+        [disabled]="(!searchQuery?.trim() && !articleSearchQuery?.trim()) || isLoadingSearch">
         {{ isLoadingSearch ? 'Поиск...' : 'Найти товары' }}
       </button>
     </div>
   </div>
 
   <div class="loading-state" *ngIf="isLoadingSearch">
-    <div class="spinner"></div><p>Поиск товаров...</p>
+    <div class="spinner"></div>
+    <p>Поиск товаров...</p>
   </div>
 
   <div class="results-summary" *ngIf="productSearchResults.length">
@@ -48,40 +52,46 @@
       <header class="product-group-header">
         <div class="product-main">
           <div class="product-image">
-            <img *ngIf="product.productImageLink" [src]="product.productImageLink"
-              [alt]="product.fullName" (error)="handleImageError($event)">
-            <span *ngIf="!product.productImageLink">{{ product.article?.charAt(0) || '📦' }}</span>
+            <img *ngIf="product.productImageLink" [src]="product.productImageLink" [alt]="product.fullName"
+              (error)="handleImageError($event)">
+            <span *ngIf="!product.productImageLink">{{ '📦' }}</span>
           </div>
           <div class="product-info">
-            <strong>{{ product.fullName }}</strong>
-            <small>Арт. {{ product.article }} <ng-container *ngIf="product.shortName">· {{ product.shortName }}</ng-container></small>
+            <strong>Сайт: {{ product.fullName }}  -  <small>Арт. {{ product.article }}</small></strong>
+            <strong style="font-size: 11px;">1C: @if (product.nameFrom1C) {{{ product.nameFrom1C }}} @else { Не
+              указан}</strong>
           </div>
         </div>
         <div class="product-meta">
-          <span *ngIf="product.retailPrice">Розн. {{ formatPrice(product.retailPrice) }}</span>
-          <span *ngIf="product.wholesalePrice">Опт. {{ formatPrice(product.wholesalePrice) }}</span>
-          <span class="count-badge" *ngIf="!product.loadingBarcodes">{{ product.barcodes.length }} фас.</span>
+          <div style="display: flex; align-items: center; flex-direction: column;">
+                <span *ngIf="product.retailPrice">Розн. {{ formatPrice(product.retailPrice) }}</span>
+                <span *ngIf="product.wholesalePrice">Опт. {{ formatPrice(product.wholesalePrice) }}</span>
+          </div>
           <span *ngIf="product.loadingBarcodes">Загрузка фасовок…</span>
-          <button type="button" class="approval-btn"
-            [class.approved]="product.isApprovedByManager"
-            [disabled]="product.approvalSaving"
-            (click)="toggleManagerApproval(product)">
-            {{ product.approvalSaving ? 'Сохранение…' : (product.isApprovedByManager ? '✓ Проверен' : 'Отметить проверку') }}
+          <button type="button" class="approval-btn" [class.approved]="product.isApprovedByManager"
+            [disabled]="product.approvalSaving" (click)="toggleManagerApproval(product)">
+              {{ product.approvalSaving ? 'Сохранение…' : (product.isApprovedByManager ? '✓ Проверен' : 'Отметить проверку') }}
           </button>
-          <button type="button" class="btn-add-inline" *ngIf="!product.adding" (click)="startAdd(product)">+ Фасовка</button>
+          <button type="button" class="btn-add-inline" *ngIf="!product.adding" (click)="startAdd(product)">+
+            Фасовка</button>
         </div>
       </header>
 
       <div class="inline-add-row" *ngIf="product.adding">
         <span class="inline-add-label">Новая фасовка</span>
         <input aria-label="Штрихкод" [(ngModel)]="drafts[product.id].barCode" placeholder="Штрихкод">
-        <input aria-label="Представление из 1С" [(ngModel)]="drafts[product.id].representationFrom1C" placeholder="Представление из 1С">
-        <input aria-label="Коэффициент" type="number" min="0.001" step="0.001" [(ngModel)]="drafts[product.id].coefficient">
+        <input aria-label="Представление из 1С" [(ngModel)]="drafts[product.id].representationFrom1C"
+          placeholder="Представление из 1С">
+        <input aria-label="Коэффициент" type="number" min="0.001" step="0.001"
+          [(ngModel)]="drafts[product.id].coefficient">
+        <input aria-label="Коэффициент для отображения" type="number" min="0.001" step="0.001"
+          [(ngModel)]="drafts[product.id].viewCoefficient">
         <select aria-label="Единица измерения" [(ngModel)]="drafts[product.id].measurementUnitId">
           <option value="">Ед. изм.</option>
           <option *ngFor="let unit of measurementUnits" [value]="unit.id">{{ unit.name || unit.shortName }}</option>
         </select>
-        <button type="button" class="action-btn save" [disabled]="isSaving" (click)="addBarcode(product)">Добавить</button>
+        <button type="button" class="action-btn save" [disabled]="isSaving"
+          (click)="addBarcode(product)">Добавить</button>
         <button type="button" class="action-btn cancel" (click)="cancelAdd(product)">×</button>
       </div>
 
@@ -92,19 +102,22 @@
               <th>Штрихкод</th>
               <th>Представление из 1С</th>
               <th>Коэффициент</th>
+              <th>Коэффициент для отображения</th>
               <th>Ед. изм.</th>
               <th>Статус</th>
               <th>Управление</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let barcode of product.barcodes"
-              [class.editing]="editingBarcode?.id === barcode.id"
+            <tr *ngFor="let barcode of product.barcodes" [class.editing]="editingBarcode?.id === barcode.id"
               [class.deleted-row]="barcode.isDeleted">
               <ng-container *ngIf="editingBarcode?.id !== barcode.id; else editRow">
-                <td><code class="barcode-code">{{ barcode.barCode }}</code></td>
+                <td><code class="barcode-code" (click)="goToProduct(barcode.id)">{{ barcode.barCode }}</code></td>
                 <td>{{ barcode.representationFrom1C || '—' }}</td>
                 <td>{{ barcode.coefficient | number:'1.0-3' }}</td>
+                <td>
+                  @if(barcode.viewCoefficient){ {{ barcode.viewCoefficient | number:'1.0-3' }} } @else {-}
+                </td>
                 <td>{{ barcode.measurementUnit?.shortName || getMeasurementUnitName(barcode.measurementUnitId) }}</td>
                 <td>
                   <span class="status-badge" [class.active]="!barcode.isDeleted" [class.inactive]="barcode.isDeleted">
@@ -112,20 +125,26 @@
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <button type="button" class="action-btn edit" title="Редактировать"
-                    [disabled]="barcode.isDeleted" (click)="startEdit(barcode)">✎</button>
+                  <button type="button" class="action-btn edit" title="Редактировать" [disabled]="barcode.isDeleted"
+                    (click)="startEdit(barcode)">✎</button>
                   <button type="button" class="action-btn delete" title="Удалить или восстановить"
                     (click)="deleteBarcode(product, barcode)">{{ barcode.isDeleted ? '↶' : '×' }}</button>
                 </td>
               </ng-container>
               <ng-template #editRow>
                 <td><code class="barcode-code">{{ barcode.barCode }}</code></td>
-                <td><input class="edit-input" [(ngModel)]="editingBarcode!.representationFrom1C" placeholder="Представление из 1С"></td>
-                <td><input class="edit-input pack-input" type="number" min="0.001" step="0.001" [(ngModel)]="editingBarcode!.coefficient"></td>
+                <td><input class="edit-input" [(ngModel)]="editingBarcode!.representationFrom1C"
+                    placeholder="Представление из 1С"></td>
+                <td><input class="edit-input pack-input" type="number" min="0" step="1"
+                    [(ngModel)]="editingBarcode!.coefficient"></td>
+
+                <td><input class="edit-input pack-input" type="number" min="0" step="1"
+                    [(ngModel)]="editingBarcode!.viewCoefficient"></td>
                 <td>
                   <select class="edit-select" [(ngModel)]="editingBarcode!.measurementUnitId">
                     <option value="">Ед. изм.</option>
-                    <option *ngFor="let unit of measurementUnits" [value]="unit.id">{{ unit.name || unit.shortName }}</option>
+                    <option *ngFor="let unit of measurementUnits" [value]="unit.id">{{ unit.name || unit.shortName }}
+                    </option>
                   </select>
                 </td>
                 <td><span class="status-badge active">Активен</span></td>
@@ -148,16 +167,20 @@
   </div>
 
   <div class="pagination" *ngIf="totalProductPages > 1">
-    <button class="pagination-btn" (click)="changeProductPage(currentProductPage - 1)" [disabled]="currentProductPage === 0">← Назад</button>
+    <button class="pagination-btn" (click)="changeProductPage(currentProductPage - 1)"
+      [disabled]="currentProductPage === 0">← Назад</button>
     <span class="pagination-info">Стр. {{ currentProductPage + 1 }} из {{ totalProductPages }}</span>
-    <button class="pagination-btn" (click)="changeProductPage(currentProductPage + 1)" [disabled]="currentProductPage >= totalProductPages - 1">Вперёд →</button>
+    <button class="pagination-btn" (click)="changeProductPage(currentProductPage + 1)"
+      [disabled]="currentProductPage >= totalProductPages - 1">Вперёд →</button>
   </div>
 
-  <div class="empty-state" *ngIf="!productSearchResults.length && !isLoadingSearch && (searchQuery.trim().length >= 2 || selectedCategoryId)">
+  <div class="empty-state"
+    *ngIf="!productSearchResults.length && !isLoadingSearch && (searchQuery.trim().length >= 2 || articleSearchQuery.trim().length >= 2 || selectedCategoryId)">
     Товары не найдены
   </div>
 
-  <div class="toast" *ngIf="toastMessage" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+  <div class="toast" *ngIf="toastMessage" [class.success]="toastType === 'success'"
+    [class.error]="toastType === 'error'">
     {{ toastMessage }}
   </div>
 </div>
