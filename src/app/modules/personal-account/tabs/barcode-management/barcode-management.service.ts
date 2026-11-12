@@ -28,9 +28,9 @@ export class BarcodeManagementService {
     // Фильтр по категории
     if (categoryIds?.length) {
       filters.push({
-        field: 'mainProductCategoryId',
+        field: 'ProductCategories',
         values: categoryIds,
-        type: 10
+        type: 11
       });
     }
 
