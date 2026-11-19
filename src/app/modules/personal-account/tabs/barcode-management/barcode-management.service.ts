@@ -20,7 +20,8 @@ export class BarcodeManagementService {
     query: string,
     articleQuery: string,
     page = 0,
-    pageSize = 10
+    pageSize = 10,
+    hideApprovedProducts = false
   ): Observable<FilterResponse<ProductSearchResult>> {
 
     const filters: FilterRequest['filters'] = [];
@@ -31,6 +32,14 @@ export class BarcodeManagementService {
         field: 'ProductCategories',
         values: categoryIds,
         type: 11
+      });
+    }
+
+       if (hideApprovedProducts == true) {
+      filters.push({
+        field: 'IsApprovedByManager',
+        values: [0],
+        type: 12
       });
     }
 

@@ -44,7 +44,7 @@ export interface ProductSearchResult {
 export interface FilterRequest {
   filters: Array<{
     field: string;
-    values: string[];
+    values: any[];
     type: number; // 0 = Contains, 10 = Equal
   }>;
   sorts?: Array<{

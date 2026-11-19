@@ -20,6 +20,20 @@
       </select>
     </div>
 
+    <!-- НОВЫЙ БЛОК: Фильтр проверенных товаров -->
+    <div class="filter-options" style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; font-size: 14px;">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="hideApprovedProducts" 
+          (change)="onHideApprovedChange()"
+          style="width: 16px; height: 16px; cursor: pointer;"
+        >
+        <span>Скрыть проверенные товары</span>
+      </label>
+    </div>
+
+
     <div class="search-form">
       <div class="search-input-wrapper">
         <input #searchInput type="text" class="search-input" placeholder="Поиск по наименованию товара..."

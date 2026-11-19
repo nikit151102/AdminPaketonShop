@@ -32,6 +32,7 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
   toastType: 'success' | 'error' = 'success';
   private destroy$ = new Subject<void>();
   private searchDebounce = new Subject<string>();
+  hideApprovedProducts = false; 
 
   constructor(private barcodeService: BarcodeManagementService, private fb: FormBuilder) { }
 
@@ -101,13 +102,14 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
     this.productSearchResults = [];
     this.currentProductPage = page;
 
-    // Вызов поиска товаров
+    // Вызов поиска товаров (ДОБАВЛЕН ПАРАМЕТР hideApprovedProducts)
     this.barcodeService.searchProduct(
       this.getSelectedCategoryIds(),
       this.searchQuery.trim(),
       this.articleSearchQuery.trim(),
       page,
-      10
+      10,
+      this.hideApprovedProducts // <-- Передаем флаг на бэкенд
     ).pipe(takeUntil(this.destroy$)).subscribe({
       next: response => {
         this.totalProductResults = response.totalCount || 0;
@@ -134,6 +136,8 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+
 
   private getSelectedCategoryIds(): string[] | [] {
     if (!this.selectedCategoryId) return [];
@@ -246,17 +250,22 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
     return price == null ? '—' : new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(price);
   }
   handleImageError(event: Event): void { (event.target as HTMLImageElement).style.visibility = 'hidden'; }
+ 
   clearSearch(): void {
     this.searchQuery = '';
     this.articleSearchQuery = '';
-    if (this.selectedCategoryId) this.searchProducts(0);
-    else {
+    this.hideApprovedProducts = false; // <-- Сбрасываем флаг при очистке поиска
+    
+    if (this.selectedCategoryId) {
+      this.searchProducts(0);
+    } else {
       this.productSearchResults = [];
       this.totalProductResults = 0;
       this.totalProductPages = 1;
     }
     this.searchInput?.nativeElement?.focus();
   }
+  
   private generateBarcode(): string {
     const base = `23${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
     return base;
@@ -271,4 +280,12 @@ export class BarcodeManagementComponent implements OnInit, OnDestroy {
       window.open(`https://пакетон.рф/product/${id}`, '_blank');
     }
   }
+
+
+   onHideApprovedChange(): void {
+    this.currentProductPage = 0;
+    this.searchProducts(0);
+  }
+
+
 }
