@@ -32,7 +32,7 @@ interface BulkProductEntry {
 export class ProductsComponent implements OnInit, OnDestroy {
   products: any[] = [];
   selectedProduct: any | null = null;
-  categories: Category[] = [];
+  categories: any[] = [];
 
   isLoading = false;
   isCreating = false;
@@ -55,6 +55,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   idFrom1cList: string[] = [];
 
   searchQuery = '';
+  articleSearchQuery = '';
   currentPage = 0;
   pageSize = 30;
   totalPages = 0;
@@ -110,7 +111,20 @@ export class ProductsComponent implements OnInit, OnDestroy {
   uploadedImages: { id: string; url: string; file?: File }[] = [];
   productProperties: any[] = [{ key: '', value: '' }];
 
-  viewMode: 'grid' | 'list' = 'grid';
+  viewMode: 'grid' | 'list' = 'list';
+  /** Настройки табличного представления */
+  readonly productColumns = [
+    { key: 'image', label: 'Фото' }, { key: 'fullName', label: 'Название' },
+    { key: 'article', label: 'Артикул' }, { key: 'price', label: 'Цена' },
+    { key: 'wholesale', label: 'Опт. цена' }, { key: 'stock', label: 'Остаток' },
+    { key: 'categories', label: 'Категории' }
+  ];
+  visibleProductColumns: string[] = ['image', 'fullName', 'article', 'price', 'wholesale', 'stock', 'categories'];
+  showColumnSettings = false;
+  expandedCategoryIds = new Set<string>();
+  quickEditId: string | null = null;
+  quickEditDraft: any = null;
+  quickEditSaving = false;
   selectedProducts: string[] = [];
   bulkAction: string = '';
 
@@ -165,8 +179,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
   loadProducts(): void {
     this.isLoading = true;
     const filters: Filter[] = [];
-    if (this.searchQuery) filters.push({ field: 'searchQuery', values: [this.searchQuery], type: 0 });
-    if (this.selectedCategory) filters.push({ field: 'categoryId', values: [this.selectedCategory], type: 0 });
+    if (this.searchQuery.trim()) filters.push({ field: 'fullName', values: [this.searchQuery.trim()], type: 0 });
+    if (this.articleSearchQuery.trim()) filters.push({ field: 'article', values: [this.articleSearchQuery.trim()], type: 0 });
+    if (this.selectedCategory) filters.push({ field: 'ProductCategories', values: [this.selectedCategory], type: 11 });
     const sorts = [{ field: this.sortField, direction: this.sortDirection }];
 
     this.productService.searchProducts({ filters, sorts, page: this.currentPage, pageSize: this.pageSize }).subscribe({
@@ -181,6 +196,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   onSearchQueryChange(query: string): void { this.searchSubject.next(query); }
+  onArticleSearchChange(query: string): void { this.articleSearchQuery = query; this.currentPage = 0; this.loadProducts(); }
 
   selectProduct(product: ProductInstance): void { this.isViewingDetails = true; this.selectedProduct = product; }
   closeDetails(): void { this.isViewingDetails = false; this.selectedProduct = null; }
@@ -491,7 +507,19 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   filterByCategory(categoryId: string): void { this.selectedCategory = categoryId; this.currentPage = 0; this.loadProducts(); }
-  clearFilters(): void { this.searchQuery = ''; this.selectedCategory = ''; this.currentPage = 0; this.loadProducts(); }
+  clearFilters(): void { this.searchQuery = ''; this.articleSearchQuery = ''; this.selectedCategory = ''; this.currentPage = 0; this.loadProducts(); }
+
+  /** Выбрать или снять выделение со всех товаров текущей страницы. */
+  selectAllProducts(checked: boolean): void {
+    this.selectedProducts = checked
+      ? this.products.map((product: any) => product.id)
+      : [];
+  }
+
+  /** Включить отображение всех доступных столбцов таблицы. */
+  showAllProductColumns(): void {
+    this.visibleProductColumns = this.productColumns.map(column => column.key);
+  }
 
   toggleProductSelection(productId: string): void {
     const idx = this.selectedProducts.indexOf(productId);
@@ -544,14 +572,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   getProductCategories(product: ProductInstance): string {
     if (!product.productCategoryIds?.length) return 'Без категории';
-    const names = product.productCategoryIds.map(id => this.categories.find(c => c.id === id)?.name).filter(Boolean);
+    const names = product.productCategoryIds.map((id: string) => this.allCategoriesFlat.find(c => c.id === id)?.name || this.categories.find(c => c.id === id)?.name).filter(Boolean);
     return names.join(', ') || 'Без категории';
   }
 
-  getTotalStock(product: ProductInstance): number {
+getTotalStock(product: any): number {
     if (!product.remains) return 0;
-    return Object.values(product.remains).reduce((sum: number, count: any) => sum + Number(count), 0);
-  }
+    
+    return product.remains.reduce((sum: number, remain: any) => {
+        return sum + Number(remain.count || 0);
+    }, 0);
+}
 
   getProductPrice(product: any): number { return product.viewPrice || product.retailPrice || 0; }
   getProductImage(product: any): string { return product.productImageLinks?.[0] || ''; }
@@ -869,4 +900,97 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
 
 
+
+
+  toggleCategoryTree(categoryId: string): void {
+    if (this.expandedCategoryIds.has(categoryId)) this.expandedCategoryIds.delete(categoryId);
+    else this.expandedCategoryIds.add(categoryId);
+    this.expandedCategoryIds = new Set(this.expandedCategoryIds);
+  }
+
+  isCategoryExpanded(categoryId: string): boolean {
+    return this.expandedCategoryIds.has(categoryId);
+  }
+
+  chooseCategory(categoryId: string | null): void {
+    this.selectedCategory = categoryId || '';
+    this.currentPage = 0;
+    this.loadProducts();
+  }
+
+  toggleProductColumn(key: string, checked: boolean): void {
+    if (checked) {
+      if (!this.visibleProductColumns.includes(key)) this.visibleProductColumns = [...this.visibleProductColumns, key];
+    } else {
+      this.visibleProductColumns = this.visibleProductColumns.filter(column => column !== key);
+    }
+  }
+
+  isProductColumnVisible(key: string): boolean {
+    return this.visibleProductColumns.includes(key);
+  }
+
+  startQuickEdit(product: any): void {
+    this.quickEditId = product.id;
+    this.quickEditDraft = {
+      id: product.id,
+      article: product.article || '',
+      shortName: product.shortName || '',
+      fullName: product.fullName || '',
+      description: product.description || '',
+      retailPrice: Number(product.retailPrice ?? product.viewPrice ?? 0),
+      retailPriceDest: Number(product.retailPriceDest ?? 0),
+      wholesalePrice: Number(product.wholesalePrice ?? 0),
+      wholesalePriceDest: Number(product.wholesalePriceDest ?? 0),
+      productCategories: product.productCategoryIds || []
+    };
+  }
+
+  cancelQuickEdit(): void {
+    this.quickEditId = null;
+    this.quickEditDraft = null;
+  }
+
+  saveQuickEdit(): void {
+    if (!this.quickEditDraft || this.quickEditSaving) return;
+    const draft = this.quickEditDraft;
+    if (!draft.fullName?.trim() || !draft.article?.trim()) {
+      this.showNotification('Заполните название и артикул', 'error');
+      return;
+    }
+    this.quickEditSaving = true;
+    const payload: any = {
+      id: draft.id,
+      article: draft.article.trim(),
+      shortName: draft.shortName || draft.fullName.trim().slice(0, 50),
+      fullName: draft.fullName.trim(),
+      description: draft.description || '',
+      productCategories: this.products.find(p => p.id === draft.id)?.productCategoryIds || [],
+      retailPrice: Number(draft.retailPrice) || 0,
+      retailPriceDest: Number(draft.retailPriceDest) || 0,
+      wholesalePrice: Number(draft.wholesalePrice) || 0,
+      wholesalePriceDest: Number(draft.wholesalePriceDest) || 0
+    };
+    this.productService.updateProduct(draft.id, payload).subscribe({
+      next: () => {
+        this.quickEditSaving = false;
+        this.cancelQuickEdit();
+        this.loadProducts();
+        this.showNotification('Изменения сохранены', 'success');
+      },
+      error: (error) => {
+        console.error('Ошибка быстрого редактирования товара:', error);
+        this.quickEditSaving = false;
+        this.showNotification('Не удалось сохранить изменения', 'error');
+      }
+    });
+  }
+
+  getProductWholesalePrice(product: any): number {
+    return Number(product.wholesalePrice ?? product.wholesalePriceDest ?? 0);
+  }
+
+  trackByProductId(_index: number, product: any): string {
+    return product.id;
+  }
 }

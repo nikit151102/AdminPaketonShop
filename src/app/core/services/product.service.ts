@@ -11,7 +11,7 @@ import { SearchResponse, CreateProductDto, UpdateProductDto, ProductBarCodeDto }
 })
 export class ProductService {
   private baseUrl = environment.production + '/api/Entities/ProductInstance';
-  private searchUrl = environment.production + '/api/Entities/ProductInstanceSearch/Filter';
+  private searchUrl = environment.production + '/api/Entities/ProductInstance/Filter';
 
   constructor(private http: HttpClient) { }
 

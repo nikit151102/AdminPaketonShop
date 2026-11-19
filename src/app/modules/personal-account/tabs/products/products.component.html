@@ -1,271 +1,172 @@
 <div class="products-management">
-  <!-- Header -->
-  <div class="management-header">
+  <header class="management-header">
     <div class="header-content">
-      <h1 class="page-title">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        Управление товарами
-      </h1>
-      <p class="page-subtitle">Создание, редактирование и управление товарами магазина</p>
+      <h1 class="page-title">Управление товарами</h1>
+      <p class="page-subtitle">Поиск, просмотр и редактирование каталога</p>
     </div>
     <div class="header-actions">
-      <button class="btn-primary" (click)="startCreate()" [disabled]="isLoading">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Добавить товар
-      </button>
-      <button (click)="openZipUploadModal()" style="
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 22px;
-          background: var(--white);
-          color: var(--text);
-          border: 2px solid var(--border);
-          border-radius: var(--r);
-          font-weight: 600;
-          font-size: 14px;
-          cursor: pointer;
-          transition: var(--tr);
-      ">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-        Импорт изображений (ZIP)
-      </button>
-      <div class="header-dropdown">
-        <button class="btn-secondary dropdown-toggle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Экспорт
-        </button>
-        <div class="dropdown-menu">
-          <button (click)="exportToCSV()">CSV</button>
-          <button (click)="importFromCSV()">Импорт из CSV</button>
-
-          <div class="dropdown-divider"></div>
-          <button (click)="openZipUploadModal()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            Импорт изображений (ZIP)
-          </button>
-        </div>
-      </div>
+      <button class="btn-primary" type="button" (click)="startCreate()" [disabled]="isLoading">＋ Добавить товар</button>
+      <button class="btn-secondary" type="button" (click)="openZipUploadModal()">Импорт изображений (ZIP)</button>
+      <button class="btn-secondary" type="button" (click)="exportToCSV()">Экспорт CSV</button>
     </div>
-  </div>
+  </header>
 
-  <!-- Control Panel -->
-  <div class="control-panel">
-    <div class="control-section">
+  <section class="control-panel">
+    <div class="products-toolbar">
       <div class="search-container">
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchQueryChange($event)"
-          placeholder="Поиск по названию или артикулу..." />
-        <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''; loadProducts()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        <span class="search-symbol">⌕</span>
+        <input type="search" [(ngModel)]="searchQuery" (ngModelChange)="onSearchQueryChange($event)"
+          placeholder="Поиск по названию..." aria-label="Поиск по названию">
+        <button *ngIf="searchQuery" type="button" class="clear-search"
+          (click)="searchQuery=''; onSearchQueryChange('')">×</button>
       </div>
-
-      <div class="filters-container">
-        <div class="filter-group">
-          <label>Категория:</label>
-          <select [(ngModel)]="selectedCategory" (change)="filterByCategory(selectedCategory)">
-            <option value="">Все категории</option>
-            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Сортировка:</label>
-          <select [(ngModel)]="sortField" (change)="sortBy(sortField)">
-            <option value="fullName">По названию</option>
-            <option value="article">По артикулу</option>
-            <option value="retailPrice">По цене</option>
-          </select>
-          <button class="sort-direction" (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'"
-            [class.desc]="sortDirection === 'desc'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14M5 12l7-7 7 7" />
-            </svg>
-          </button>
+      <div class="search-container article-search">
+        <input type="search" [(ngModel)]="articleSearchQuery" (ngModelChange)="onArticleSearchChange($event)"
+          placeholder="Артикул..." aria-label="Поиск по артикулу">
+      </div>
+      <!-- <select [(ngModel)]="sortField" (change)="sortBy(sortField)" aria-label="Сортировка">
+        <option value="fullName">Название</option>
+        <option value="article">Артикул</option>
+        <option value="retailPrice">Цена</option>
+      </select> -->
+      <!-- <button type="button" class="btn-secondary"
+        (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; loadProducts()">
+        {{ sortDirection === 'asc' ? '↑ По возрастанию' : '↓ По убыванию' }}
+      </button> -->
+      <div class="column-settings">
+        <button type="button" class="btn-secondary" (click)="showColumnSettings = !showColumnSettings">⚙
+          Столбцы</button>
+        <div class="column-popover" *ngIf="showColumnSettings">
+          <label *ngFor="let column of productColumns">
+            <input type="checkbox" [checked]="isProductColumnVisible(column.key)"
+              (change)="toggleProductColumn(column.key, $any($event.target).checked)">
+            {{ column.label }}
+          </label>
+          <button type="button" class="text-action" (click)="showAllProductColumns()">Показать все</button>
         </div>
       </div>
-
-      <div class="quick-actions">
-        <button class="btn-view-mode" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-          </svg>
-        </button>
-        <button class="btn-view-mode" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6" />
-            <line x1="8" y1="12" x2="21" y2="12" />
-            <line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="4" y1="6" x2="4.01" y2="6" />
-            <line x1="4" y1="12" x2="4.01" y2="12" />
-            <line x1="4" y1="18" x2="4.01" y2="18" />
-          </svg>
-        </button>
-        <button class="btn-clear-filters" (click)="clearFilters()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="1 4 1 10 7 10" />
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-          </svg>
-          Сбросить
-        </button>
-      </div>
+      <button type="button" class="btn-secondary" (click)="clearFilters()">Сбросить</button>
     </div>
-
-    <!-- Bulk Actions -->
-    <div *ngIf="selectedProducts.length > 0" class="bulk-actions-panel">
-      <div class="bulk-selection-info">
-        <span>Выбрано: {{ selectedProducts.length }}</span>
-        <button class="btn-clear-selection" (click)="selectedProducts = []">Очистить</button>
-      </div>
-      <div class="bulk-actions">
-        <select [(ngModel)]="bulkAction">
-          <option value="">Действие...</option>
-          <option value="delete">Удалить выбранное</option>
-        </select>
-        <button class="btn-primary" (click)="executeBulkAction()" [disabled]="!bulkAction">Применить</button>
-      </div>
+    <div *ngIf="selectedProducts.length" class="bulk-actions-panel">
+      <span>Выбрано: {{ selectedProducts.length }}</span>
+      <select [(ngModel)]="bulkAction">
+        <option value="">Действие...</option>
+        <option value="delete">Удалить выбранное</option>
+      </select>
+      <button class="btn-primary" type="button" (click)="executeBulkAction()"
+        [disabled]="!bulkAction">Применить</button>
+      <button class="text-action" type="button" (click)="selectedProducts=[]">Снять выделение</button>
     </div>
-  </div>
+  </section>
 
-  <!-- Main Content -->
-  <div class="products-content">
-    <div *ngIf="!isLoading; else loadingTpl" class="products-container">
-      <div *ngIf="products.length > 0; else emptyTpl">
-
-        <!-- GRID VIEW -->
-        <div *ngIf="viewMode === 'grid'" class="products-grid">
-          <div *ngFor="let product of products" class="product-card"
-            [class.selected]="selectedProducts.includes(product.id)">
-            <div class="card-checkbox">
-              <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
-                (change)="toggleProductSelection(product.id)" />
-            </div>
-
-            <div class="card-image" (click)="selectProduct(product)">
-              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName" />
-              <div *ngIf="!getProductImage(product)" class="image-placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
-              <div *ngIf="getTotalStock(product) === 0" class="stock-badge out">Нет в наличии</div>
-            </div>
-
-            <div class="card-body">
-              <h3 class="card-title" (click)="selectProduct(product)">{{ product.fullName }}</h3>
-              <div class="card-meta">
-                <span class="article-tag">{{ product.article }}</span>
-                <span class="card-price">{{ getProductPrice(product) | number:'1.2-2' }} ₽</span>
-              </div>
-              <div class="card-categories" *ngIf="product.productCategoryIds?.length">
-                <span class="cat-tag" *ngFor="let catId of product.productCategoryIds.slice(0, 2)">
-                  {{ getProductCategories(product) }}
-                </span>
-              </div>
-              <div class="card-stock">
-                Остаток: <strong>{{ getTotalStock(product) }}</strong> шт.
-              </div>
-              <div class="card-actions">
-                <button class="btn-action edit" (click)="startEdit(product)" title="Редактировать">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
-                <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true"
-                  title="Удалить">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+  <div class="catalog-layout">
+    <aside class="category-sidebar">
+      <div class="sidebar-heading"><strong>Категории</strong><span>{{ totalProducts }}</span></div>
+      <button type="button" class="tree-all" [class.active]="!selectedCategory" (click)="chooseCategory(null)">Все
+        товары</button>
+      <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, depth: 0 }"></ng-container>
+      <ng-template #categoryTree let-items let-depth="depth">
+        <div *ngFor="let category of items" class="tree-node">
+          <div class="tree-line" [style.padding-left.px]="depth * 14">
+            <button *ngIf="category.subCategories?.length" type="button" class="tree-expand"
+              (click)="toggleCategoryTree(category.id)" [attr.aria-expanded]="isCategoryExpanded(category.id)">
+              {{ isCategoryExpanded(category.id) ? '▾' : '▸' }}
+            </button>
+            <span *ngIf="!category.subCategories?.length" class="tree-spacer"></span>
+            <button type="button" class="tree-category" [class.active]="selectedCategory === category.id"
+              (click)="chooseCategory(category.id)" [title]="category.name">
+              <span>{{ category.name }}</span><small>{{ category.productCount || 0 }}</small>
+            </button>
           </div>
+          <ng-container *ngIf="category.subCategories?.length && isCategoryExpanded(category.id)">
+            <ng-container
+              *ngTemplateOutlet="categoryTree; context: { $implicit: category.subCategories, depth: depth + 1 }"></ng-container>
+          </ng-container>
         </div>
+      </ng-template>
+    </aside>
 
-        <!-- LIST VIEW -->
-        <div *ngIf="viewMode === 'list'" class="products-list">
-          <div class="list-header-row">
-            <div class="lc-check"></div>
-            <div class="lc-img"></div>
-            <div class="lc-name">Название</div>
-            <div class="lc-article">Артикул</div>
-            <div class="lc-price">Цена</div>
-            <div class="lc-stock">Остаток</div>
-            <div class="lc-actions">Действия</div>
-          </div>
-          <div *ngFor="let product of products" class="list-row"
-            [class.selected]="selectedProducts.includes(product.id)" (click)="selectProduct(product)">
-            <div class="lc-check" (click)="$event.stopPropagation()">
-              <input type="checkbox" [checked]="selectedProducts.includes(product.id)"
-                (change)="toggleProductSelection(product.id)" />
-            </div>
-            <div class="lc-img">
-              <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName" />
-              <div *ngIf="!getProductImage(product)" class="img-ph-sm">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
-            </div>
-            <div class="lc-name"><span class="name-text">{{ product.fullName }}</span></div>
-            <div class="lc-article"><span class="article-tag">{{ product.article }}</span></div>
-            <div class="lc-price"><span class="price-value">{{ getProductPrice(product) | number:'1.2-2' }} ₽</span>
-            </div>
-            <div class="lc-stock">
-              <span [class.out]="getTotalStock(product) === 0">{{ getTotalStock(product) }} шт.</span>
-            </div>
-            <div class="lc-actions" (click)="$event.stopPropagation()">
-              <button class="btn-action edit" (click)="startEdit(product)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
-              <button class="btn-action danger" (click)="selectedProduct = product; showDeleteConfirm = true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-              </button>
-            </div>
-          </div>
+    <main class="products-table-area">
+      <div *ngIf="!isLoading; else loadingTpl" class="products-container">
+        <div *ngIf="products.length; else emptyTpl" class="table-scroll">
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th class="check-col"><input type="checkbox"
+                    [checked]="selectedProducts.length === products.length && products.length > 0"
+                    (change)="selectAllProducts($any($event.target).checked)" aria-label="Выбрать все"></th>
+                <th *ngIf="isProductColumnVisible('image')">Фото</th>
+                <th *ngIf="isProductColumnVisible('fullName')">Товар</th>
+                <th *ngIf="isProductColumnVisible('article')">Артикул</th>
+                <th *ngIf="isProductColumnVisible('price')">Розничная цена</th>
+                <th *ngIf="isProductColumnVisible('wholesale')">Оптовая цена</th>
+                <th *ngIf="isProductColumnVisible('stock')">Остаток</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let product of products; trackBy: trackByProductId">
+                <tr [class.selected]="selectedProducts.includes(product.id)"
+                  [class.quick-editing]="quickEditId === product.id">
+                  <td class="check-col"><input type="checkbox" [checked]="selectedProducts.includes(product.id)"
+                      (change)="toggleProductSelection(product.id)" [attr.aria-label]="'Выбрать ' + product.fullName">
+                  </td>
+                  <td *ngIf="isProductColumnVisible('image')" class="image-cell">
+                    <img *ngIf="getProductImage(product)" [src]="getProductImage(product)" [alt]="product.fullName">
+                    <span *ngIf="!getProductImage(product)" class="image-placeholder">□</span>
+                  </td>
+                  <td *ngIf="isProductColumnVisible('fullName')" class="name-cell">
+                    <ng-container *ngIf="quickEditId !== product.id; else editName">
+                      <button type="button" class="product-name" (click)="selectProduct(product)">{{ product.fullName
+                        }}</button>
+                      <small>1C: {{ product.nameFrom1C || '—' }}</small>
+                    </ng-container>
+                    <ng-template #editName><input class="table-input name-input" [(ngModel)]="quickEditDraft.fullName"
+                        aria-label="Название"></ng-template>
+                  </td>
+                  <td *ngIf="isProductColumnVisible('article')">
+                    <ng-container
+                      *ngIf="quickEditId !== product.id; else editArticle"><code>{{ product.article || '—' }}</code></ng-container>
+                    <ng-template #editArticle><input class="table-input" [(ngModel)]="quickEditDraft.article"
+                        aria-label="Артикул"></ng-template>
+                  </td>
+                  <td *ngIf="isProductColumnVisible('price')">
+                    <ng-container *ngIf="quickEditId !== product.id; else editRetail">{{ getProductPrice(product) |
+                      number:'1.2-2' }} ₽</ng-container>
+                    <ng-template #editRetail><input class="table-input price-input" type="number" min="0" step="0.01"
+                        [(ngModel)]="quickEditDraft.retailPrice"></ng-template>
+                  </td>
+                  <td *ngIf="isProductColumnVisible('wholesale')">
+                    <ng-container *ngIf="quickEditId !== product.id; else editWholesale">{{
+                      getProductWholesalePrice(product) | number:'1.2-2' }} ₽</ng-container>
+                    <ng-template #editWholesale><input class="table-input price-input" type="number" min="0" step="0.01"
+                        [(ngModel)]="quickEditDraft.wholesalePrice"></ng-template>
+                  </td>
+                  <td *ngIf="isProductColumnVisible('stock')"><span class="stock-value"
+                      [class.out]="getTotalStock(product) <= 0">{{ getTotalStock(product) }}</span></td>
+                  <td class="row-actions" (click)="$event.stopPropagation()">
+                    <ng-container *ngIf="quickEditId !== product.id">
+                      <button type="button" class="icon-action" title="Быстрое редактирование"
+                        (click)="startQuickEdit(product)">✎</button>
+                      <button type="button" class="icon-action" title="Полное редактирование"
+                        (click)="startEdit(product)">⋯</button>
+                      <!-- <button type="button" class="icon-action" title="Просмотр карточки"
+                        (click)="selectProduct(product)">◉</button> -->
+                      <button type="button" class="icon-action danger" title="Удалить"
+                        (click)="selectedProduct=product; showDeleteConfirm=true">×</button>
+                    </ng-container>
+                    <ng-container *ngIf="quickEditId === product.id">
+                      <button type="button" class="icon-action save" (click)="saveQuickEdit()"
+                        [disabled]="quickEditSaving">✓</button>
+                      <button type="button" class="icon-action" (click)="cancelQuickEdit()">×</button>
+                    </ng-container>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
         </div>
       </div>
-
       <ng-template #emptyTpl>
         <div class="empty-state">
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -277,37 +178,34 @@
           <button class="btn-primary" (click)="clearFilters()">Сбросить фильтры</button>
         </div>
       </ng-template>
-    </div>
 
-    <ng-template #loadingTpl>
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Загрузка товаров...</p>
-      </div>
-    </ng-template>
-
-    <!-- Pagination -->
-    <div *ngIf="products.length > 0 && totalPages > 1" class="pagination">
-      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 0">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <div class="page-numbers">
-        <button *ngFor="let p of generatePageNumbers()" class="page-num" [class.active]="p === currentPage + 1"
-          (click)="goToPage(p)" [disabled]="p === '...'">
-          {{ p }}
-        </button>
-      </div>
-      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
-      <span class="page-info">{{ products.length }} из {{ totalProducts }}</span>
+  <ng-template #loadingTpl>
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Загрузка товаров...</p>
     </div>
+  </ng-template>
+
+  <!-- Pagination -->
+  <div *ngIf="products.length > 0 && totalPages > 1" class="pagination">
+    <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </button>
+    <div class="page-numbers">
+      <button *ngFor="let p of generatePageNumbers()" class="page-num" [class.active]="p === currentPage + 1"
+        (click)="goToPage(p)" [disabled]="p === '...'">
+        {{ p }}
+      </button>
+    </div>
+    <button class="page-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+    <span class="page-info">{{ products.length }} из {{ totalProducts }}</span>
   </div>
-</div>
 
 
 
@@ -764,8 +662,10 @@
                   <span class="batch-index">Партия {{ batch.index }}</span>
                   <span class="batch-status">
                     <ng-container *ngIf="batch.status === 'pending'">Ожидание...</ng-container>
-                    <ng-container *ngIf="batch.status === 'success'">Успешно: {{ batch.successCount }} шт.</ng-container>
-                    <ng-container *ngIf="batch.status === 'partial'">Частично: {{ batch.successCount }} усп., {{ batch.errorCount }} ош.</ng-container>
+                    <ng-container *ngIf="batch.status === 'success'">Успешно: {{ batch.successCount }}
+                      шт.</ng-container>
+                    <ng-container *ngIf="batch.status === 'partial'">Частично: {{ batch.successCount }} усп., {{
+                      batch.errorCount }} ош.</ng-container>
                     <ng-container *ngIf="batch.status === 'error'">Ошибка: {{ batch.errorCount }} шт.</ng-container>
                   </span>
                 </div>
